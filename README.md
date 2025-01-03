@@ -4,7 +4,7 @@ A web platform and hardware solution for automated cocktail mixing machines.
 
 ## Overview
 
-RobotCocktail is a modern reimagining of the [Autobar v1 project](https://github.com/vtalpaert/autobar). While the original project used Django and Raspberry Pi, this v3 version brings several key improvements:
+RobotCocktail is a modern reimagining of the [Autobar v1 project](https://github.com/vtalpaert/autobar). While the original project used Django and Raspberry Pi, this new version brings several key improvements:
 
 - Modern web interface built with Tailwind CSS
 - Hosted at robotcocktail.ovh
@@ -23,7 +23,7 @@ The project consists of two main parts:
    - Device management interface
    - API endpoints for device communication
 
-2. **Hardware Implementation** 
+2. **Hardware Implementation**
    - ESP32-based cocktail mixing machine (primary target)
    - Support for legacy Raspberry Pi implementation
    - Automated OTA updates
@@ -40,4 +40,4 @@ Please see [CONTRIBUTING.md](CONTRIBUTING.md) for development guidelines and con
 
 ## License
 
-[License details to be added]
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
