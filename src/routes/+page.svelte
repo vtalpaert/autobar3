@@ -24,7 +24,7 @@
         {t.hero.description}
       </p>
       <div class="flex justify-center gap-4">
-        <a href="/demo/lucia/login" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg transition-colors">
+        <a href="/auth/login" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg transition-colors">
           {t.hero.getStarted}
         </a>
         <a href="#" class="bg-gray-700 hover:bg-gray-600 text-white font-bold py-3 px-6 rounded-lg transition-colors">
