@@ -38,7 +38,6 @@ export const translations = {
       addedOn: 'Added on',
       createNew: 'Create New Cocktail',
       instructions: 'Instructions',
-      createdBy: 'Created by',
       filterAll: 'All Cocktails',
       filterMine: 'My Cocktails'
     },
@@ -95,7 +94,6 @@ export const translations = {
       addedOn: 'Ajouté le',
       createNew: 'Créer un Nouveau Cocktail',
       instructions: 'Instructions',
-      createdBy: 'Créé par',
       filterAll: 'Tous les Cocktails',
       filterMine: 'Mes Cocktails'
     },

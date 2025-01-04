@@ -24,7 +24,7 @@ export const load: PageServerLoad = async ({ locals }) => {
             id: table.cocktail.id,
             name: table.cocktail.name,
             description: table.cocktail.description,
-            creatorName: table.user.username
+            creatorName: table.profile.artistName
         })
         .from(table.cocktail)
         .innerJoin(table.user, eq(table.user.id, table.cocktail.creatorId));

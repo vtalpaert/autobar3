@@ -60,6 +60,7 @@
                     <div class="flex items-center justify-between bg-gray-700 p-4 rounded-lg">
                         <div>
                             <p class="font-bold">{profile.username}</p>
+                            <p class="text-sm text-gray-400">Artist Name: {profile.artistName || 'Not set'}</p>
                             <p class="text-sm text-gray-400">
                                 Status: {profile.isVerified ? 'Verified' : 'Unverified'}
                             </p>

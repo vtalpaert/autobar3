@@ -14,7 +14,7 @@ export const load: PageServerLoad = async ({ params, locals, redirect }) => {
             name: table.cocktail.name,
             description: table.cocktail.description,
             instructions: table.cocktail.instructions,
-            creatorName: table.user.username,
+            creatorName: table.profile.artistName,
             createdAt: table.cocktail.createdAt
         })
         .from(table.cocktail)

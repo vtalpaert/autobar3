@@ -22,7 +22,8 @@ export const profile = sqliteTable('profile', {
 		.unique(),
 	createdAt: integer('created_at', { mode: 'timestamp' }).notNull(),
 	isVerified: integer('is_verified', { mode: 'boolean' }).notNull().default(false),
-	isAdmin: integer('is_admin', { mode: 'boolean' }).notNull().default(false)
+	isAdmin: integer('is_admin', { mode: 'boolean' }).notNull().default(false),
+	artistName: text('artist_name')
 });
 
 export const device = sqliteTable('device', {
