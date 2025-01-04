@@ -135,7 +135,7 @@ export const translations = {
       password: 'Mot de passe',
       dontHaveAccount: "Vous n'avez pas de compte ?",
       alreadyHaveAccount: 'Vous avez déjà un compte ?',
-      backToHome: '← Back to Home'
+      backToHome: '← Retour'
     },
     profile: {
       unverified: {

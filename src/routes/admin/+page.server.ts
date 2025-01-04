@@ -54,7 +54,10 @@ export const load: PageServerLoad = async ({ locals }) => {
         profiles,
         cocktails,
         devices,
-        user: locals.user
+        user: {
+            ...locals.user,
+            isAdmin: profile?.isAdmin || false
+        }
     };
 };
 

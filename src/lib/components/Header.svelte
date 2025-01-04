@@ -3,7 +3,7 @@
   import { translations } from '$lib/i18n/translations';
   import { currentLanguage } from '$lib/i18n/store';
   
-  export let user: { username: string } | null = null;
+  export let user: { username: string, isAdmin?: boolean } | null = null;
   let isDropdownOpen = false;
 
   const toggleDropdown = () => {
@@ -71,6 +71,33 @@
               class="absolute right-0 mt-2 w-48 bg-gray-700 rounded-lg shadow-xl py-2"
               on:mouseleave={closeDropdown}
             >
+              <a
+                href="/cocktails"
+                class="block w-full text-left px-4 py-2 text-white hover:bg-gray-600"
+                role="menuitem"
+                on:click={closeDropdown}
+              >
+                My Cocktails
+              </a>
+              <a
+                href="/devices"
+                class="block w-full text-left px-4 py-2 text-white hover:bg-gray-600"
+                role="menuitem"
+                on:click={closeDropdown}
+              >
+                My Devices
+              </a>
+              {#if user.isAdmin}
+                <a
+                  href="/admin"
+                  class="block w-full text-left px-4 py-2 text-white hover:bg-gray-600"
+                  role="menuitem"
+                  on:click={closeDropdown}
+                >
+                  Admin
+                </a>
+              {/if}
+              <div class="border-t border-gray-600 my-1"></div>
               <form
                 method="POST"
                 action="/auth?/logout"

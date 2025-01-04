@@ -26,6 +26,9 @@ export const load: PageServerLoad = async ({ locals }) => {
 
     return {
         devices,
-        user: locals.user
+        user: {
+            ...locals.user,
+            isAdmin: profile?.isAdmin || false
+        }
     };
 };

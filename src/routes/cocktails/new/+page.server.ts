@@ -7,8 +7,17 @@ export const load: PageServerLoad = async ({ locals }) => {
     if (!locals.user) {
         throw redirect(302, '/auth/login');
     }
+    const profile = await db
+        .select()
+        .from(table.profile)
+        .where(eq(table.profile.userId, locals.user.id))
+        .get();
+
     return {
-        user: locals.user
+        user: {
+            ...locals.user,
+            isAdmin: profile?.isAdmin || false
+        }
     };
 };
 
