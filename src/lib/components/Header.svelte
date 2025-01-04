@@ -22,7 +22,13 @@
     <div class="flex justify-between items-center h-16">
       <a href="/" class="text-white text-xl font-bold">RobotCocktail</a>
       
-      <div class="flex items-center space-x-4">
+      <div class="flex items-center space-x-6">
+        <a 
+          href="/cocktails"
+          class="text-white hover:text-gray-300"
+        >
+          Cocktails
+        </a>
         <!-- Language Selector -->
         <select
           class="bg-gray-700 text-white px-3 py-1 rounded-lg border border-gray-600"
