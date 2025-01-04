@@ -38,7 +38,14 @@ export const translations = {
       addedOn: 'Added on',
       createNew: 'Create New Cocktail',
       instructions: 'Instructions',
-      createdBy: 'Created by'
+      createdBy: 'Created by',
+      filterAll: 'All Cocktails',
+      filterMine: 'My Cocktails'
+    },
+    devices: {
+      title: 'My Devices',
+      registerNew: 'Register New Device',
+      noDevices: 'No devices registered yet'
     },
     createCocktail: {
       title: 'Create New Cocktail',
@@ -88,7 +95,14 @@ export const translations = {
       addedOn: 'Ajouté le',
       createNew: 'Créer un Nouveau Cocktail',
       instructions: 'Instructions',
-      createdBy: 'Créé par'
+      createdBy: 'Créé par',
+      filterAll: 'Tous les Cocktails',
+      filterMine: 'Mes Cocktails'
+    },
+    devices: {
+      title: 'Mes Appareils',
+      registerNew: 'Enregistrer un Nouvel Appareil',
+      noDevices: 'Aucun appareil enregistré'
     },
     createCocktail: {
       title: 'Créer un Nouveau Cocktail',
