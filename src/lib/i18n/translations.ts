@@ -70,7 +70,18 @@ export const translations = {
         title: 'Unverified Profile',
         message: 'Your profile is pending verification by an administrator. This process helps us maintain the quality and security of our platform.',
         checkBack: 'Please check back later. Once your profile is verified, you will have full access to create and manage cocktails and devices.'
-      }
+      },
+      title: 'My Profile',
+      artistName: 'Artist Name',
+      artistNamePlaceholder: 'Enter your artist name',
+      currentPassword: 'Current Password',
+      newPassword: 'New Password',
+      confirmPassword: 'Confirm New Password',
+      updateProfile: 'Update Profile',
+      changePassword: 'Change Password',
+      passwordMismatch: 'New passwords do not match',
+      updateSuccess: 'Profile updated successfully',
+      passwordSuccess: 'Password changed successfully'
     }
   },
   fr: {
@@ -142,7 +153,18 @@ export const translations = {
         title: 'Profil Non Vérifié',
         message: 'Votre profil est en attente de vérification par un administrateur. Ce processus nous aide à maintenir la qualité et la sécurité de notre plateforme.',
         checkBack: 'Veuillez revenir plus tard. Une fois votre profil vérifié, vous aurez un accès complet pour créer et gérer des cocktails et des appareils.'
-      }
+      },
+      title: 'Mon Profil',
+      artistName: 'Nom d\'artiste',
+      artistNamePlaceholder: 'Entrez votre nom d\'artiste',
+      currentPassword: 'Mot de passe actuel',
+      newPassword: 'Nouveau mot de passe',
+      confirmPassword: 'Confirmer le nouveau mot de passe',
+      updateProfile: 'Mettre à jour le profil',
+      changePassword: 'Changer le mot de passe',
+      passwordMismatch: 'Les nouveaux mots de passe ne correspondent pas',
+      updateSuccess: 'Profil mis à jour avec succès',
+      passwordSuccess: 'Mot de passe changé avec succès'
     }
   }
 } as const;
