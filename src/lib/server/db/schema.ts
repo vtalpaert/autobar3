@@ -6,16 +6,6 @@ export const user = sqliteTable('user', {
 	passwordHash: text('password_hash').notNull()
 });
 
-export const profile = sqliteTable('profile', {
-	id: text('id').primaryKey(),
-	userId: text('user_id')
-		.notNull()
-		.references(() => user.id)
-		.unique(),
-	isVerified: integer('is_verified', { mode: 'boolean' }).notNull().default(false),
-	createdAt: integer('created_at', { mode: 'timestamp' }).notNull()
-});
-
 export const session = sqliteTable('session', {
 	id: text('id').primaryKey(),
 	userId: text('user_id')
@@ -24,15 +14,15 @@ export const session = sqliteTable('session', {
 	expiresAt: integer('expires_at', { mode: 'timestamp' }).notNull()
 });
 
-export const cocktail = sqliteTable('cocktail', {
+export const profile = sqliteTable('profile', {
 	id: text('id').primaryKey(),
-	name: text('name').notNull(),
-	creatorId: text('creator_id')
+	userId: text('user_id')
 		.notNull()
-		.references(() => profile.id),
-	description: text('description'),
-	instructions: text('instructions'),
-	createdAt: integer('created_at', { mode: 'timestamp' }).notNull()
+		.references(() => user.id)
+		.unique(),
+	createdAt: integer('created_at', { mode: 'timestamp' }).notNull(),
+	isVerified: integer('is_verified', { mode: 'boolean' }).notNull().default(false),
+	isAdmin: integer('is_admin', { mode: 'boolean' }).notNull().default(false)
 });
 
 export const device = sqliteTable('device', {
@@ -44,6 +34,17 @@ export const device = sqliteTable('device', {
 	isDefault: integer('is_default', { mode: 'boolean' }).notNull().default(false),
 	addedAt: integer('added_at', { mode: 'timestamp' }).notNull(),
 	lastUsedAt: integer('last_used_at', { mode: 'timestamp' })
+});
+
+export const cocktail = sqliteTable('cocktail', {
+	id: text('id').primaryKey(),
+	name: text('name').notNull(),
+	creatorId: text('creator_id')
+		.notNull()
+		.references(() => profile.id),
+	description: text('description'),
+	instructions: text('instructions'),
+	createdAt: integer('created_at', { mode: 'timestamp' }).notNull()
 });
 
 export type Session = typeof session.$inferSelect;

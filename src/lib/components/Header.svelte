@@ -87,6 +87,16 @@
               >
                 My Devices
               </a>
+              {#if data.isAdmin}
+                <a
+                  href="/admin"
+                  class="block w-full text-left px-4 py-2 text-white hover:bg-gray-600"
+                  role="menuitem"
+                  on:click={closeDropdown}
+                >
+                  Admin Dashboard
+                </a>
+              {/if}
               <form
                 method="POST"
                 action="/auth?/logout"
