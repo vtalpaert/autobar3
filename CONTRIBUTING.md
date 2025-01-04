@@ -5,20 +5,26 @@ Thank you for your interest in contributing to RobotCocktail! This document prov
 ## Project Structure
 
 ```
-robotcocktail/
-├── web/                    # Web platform code
-│   ├── src/               # Source code
-│   │   ├── components/    # Reusable UI components
-│   │   ├── pages/        # Page components
-│   │   └── styles/       # Tailwind CSS styles
-│   ├── public/           # Static assets
-│   └── tests/            # Web platform tests
-├── hardware/              # Hardware implementation code
-│   ├── esp32/            # ESP32 implementation
-│   ├── raspberry/        # Raspberry Pi implementation
-│   └── tests/            # Hardware tests
-├── api/                   # API documentation and specs
-└── docs/                 # Project documentation
+/
+├── src/                    # Source code
+│   ├── lib/               # Shared libraries and components
+│   │   ├── components/    # Reusable Svelte components
+│   │   ├── i18n/         # Internationalization
+│   │   └── server/       # Server-side code
+│   │       ├── auth/     # Authentication logic
+│   │       └── db/       # Database schema and queries
+│   └── routes/           # SvelteKit routes
+│       ├── admin/        # Admin panel
+│       ├── auth/         # Authentication pages
+│       ├── cocktails/    # Cocktail management
+│       ├── devices/      # Device management
+│       └── profile/      # User profile pages
+├── static/               # Static assets
+│   └── firmware/        # Device firmware files
+├── drizzle.config.ts    # Database configuration
+├── svelte.config.js     # SvelteKit configuration
+├── tailwind.config.ts   # Tailwind CSS configuration
+└── vite.config.ts       # Vite bundler configuration
 ```
 
 ## Coding Conventions
