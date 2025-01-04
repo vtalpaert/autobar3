@@ -19,7 +19,7 @@
                 href="/cocktails" 
                 class="text-blue-400 hover:text-blue-300 mb-6 inline-block"
             >
-                ← Back to Cocktails
+                {t.cocktails.backToCocktails}
             </a>
             
             <h1 class="text-4xl font-bold mb-4">{data.cocktail.name}</h1>
@@ -30,14 +30,14 @@
             
             {#if data.cocktail.instructions}
                 <div class="mb-6">
-                    <h2 class="text-2xl font-bold mb-3">Instructions</h2>
+                    <h2 class="text-2xl font-bold mb-3">{t.cocktails.instructions}</h2>
                     <p class="text-gray-300">{data.cocktail.instructions}</p>
                 </div>
             {/if}
             
             <div class="text-sm text-gray-400">
-                <p>Created by {data.cocktail.creatorName}</p>
-                <p>Added on {formattedDate}</p>
+                <p>{t.cocktails.createdBy} {data.cocktail.creatorName}</p>
+                <p>{t.cocktails.addedOn} {formattedDate}</p>
             </div>
         </div>
     </div>

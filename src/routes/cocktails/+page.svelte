@@ -12,7 +12,15 @@
 
 <div class="min-h-screen bg-gradient-to-b from-gray-900 to-gray-800 text-white">
     <div class="container mx-auto px-4 py-16">
-        <h1 class="text-4xl font-bold mb-8">Cocktail Recipes</h1>
+        <div class="flex justify-between items-center mb-8">
+            <h1 class="text-4xl font-bold">{t.cocktails.title}</h1>
+            <a 
+                href="/cocktails/new" 
+                class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded transition-colors"
+            >
+                {t.cocktails.createNew}
+            </a>
+        </div>
         
         <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
             {#each data.cocktails as cocktail}
@@ -21,12 +29,12 @@
                     {#if cocktail.description}
                         <p class="text-gray-300 mb-4">{cocktail.description}</p>
                     {/if}
-                    <p class="text-sm text-gray-400">Created by {cocktail.creatorName}</p>
+                    <p class="text-sm text-gray-400">{t.cocktails.createdBy} {cocktail.creatorName}</p>
                     <a 
                         href="/cocktails/{cocktail.id}" 
                         class="mt-4 inline-block bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded transition-colors"
                     >
-                        View Details
+                        {t.cocktails.viewDetails}
                     </a>
                 </div>
             {/each}

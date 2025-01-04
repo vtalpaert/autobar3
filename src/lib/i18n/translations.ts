@@ -29,6 +29,26 @@ export const translations = {
     language: {
       en: 'English',
       fr: 'Français'
+    },
+    cocktails: {
+      title: 'Cocktail Recipes',
+      viewDetails: 'View Details',
+      backToCocktails: '← Back to Cocktails',
+      createdBy: 'Created by',
+      addedOn: 'Added on',
+      createNew: 'Create New Cocktail',
+      instructions: 'Instructions',
+      createdBy: 'Created by'
+    },
+    createCocktail: {
+      title: 'Create New Cocktail',
+      name: 'Cocktail Name',
+      description: 'Description',
+      instructions: 'Instructions',
+      create: 'Create Cocktail',
+      namePlaceholder: 'Enter cocktail name',
+      descriptionPlaceholder: 'Enter a brief description',
+      instructionsPlaceholder: 'Enter preparation instructions'
     }
   },
   fr: {
@@ -59,6 +79,26 @@ export const translations = {
     language: {
       en: 'English',
       fr: 'Français'
+    },
+    cocktails: {
+      title: 'Recettes de Cocktails',
+      viewDetails: 'Voir les Détails',
+      backToCocktails: '← Retour aux Cocktails',
+      createdBy: 'Créé par',
+      addedOn: 'Ajouté le',
+      createNew: 'Créer un Nouveau Cocktail',
+      instructions: 'Instructions',
+      createdBy: 'Créé par'
+    },
+    createCocktail: {
+      title: 'Créer un Nouveau Cocktail',
+      name: 'Nom du Cocktail',
+      description: 'Description',
+      instructions: 'Instructions',
+      create: 'Créer le Cocktail',
+      namePlaceholder: 'Entrez le nom du cocktail',
+      descriptionPlaceholder: 'Entrez une brève description',
+      instructionsPlaceholder: 'Entrez les instructions de préparation'
     }
   }
 } as const;
