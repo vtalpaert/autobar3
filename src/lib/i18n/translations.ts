@@ -55,6 +55,22 @@ export const translations = {
       namePlaceholder: 'Enter cocktail name',
       descriptionPlaceholder: 'Enter a brief description',
       instructionsPlaceholder: 'Enter preparation instructions'
+    },
+    auth: {
+      login: 'Login',
+      register: 'Register',
+      username: 'Username',
+      password: 'Password',
+      dontHaveAccount: "Don't have an account?",
+      alreadyHaveAccount: 'Already have an account?',
+      backToHome: '← Back to Home'
+    },
+    profile: {
+      unverified: {
+        title: 'Unverified Profile',
+        message: 'Your profile is pending verification by an administrator. This process helps us maintain the quality and security of our platform.',
+        checkBack: 'Please check back later. Once your profile is verified, you will have full access to create and manage cocktails and devices.'
+      }
     }
   },
   fr: {
@@ -111,6 +127,22 @@ export const translations = {
       namePlaceholder: 'Entrez le nom du cocktail',
       descriptionPlaceholder: 'Entrez une brève description',
       instructionsPlaceholder: 'Entrez les instructions de préparation'
+    },
+    auth: {
+      login: 'Connexion',
+      register: 'Inscription',
+      username: "Nom d'utilisateur",
+      password: 'Mot de passe',
+      dontHaveAccount: "Vous n'avez pas de compte ?",
+      alreadyHaveAccount: 'Vous avez déjà un compte ?',
+      backToHome: '← Back to Home'
+    },
+    profile: {
+      unverified: {
+        title: 'Profil Non Vérifié',
+        message: 'Votre profil est en attente de vérification par un administrateur. Ce processus nous aide à maintenir la qualité et la sécurité de notre plateforme.',
+        checkBack: 'Veuillez revenir plus tard. Une fois votre profil vérifié, vous aurez un accès complet pour créer et gérer des cocktails et des appareils.'
+      }
     }
   }
 } as const;

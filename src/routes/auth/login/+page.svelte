@@ -19,10 +19,10 @@
         href="/" 
         class="text-blue-400 hover:text-blue-300 mb-6 inline-block"
       >
-        ← Back to Home
+        {t.auth.backToHome}
       </a>
       <h1 class="text-3xl font-bold mb-6 text-center">
-        {isLogin ? 'Login' : 'Register'}
+        {isLogin ? t.auth.login : t.auth.register}
       </h1>
 
       {#if form?.message}
@@ -33,7 +33,7 @@
 
       <form method="POST" action="?/{isLogin ? 'login' : 'register'}" use:enhance>
         <div class="mb-4">
-          <label for="username" class="block text-sm font-medium mb-2">Username</label>
+          <label for="username" class="block text-sm font-medium mb-2">{t.auth.username}</label>
           <input
             type="text"
             id="username"
@@ -44,7 +44,7 @@
         </div>
 
         <div class="mb-6">
-          <label for="password" class="block text-sm font-medium mb-2">Password</label>
+          <label for="password" class="block text-sm font-medium mb-2">{t.auth.password}</label>
           <input
             type="password"
             id="password"
@@ -58,17 +58,17 @@
           type="submit"
           class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg transition-colors mb-4"
         >
-          {isLogin ? 'Login' : 'Register'}
+          {isLogin ? t.auth.login : t.auth.register}
         </button>
       </form>
 
       <p class="text-center text-gray-400">
-        {isLogin ? "Don't have an account?" : "Already have an account?"}
+        {isLogin ? t.auth.dontHaveAccount : t.auth.alreadyHaveAccount}
         <button
           class="text-blue-400 hover:text-blue-300 ml-1"
           on:click={toggleMode}
         >
-          {isLogin ? 'Register' : 'Login'}
+          {isLogin ? t.auth.register : t.auth.login}
         </button>
       </p>
     </div>
