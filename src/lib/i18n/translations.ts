@@ -5,7 +5,8 @@ export const translations = {
     hero: {
       title: 'RobotCocktail',
       description: 'The modern solution for automated cocktail mixing. Create perfect drinks every time with precision and style.',
-      getStarted: 'Get Started',
+      register: 'Register',
+      seeCocktails: 'See My Cocktails',
       viewGithub: 'View on GitHub'
     },
     features: {
@@ -34,7 +35,8 @@ export const translations = {
     hero: {
       title: 'RobotCocktail',
       description: 'La solution moderne pour le mélange automatisé de cocktails. Créez des boissons parfaites à chaque fois avec précision et style.',
-      getStarted: 'Commencer',
+      register: "S'inscrire",
+      seeCocktails: 'Voir Mes Cocktails',
       viewGithub: 'Voir sur GitHub'
     },
     features: {

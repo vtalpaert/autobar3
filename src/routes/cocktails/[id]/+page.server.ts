@@ -1,10 +1,13 @@
-import { error } from '@sveltejs/kit';
+import { error, redirect } from '@sveltejs/kit';
 import { db } from '$lib/server/db';
 import * as table from '$lib/server/db/schema';
 import { eq } from 'drizzle-orm';
 import type { PageServerLoad } from './$types';
 
-export const load: PageServerLoad = async ({ params }) => {
+export const load: PageServerLoad = async ({ params, locals, redirect }) => {
+    if (!locals.user) {
+        throw redirect(302, '/auth/login');
+    }
     const cocktails = await db
         .select({
             id: table.cocktail.id,
