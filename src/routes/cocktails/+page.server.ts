@@ -8,6 +8,17 @@ export const load: PageServerLoad = async ({ locals }) => {
     if (!locals.user) {
         throw redirect(302, '/auth/login');
     }
+
+    const profile = await db
+        .select()
+        .from(table.profile)
+        .where(eq(table.profile.userId, locals.user.id))
+        .get();
+
+    if (!profile || !profile.isVerified) {
+        throw redirect(302, '/profile/unverified');
+    }
+
     const cocktails = await db
         .select({
             id: table.cocktail.id,

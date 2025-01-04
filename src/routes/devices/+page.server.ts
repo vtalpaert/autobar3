@@ -9,10 +9,20 @@ export const load: PageServerLoad = async ({ locals }) => {
         throw redirect(302, '/auth/login');
     }
 
+    const profile = await db
+        .select()
+        .from(table.profile)
+        .where(eq(table.profile.userId, locals.user.id))
+        .get();
+
+    if (!profile || !profile.isVerified) {
+        throw redirect(302, '/profile/unverified');
+    }
+
     const devices = await db
         .select()
         .from(table.device)
-        .where(eq(table.device.userId, locals.user.id));
+        .where(eq(table.device.profileId, profile.id));
 
     return {
         devices,

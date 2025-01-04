@@ -2,9 +2,18 @@ import { sqliteTable, text, integer } from 'drizzle-orm/sqlite-core';
 
 export const user = sqliteTable('user', {
 	id: text('id').primaryKey(),
-	age: integer('age'),
 	username: text('username').notNull().unique(),
 	passwordHash: text('password_hash').notNull()
+});
+
+export const profile = sqliteTable('profile', {
+	id: text('id').primaryKey(),
+	userId: text('user_id')
+		.notNull()
+		.references(() => user.id)
+		.unique(),
+	isVerified: integer('is_verified', { mode: 'boolean' }).notNull().default(false),
+	createdAt: integer('created_at', { mode: 'timestamp' }).notNull()
 });
 
 export const session = sqliteTable('session', {
@@ -20,7 +29,7 @@ export const cocktail = sqliteTable('cocktail', {
 	name: text('name').notNull(),
 	creatorId: text('creator_id')
 		.notNull()
-		.references(() => user.id),
+		.references(() => profile.id),
 	description: text('description'),
 	instructions: text('instructions'),
 	createdAt: integer('created_at', { mode: 'timestamp' }).notNull()
@@ -28,9 +37,9 @@ export const cocktail = sqliteTable('cocktail', {
 
 export const device = sqliteTable('device', {
 	id: text('id').primaryKey(),
-	userId: text('user_id')
+	profileId: text('profile_id')
 		.notNull()
-		.references(() => user.id),
+		.references(() => profile.id),
 	firmwareVersion: text('firmware_version').notNull().default('unknown'),
 	isDefault: integer('is_default', { mode: 'boolean' }).notNull().default(false),
 	addedAt: integer('added_at', { mode: 'timestamp' }).notNull(),
@@ -39,5 +48,6 @@ export const device = sqliteTable('device', {
 
 export type Session = typeof session.$inferSelect;
 export type User = typeof user.$inferSelect;
+export type Profile = typeof profile.$inferSelect;
 export type Cocktail = typeof cocktail.$inferSelect;
 export type Device = typeof device.$inferSelect;
