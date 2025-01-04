@@ -24,10 +24,11 @@ export const load: PageServerLoad = async ({ locals }) => {
             id: table.cocktail.id,
             name: table.cocktail.name,
             description: table.cocktail.description,
-            creatorName: table.profile.artistName
+            creatorName: table.user.username
         })
         .from(table.cocktail)
-        .innerJoin(table.user, eq(table.user.id, table.cocktail.creatorId));
+        .innerJoin(table.profile, eq(table.profile.id, table.cocktail.creatorId))
+        .innerJoin(table.user, eq(table.user.id, table.profile.userId));
 
     return { 
         cocktails,
