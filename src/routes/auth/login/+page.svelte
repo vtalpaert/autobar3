@@ -1,11 +1,15 @@
 <script lang="ts">
   import { enhance } from '$app/forms';
   import type { ActionData } from './$types';
+  import { translations } from '$lib/i18n/translations';
+  import { currentLanguage } from '$lib/i18n/store';
 
   export let form: ActionData;
   
   let isLogin = true;
   const toggleMode = () => isLogin = !isLogin;
+
+  $: t = translations[$currentLanguage];
 </script>
 
 <div class="min-h-screen bg-gradient-to-b from-gray-900 to-gray-800 text-white">

@@ -1,21 +1,15 @@
 <script lang="ts">
   import { translations } from '$lib/i18n/translations';
   import { currentLanguage } from '$lib/i18n/store';
+  import Header from '$lib/components/Header.svelte';
 
+  export let data;
   $: t = translations[$currentLanguage];
 </script>
 
+<Header user={data.user} />
+
 <div class="min-h-screen bg-gradient-to-b from-gray-900 to-gray-800 text-white">
-  <!-- Language Selector -->
-  <div class="absolute top-4 right-4">
-    <select
-      class="bg-gray-800 text-white px-3 py-1 rounded-lg border border-gray-700"
-      bind:value={$currentLanguage}
-    >
-      <option value="en">{t.language.en}</option>
-      <option value="fr">{t.language.fr}</option>
-    </select>
-  </div>
   <!-- Hero Section -->
   <div class="container mx-auto px-4 py-16">
     <div class="text-center">
@@ -27,7 +21,12 @@
         <a href="/auth/login" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg transition-colors">
           {t.hero.getStarted}
         </a>
-        <a href="#" class="bg-gray-700 hover:bg-gray-600 text-white font-bold py-3 px-6 rounded-lg transition-colors">
+        <a 
+          href="https://github.com/vtalpaert/autobar" 
+          target="_blank" 
+          rel="noopener noreferrer" 
+          class="bg-gray-700 hover:bg-gray-600 text-white font-bold py-3 px-6 rounded-lg transition-colors"
+        >
           {t.hero.viewGithub}
         </a>
       </div>
