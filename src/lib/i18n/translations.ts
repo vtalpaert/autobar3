@@ -64,14 +64,18 @@ export const translations = {
       ap: {
         title: 'WiFi Setup Instructions',
         step1: 'Power on your ESP32 device',
-        step2: 'Connect to the WiFi network named "RobotCocktail"',
+        step2: 'Connect to the WiFi network "RobotCocktail" with password "configure"',
         step3: 'Open http://192.168.4.1 in your browser',
-        step4: 'Fill in your WiFi credentials and server URL',
-        step5: 'The device will restart and connect to your network',
-        networkName: 'Network Name:',
-        networkValue: 'RobotCocktail',
-        password: 'Password:',
-        passwordValue: 'configure'
+        step4: 'Enter your WiFi network credentials',
+        step5: 'For the server URL, use either:\n- Development: https://192.168.1.x:5173\n- Production: https://robotcocktail.ovh',
+        step6: 'Copy and paste the token shown below',
+        step7: 'The device will restart automatically and connect to your network',
+        token: {
+            title: 'Device Token',
+            description: 'Copy this token to the AP configuration page:',
+            enroll: 'Enroll Device',
+            success: 'Device enrolled successfully!'
+        }
       }
     },
     createCocktail: {
@@ -175,14 +179,12 @@ export const translations = {
       ap: {
         title: 'Instructions de Configuration WiFi',
         step1: 'Allumez votre appareil ESP32',
-        step2: 'Connectez-vous au réseau WiFi nommé "RobotCocktail"',
+        step2: 'Connectez-vous au réseau WiFi "RobotCocktail" avec le mot de passe "configure"',
         step3: 'Ouvrez http://192.168.4.1 dans votre navigateur',
-        step4: 'Remplissez vos identifiants WiFi et l\'URL du serveur',
-        step5: 'L\'appareil redémarrera et se connectera à votre réseau',
-        networkName: 'Nom du Réseau:',
-        networkValue: 'RobotCocktail',
-        password: 'Mot de passe:',
-        passwordValue: 'robotcocktail'
+        step4: 'Entrez vos identifiants WiFi',
+        step5: 'Pour l\'URL du serveur, utilisez soit:\n- Développement: https://192.168.1.x:5173\n- Production: https://robotcocktail.ovh',
+        step6: 'Copiez et collez le jeton affiché ci-dessous',
+        step7: 'L\'appareil redémarrera automatiquement et se connectera à votre réseau'
       }
     },
     createCocktail: {

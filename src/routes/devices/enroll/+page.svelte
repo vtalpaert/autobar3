@@ -30,22 +30,29 @@
                     <li>{t.devices.ap.step3}</li>
                     <li>{t.devices.ap.step4}</li>
                     <li>{t.devices.ap.step5}</li>
+                    <li>{t.devices.ap.step6}</li>
+                    <li>{t.devices.ap.step7}</li>
                 </ol>
 
-                <div class="mt-4 mb-4 p-4 bg-gray-600 rounded-lg">
-                    <p class="text-sm text-gray-300">
-                        For the server URL field, use either:
-                        <br/>- Development server: <code class="bg-gray-700 px-2 py-1 rounded">https://192.168.1.x:5173</code> (your local IP)
-                        <br/>- Production server: <code class="bg-gray-700 px-2 py-1 rounded">https://robotcocktail.ovh</code>
-                    </p>
+                <div class="mt-8 p-6 bg-gray-700 rounded-lg">
+                    <h3 class="text-xl font-bold mb-4">{t.devices.ap.token.title}</h3>
+                    <p class="mb-4">{t.devices.ap.token.description}</p>
+                    
+                    <div class="bg-gray-800 p-4 rounded-lg mb-6">
+                        <code class="text-lg" id="deviceToken">{data.token}</code>
+                    </div>
+
+                    <form method="POST" action="?/enrollDevice" class="text-center">
+                        <input type="hidden" name="token" value={data.token}>
+                        <button 
+                            type="submit"
+                            class="bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-6 rounded-lg transition-colors"
+                        >
+                            {t.devices.ap.token.enroll}
+                        </button>
+                    </form>
                 </div>
 
-                <div class="p-4 bg-gray-700 rounded-lg">
-                    <p class="font-bold mb-2">{t.devices.ap.networkName}</p>
-                    <p class="mb-4">{t.devices.ap.networkValue}</p>
-                    <p class="font-bold mb-2">{t.devices.ap.password}</p>
-                    <p>{t.devices.ap.passwordValue}</p>
-                </div>
             </div>
         </div>
     </div>

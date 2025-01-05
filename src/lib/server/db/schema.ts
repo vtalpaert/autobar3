@@ -34,7 +34,8 @@ export const device = sqliteTable('device', {
 	firmwareVersion: text('firmware_version').notNull().default('unknown'),
 	isDefault: integer('is_default', { mode: 'boolean' }).notNull().default(false),
 	addedAt: integer('added_at', { mode: 'timestamp' }).notNull(),
-	lastUsedAt: integer('last_used_at', { mode: 'timestamp' })
+	lastUsedAt: integer('last_used_at', { mode: 'timestamp' }),
+	apiToken: text('api_token').unique()
 });
 
 export const cocktail = sqliteTable('cocktail', {

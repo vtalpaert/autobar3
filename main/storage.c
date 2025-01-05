@@ -74,6 +74,28 @@ void store_server_url(const char *url) {
     nvs_close(nvs_handle);
 }
 
+bool get_stored_api_token(char *token) {
+    nvs_handle_t nvs_handle;
+    esp_err_t err = nvs_open("storage", NVS_READONLY, &nvs_handle);
+    if (err != ESP_OK) return false;
+
+    size_t token_len = MAX_TOKEN_LEN;
+    err = nvs_get_str(nvs_handle, "api_token", token, &token_len);
+    
+    nvs_close(nvs_handle);
+    return (err == ESP_OK && token_len > 1);
+}
+
+void store_api_token(const char *token) {
+    nvs_handle_t nvs_handle;
+    ESP_ERROR_CHECK(nvs_open("storage", NVS_READWRITE, &nvs_handle));
+    
+    ESP_ERROR_CHECK(nvs_set_str(nvs_handle, "api_token", token));
+    
+    ESP_ERROR_CHECK(nvs_commit(nvs_handle));
+    nvs_close(nvs_handle);
+}
+
 bool try_wifi_connect(const char *ssid, const char *password) {
     wifi_config_t wifi_config = {0};
     memcpy(wifi_config.sta.ssid, ssid, strlen(ssid));
