@@ -30,6 +30,12 @@ export const translations = {
       en: 'English',
       fr: 'Français'
     },
+    header: {
+      cocktails: 'My Cocktails',
+      devices: 'My Devices',
+      profile: 'My Profile',
+      logout: 'Logout'
+    },
     cocktails: {
       title: 'Cocktail Recipes',
       viewDetails: 'View Details',
@@ -44,7 +50,16 @@ export const translations = {
     devices: {
       title: 'My Devices',
       registerNew: 'Flash New Device',
-      noDevices: 'No devices registered yet'
+      noDevices: 'No devices registered yet',
+      instructions: {
+        title: 'Instructions',
+        step1: 'Connect your ESP32 to your computer via USB',
+        step2: 'Click the Install button below',
+        step3: 'Select the correct USB port when prompted',
+        step4: 'Wait for the installation to complete'
+      },
+      back: 'Back to Devices',
+      installButton: 'Install Firmware'
     },
     createCocktail: {
       title: 'Create New Cocktail',
@@ -112,6 +127,12 @@ export const translations = {
     language: {
       en: 'English',
       fr: 'Français'
+    },
+    header: {
+      cocktails: 'Mes Cocktails',
+      devices: 'Mes Appareils',
+      profile: 'Mon Profil',
+      logout: 'Déconnexion'
     },
     cocktails: {
       title: 'Recettes de Cocktails',

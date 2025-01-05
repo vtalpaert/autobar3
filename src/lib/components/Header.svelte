@@ -14,7 +14,7 @@
     isDropdownOpen = false;
   };
 
-  $: t = translations[$currentLanguage];
+  $: t = translations[$currentLanguage] || translations.en;
 </script>
 
 <header class="bg-gray-800 fixed w-full top-0 z-50 shadow-lg">
@@ -27,7 +27,7 @@
           href="/cocktails"
           class="text-white hover:text-gray-300"
         >
-          Cocktails
+          {t.header.cocktails}
         </a>
         <!-- Language Selector -->
         <select
@@ -77,7 +77,7 @@
                 role="menuitem"
                 on:click={closeDropdown}
               >
-                My Cocktails
+                {t.header.cocktails}
               </a>
               <a
                 href="/devices"
@@ -85,7 +85,7 @@
                 role="menuitem"
                 on:click={closeDropdown}
               >
-                My Devices
+                {t.header.devices}
               </a>
               <a
                 href="/profile"
@@ -93,7 +93,7 @@
                 role="menuitem"
                 on:click={closeDropdown}
               >
-                My Profile
+                {t.header.profile}
               </a>
               {#if user.isAdmin}
                 <a
@@ -117,7 +117,7 @@
                   class="block w-full text-left px-4 py-2 text-white hover:bg-gray-600"
                   role="menuitem"
                 >
-                  Logout
+                  {t.header.logout}
                 </button>
               </form>
             </div>
