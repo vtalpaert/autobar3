@@ -34,11 +34,24 @@ static esp_err_t root_handler(httpd_req_t *req) {
 }
 
 static esp_err_t save_handler(httpd_req_t *req) {
-    char *buf = NULL;
+    typedef struct {
+        const char *param_name;
+        char *value;
+        size_t max_len;
+        size_t name_len;
+    } form_param_t;
+
     char ssid[MAX_SSID_LEN] = {0};
     char password[MAX_PASS_LEN] = {0};
     char server_url[MAX_URL_LEN] = {0};
     char api_token[MAX_TOKEN_LEN] = {0};
+    
+    form_param_t params[] = {
+        {"ssid", ssid, MAX_SSID_LEN, 4},
+        {"password", password, MAX_PASS_LEN, 8},
+        {"server_url", server_url, MAX_URL_LEN, 10},
+        {"api_token", api_token, MAX_TOKEN_LEN, 9}
+    };
     
     size_t content_len = req->content_len;
     if (content_len > 2048) {
@@ -46,7 +59,7 @@ static esp_err_t save_handler(httpd_req_t *req) {
         return ESP_FAIL;
     }
     
-    buf = malloc(content_len + 1);
+    char *buf = malloc(content_len + 1);
     if (buf == NULL) {
         httpd_resp_send_err(req, HTTPD_500_INTERNAL_SERVER_ERROR, "Failed to allocate memory");
         return ESP_FAIL;
@@ -64,103 +77,62 @@ static esp_err_t save_handler(httpd_req_t *req) {
         offset += received;
     }
     buf[content_len] = '\0';
-    
-    char decoded[MAX_SSID_LEN] = {0};
-    char *ssid_start = strstr(buf, "ssid=");
-    char *pass_start = strstr(buf, "password=");
-    char *token_start = strstr(buf, "api_token=");
+
+    char decoded[MAX_URL_LEN] = {0}; // Use largest buffer size
+    bool all_params_found = true;
+
+    // Process each parameter
+    for (int i = 0; i < sizeof(params)/sizeof(params[0]); i++) {
+        char param_prefix[32];
+        snprintf(param_prefix, sizeof(param_prefix), "%s=", params[i].param_name);
         
-    if (ssid_start && pass_start && token_start) {
-        ssid_start += 5;
-        pass_start += 9;
-        
-        char *ssid_end = strchr(ssid_start, '&');
-        if (ssid_end) {
-            size_t len = ssid_end - ssid_start;
-            char temp[MAX_SSID_LEN] = {0};
-            memcpy(temp, ssid_start, len);
-            
-            char *src = temp;
-            char *dst = decoded;
-            while (*src) {
-                if (*src == '+') {
-                    *dst = ' ';
-                } else if (*src == '%' && src[1] && src[2]) {
-                    int high = src[1] >= 'A' ? (src[1] - 'A' + 10) : (src[1] - '0');
-                    int low = src[2] >= 'A' ? (src[2] - 'A' + 10) : (src[2] - '0');
-                    *dst = (high << 4) | low;
-                    src += 2;
-                } else {
-                    *dst = *src;
-                }
-                src++;
-                dst++;
-            }
-            strcpy(ssid, decoded);
+        char *param_start = strstr(buf, param_prefix);
+        if (!param_start) {
+            ESP_LOGE(TAG, "Missing parameter: %s", params[i].param_name);
+            all_params_found = false;
+            continue;
         }
         
+        param_start += params[i].name_len + 1; // Skip "param="
+        char *param_end = strchr(param_start, '&');
+        if (!param_end) {
+            param_end = param_start + strlen(param_start);
+        }
+        
+        // Clear decoded buffer
         memset(decoded, 0, sizeof(decoded));
-        char *src = pass_start;
+        
+        // URL decode the parameter value
+        char *src = param_start;
         char *dst = decoded;
-        while (*src && *src != '&') {
+        while (src < param_end) {
             if (*src == '+') {
                 *dst = ' ';
-            } else if (*src == '%' && src[1] && src[2]) {
-                int high = src[1] >= 'A' ? (src[1] - 'A' + 10) : (src[1] - '0');
-                int low = src[2] >= 'A' ? (src[2] - 'A' + 10) : (src[2] - '0');
-                *dst = (high << 4) | low;
-                src += 2;
+                src++;
+            } else if (*src == '%' && src + 2 < param_end) {
+                // Handle hex values properly
+                char hex[3] = {src[1], src[2], 0};
+                int value;
+                sscanf(hex, "%x", &value);
+                *dst = (char)value;
+                src += 3;
             } else {
                 *dst = *src;
+                src++;
             }
-            src++;
             dst++;
         }
-        strcpy(password, decoded);
         
-        // Extract server_url
-        char *url_start = strstr(buf, "server_url=");
-        if (url_start) {
-            url_start += 11;
-            memset(decoded, 0, sizeof(decoded));
-            char *src = url_start;
-            char *dst = decoded;
-            while (*src && *src != '&') {
-                if (*src == '+') {
-                    *dst = ' ';
-                } else if (*src == '%' && src[1] && src[2]) {
-                    int high = src[1] >= 'A' ? (src[1] - 'A' + 10) : (src[1] - '0');
-                    int low = src[2] >= 'A' ? (src[2] - 'A' + 10) : (src[2] - '0');
-                    *dst = (high << 4) | low;
-                    src += 2;
-                } else {
-                    *dst = *src;
-                }
-                src++;
-                dst++;
-            }
-            strcpy(server_url, decoded);
-        }
-
-        // Extract and decode API token
-        memset(decoded, 0, sizeof(decoded));
-        char *token_src = token_start + 10; // Skip "api_token="
-        char *token_dst = decoded;
-        while (*token_src && *token_src != '&') {
-            if (*token_src == '+') {
-                *token_dst = ' ';
-            } else if (*token_src == '%' && token_src[1] && token_src[2]) {
-                int high = token_src[1] >= 'A' ? (token_src[1] - 'A' + 10) : (token_src[1] - '0');
-                int low = token_src[2] >= 'A' ? (token_src[2] - 'A' + 10) : (token_src[2] - '0');
-                *token_dst = (high << 4) | low;
-                token_src += 2;
-            } else {
-                *token_dst = *token_src;
-            }
-            token_src++;
-            token_dst++;
-        }
-        strcpy(api_token, decoded);
+        // Copy decoded value to destination buffer
+        strncpy(params[i].value, decoded, params[i].max_len - 1);
+        params[i].value[params[i].max_len - 1] = '\0';
+    }
+    
+    if (!all_params_found) {
+        free(buf);
+        httpd_resp_send_err(req, HTTPD_400_BAD_REQUEST, "Missing required parameters");
+        return ESP_FAIL;
+    }
 
         store_wifi_credentials(ssid, password);
         store_server_url(server_url);
@@ -171,7 +143,6 @@ static esp_err_t save_handler(httpd_req_t *req) {
         
         vTaskDelay(pdMS_TO_TICKS(1000));
         esp_restart();
-    }
     
     free(buf);
     return ESP_OK;

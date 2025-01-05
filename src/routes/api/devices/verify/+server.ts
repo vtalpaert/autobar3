@@ -23,7 +23,7 @@ export async function POST({ request }) {
     if (!device) {
         return json({
             tokenValid: false,
-            message: "I don't know who you are, you should enroll again"
+            message: `Your token '${token}' is invalid, you should enroll again`
         });
     }
 
