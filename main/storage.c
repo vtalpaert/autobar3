@@ -1,4 +1,4 @@
-#include "wifi_config.h"
+#include "storage.h"
 #include "esp_wifi.h"
 #include "esp_log.h"
 #include "nvs_flash.h"
@@ -6,7 +6,7 @@
 #include "esp_netif.h"
 #include <string.h>
 
-static const char *TAG = "wifi_config";
+static const char *TAG = "storage";
 
 void initialize_nvs(void) {
     esp_err_t ret = nvs_flash_init();
@@ -19,7 +19,7 @@ void initialize_nvs(void) {
 
 bool get_stored_wifi_credentials(char *ssid, char *password) {
     nvs_handle_t nvs_handle;
-    esp_err_t err = nvs_open("wifi_config", NVS_READONLY, &nvs_handle);
+    esp_err_t err = nvs_open("storage", NVS_READONLY, &nvs_handle);
     if (err != ESP_OK) return false;
 
     size_t ssid_len = MAX_SSID_LEN;
@@ -43,10 +43,32 @@ bool get_stored_wifi_credentials(char *ssid, char *password) {
 
 void store_wifi_credentials(const char *ssid, const char *password) {
     nvs_handle_t nvs_handle;
-    ESP_ERROR_CHECK(nvs_open("wifi_config", NVS_READWRITE, &nvs_handle));
+    ESP_ERROR_CHECK(nvs_open("storage", NVS_READWRITE, &nvs_handle));
     
     ESP_ERROR_CHECK(nvs_set_str(nvs_handle, "ssid", ssid));
     ESP_ERROR_CHECK(nvs_set_str(nvs_handle, "password", password));
+    
+    ESP_ERROR_CHECK(nvs_commit(nvs_handle));
+    nvs_close(nvs_handle);
+}
+
+bool get_stored_server_url(char *url) {
+    nvs_handle_t nvs_handle;
+    esp_err_t err = nvs_open("storage", NVS_READONLY, &nvs_handle);
+    if (err != ESP_OK) return false;
+
+    size_t url_len = MAX_URL_LEN;
+    err = nvs_get_str(nvs_handle, "server_url", url, &url_len);
+    
+    nvs_close(nvs_handle);
+    return (err == ESP_OK && url_len > 1);
+}
+
+void store_server_url(const char *url) {
+    nvs_handle_t nvs_handle;
+    ESP_ERROR_CHECK(nvs_open("storage", NVS_READWRITE, &nvs_handle));
+    
+    ESP_ERROR_CHECK(nvs_set_str(nvs_handle, "server_url", url));
     
     ESP_ERROR_CHECK(nvs_commit(nvs_handle));
     nvs_close(nvs_handle);

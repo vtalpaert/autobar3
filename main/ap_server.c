@@ -1,5 +1,5 @@
 #include "ap_server.h"
-#include "wifi_config.h"
+#include "storage.h"
 #include "esp_wifi.h"
 #include "esp_log.h"
 #include "esp_netif.h"
@@ -22,6 +22,7 @@ static const char *config_html = "<!DOCTYPE html><html><head>"
     "<h2>WiFi Configuration</h2>"
     "<input type='text' name='ssid' placeholder='WiFi SSID' required>"
     "<input type='password' name='password' placeholder='WiFi Password' required>"
+    "<input type='text' name='server_url' placeholder='Server URL (e.g. https://192.168.1.4:5173)' required>"
     "<button type='submit'>Save and Connect</button>"
     "</form></body></html>";
 
@@ -34,6 +35,7 @@ static esp_err_t save_handler(httpd_req_t *req) {
     char *buf = NULL;
     char ssid[MAX_SSID_LEN] = {0};
     char password[MAX_PASS_LEN] = {0};
+    char server_url[MAX_URL_LEN] = {0};
     
     size_t content_len = req->content_len;
     if (content_len > 2048) {
@@ -112,7 +114,32 @@ static esp_err_t save_handler(httpd_req_t *req) {
         }
         strcpy(password, decoded);
         
+        // Extract server_url
+        char *url_start = strstr(buf, "server_url=");
+        if (url_start) {
+            url_start += 11;
+            memset(decoded, 0, sizeof(decoded));
+            char *src = url_start;
+            char *dst = decoded;
+            while (*src && *src != '&') {
+                if (*src == '+') {
+                    *dst = ' ';
+                } else if (*src == '%' && src[1] && src[2]) {
+                    int high = src[1] >= 'A' ? (src[1] - 'A' + 10) : (src[1] - '0');
+                    int low = src[2] >= 'A' ? (src[2] - 'A' + 10) : (src[2] - '0');
+                    *dst = (high << 4) | low;
+                    src += 2;
+                } else {
+                    *dst = *src;
+                }
+                src++;
+                dst++;
+            }
+            strcpy(server_url, decoded);
+        }
+
         store_wifi_credentials(ssid, password);
+        store_server_url(server_url);
         
         const char *response = "Configuration saved. Device will restart...";
         httpd_resp_send(req, response, strlen(response));

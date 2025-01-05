@@ -2,6 +2,7 @@
 #define AP_SERVER_H
 
 #include "esp_http_server.h"
+#include "storage.h"
 
 #define AP_SSID "RobotCocktail"
 #define AP_PASS "configure"

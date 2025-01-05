@@ -5,11 +5,12 @@
 #include "esp_event.h"
 #include "esp_http_client.h"
 #include "esp_netif.h"
-#include "wifi_config.h"
+#include "storage.h"
 #include "ap_server.h"
 
 static const char *TAG = "autobar3";
-#define MANIFEST_URL "https://192.168.1.4:5173/firmware/manifest.json"
+#define DEFAULT_SERVER_URL "https://192.168.1.4:5173"
+#define MANIFEST_PATH "/firmware/manifest.json"
 
 extern const uint8_t server_cert_pem_start[] asm("_binary_server_cert_pem_start");
 extern const uint8_t server_cert_pem_end[] asm("_binary_server_cert_pem_end");
@@ -32,8 +33,17 @@ static esp_err_t http_event_handler(esp_http_client_event_t *evt) {
 }
 
 static void fetch_manifest(void) {
+    char server_url[MAX_URL_LEN] = {0};
+    char manifest_url[MAX_URL_LEN + 64] = {0};
+    
+    if (!get_stored_server_url(server_url)) {
+        strcpy(server_url, DEFAULT_SERVER_URL);
+    }
+    
+    snprintf(manifest_url, sizeof(manifest_url), "%s%s", server_url, MANIFEST_PATH);
+    
     esp_http_client_config_t config = {
-        .url = MANIFEST_URL,
+        .url = manifest_url,
         .event_handler = http_event_handler,
         .cert_pem = (char *)server_cert_pem_start,
         .transport_type = HTTP_TRANSPORT_OVER_SSL,
