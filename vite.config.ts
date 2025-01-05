@@ -19,7 +19,8 @@ export default defineConfig(({ mode }) => {
 	return {
 		plugins: [sveltekit()],
 		server: {
-			https
+			https,
+			host: true
 		},
 		test: {
 			include: ['src/**/*.{test,spec}.{js,ts}']

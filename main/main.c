@@ -9,7 +9,10 @@
 #include "ap_server.h"
 
 static const char *TAG = "autobar3";
-#define MANIFEST_URL "https://localhost:5173/firmware/manifest.json"
+#define MANIFEST_URL "https://192.168.1.4:5173/firmware/manifest.json"
+
+extern const uint8_t server_cert_pem_start[] asm("_binary_server_cert_pem_start");
+extern const uint8_t server_cert_pem_end[] asm("_binary_server_cert_pem_end");
 
 
 static esp_err_t http_event_handler(esp_http_client_event_t *evt) {
@@ -32,8 +35,8 @@ static void fetch_manifest(void) {
     esp_http_client_config_t config = {
         .url = MANIFEST_URL,
         .event_handler = http_event_handler,
-        .skip_cert_common_name_check = true,
-        .cert_pem = NULL,
+        .cert_pem = (char *)server_cert_pem_start,
+        .transport_type = HTTP_TRANSPORT_OVER_SSL,
     };
     
     esp_http_client_handle_t client = esp_http_client_init(&config);

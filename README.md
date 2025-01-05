@@ -31,6 +31,18 @@ The project consists of two main parts:
 
 ## Getting Started
 
+First, generate SSL certificates for local development:
+
+```bash
+./scripts/generate_dev_certificates.sh
+```
+
+This script generates:
+
+- Self-signed certificates for HTTPS development server
+- A PEM file for ESP32 firmware to verify HTTPS connections
+- These certificates are for development only and should not be used in production
+
 ### Hardware
 
 The firmware is built locally into the `static/firmware` folder so that user may flash their device the first time via a webpage.
@@ -48,13 +60,7 @@ Building the project will copy the firmware binaries to the static folder.
 
 ### Web
 
-First, generate SSL certificates for local development:
-
-```bash
-./scripts/generate_dev_certificates.sh
-```
-
-Then install dependencies and start the development server:
+Install dependencies and start the development server:
 
 ```bash
 npm install
@@ -62,6 +68,8 @@ npm run dev
 ```
 
 The development server will run with HTTPS using the generated self-signed certificates.
+
+Note: For production deployment, replace the development certificates with proper SSL certificates from a trusted Certificate Authority.
 
 ## Contributing
 

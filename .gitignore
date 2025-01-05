@@ -32,4 +32,5 @@ vite.config.ts.timestamp-*
 *.db
 
 # SSL Certificates
-/certificates
+certificates/
+main/server_cert.pem
