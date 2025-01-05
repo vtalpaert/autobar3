@@ -48,10 +48,20 @@ Building the project will copy the firmware binaries to the static folder.
 
 ### Web
 
+First, generate SSL certificates for local development:
+
+```bash
+./scripts/generate_dev_certificates.sh
+```
+
+Then install dependencies and start the development server:
+
 ```bash
 npm install
 npm run dev
 ```
+
+The development server will run with HTTPS using the generated self-signed certificates.
 
 ## Contributing
 
