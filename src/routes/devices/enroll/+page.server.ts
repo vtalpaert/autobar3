@@ -42,10 +42,20 @@ export const actions = {
             return fail(400, { error: 'Token is required' });
         }
 
+        const profile = await db
+            .select()
+            .from(table.profile)
+            .where(eq(table.profile.userId, locals.user.id))
+            .get();
+
+        if (!profile) {
+            return fail(400, { error: 'Profile not found' });
+        }
+
         // Create a new device entry
         await db.insert(table.device).values({
             id: nanoid(),
-            profileId: locals.profile.id,
+            profileId: profile.id,
             apiToken: token,
             addedAt: new Date()
         });

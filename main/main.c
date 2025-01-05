@@ -62,21 +62,25 @@ static void fetch_manifest(void) {
 }
 
 void app_main(void) {
+    // Configuration variables
     char ssid[MAX_SSID_LEN] = {0};
     char password[MAX_PASS_LEN] = {0};
+    char server_url[MAX_URL_LEN] = {0};
+    char api_token[MAX_TOKEN_LEN] = {0};
     bool need_config = true;
     
     // Initialize NVS
     initialize_nvs();
     
-    // Initialize TCP/IP and WiFi
+    // Initialize TCP/IP and WiFi components first
     ESP_ERROR_CHECK(esp_netif_init());
     ESP_ERROR_CHECK(esp_event_loop_create_default());
     esp_netif_create_default_wifi_sta();
     esp_netif_t *ap_netif = esp_netif_create_default_wifi_ap();
+    
     wifi_init_config_t cfg = WIFI_INIT_CONFIG_DEFAULT();
     ESP_ERROR_CHECK(esp_wifi_init(&cfg));
-
+    
     // Configure default IP for AP mode
     esp_netif_ip_info_t ip_info;
     IP4_ADDR(&ip_info.ip, 192, 168, 4, 1);
@@ -86,8 +90,17 @@ void app_main(void) {
     esp_netif_set_ip_info(ap_netif, &ip_info);
     esp_netif_dhcps_start(ap_netif);
     
-    // Try stored credentials if available
-    if (get_stored_wifi_credentials(ssid, password)) {
+    // Check if we have all required configuration
+    if (get_stored_wifi_credentials(ssid, password) &&
+        get_stored_server_url(server_url) &&
+        get_stored_api_token(api_token)) {
+        
+        ESP_LOGI(TAG, "Found stored configuration");
+        ESP_LOGI(TAG, "SSID: %s", ssid);
+        ESP_LOGI(TAG, "Server URL: %s", server_url);
+        ESP_LOGI(TAG, "API Token length: %d", strlen(api_token));
+    
+        // Try to connect with stored credentials
         ESP_LOGI(TAG, "Trying stored WiFi credentials for SSID: %s", ssid);
         if (try_wifi_connect(ssid, password)) {
             need_config = false;
@@ -95,6 +108,8 @@ void app_main(void) {
         } else {
             ESP_LOGI(TAG, "Failed to connect with stored credentials");
         }
+    } else {
+        ESP_LOGI(TAG, "Missing configuration - need setup");
     }
     
     // Start configuration portal if needed

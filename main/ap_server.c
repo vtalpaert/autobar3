@@ -19,11 +19,12 @@ static const char *config_html = "<!DOCTYPE html><html><head>"
     "button{width:100%;padding:10px;background:#4CAF50;color:white;border:none;border-radius:4px;}"
     "</style></head><body>"
     "<form action='/save' method='post'>"
-    "<input type='hidden' name='api_token' value=''>"
     "<h2>WiFi Configuration</h2>"
     "<input type='text' name='ssid' placeholder='WiFi SSID' required>"
     "<input type='password' name='password' placeholder='WiFi Password' required>"
+    "<h2>Server Configuration</h2>"
     "<input type='text' name='server_url' placeholder='Server URL (e.g. https://192.168.1.4:5173)' required>"
+    "<input type='text' name='api_token' placeholder='API Token' required>"
     "<button type='submit'>Save and Connect</button>"
     "</form></body></html>";
 
@@ -37,6 +38,7 @@ static esp_err_t save_handler(httpd_req_t *req) {
     char ssid[MAX_SSID_LEN] = {0};
     char password[MAX_PASS_LEN] = {0};
     char server_url[MAX_URL_LEN] = {0};
+    char api_token[MAX_TOKEN_LEN] = {0};
     
     size_t content_len = req->content_len;
     if (content_len > 2048) {
@@ -66,8 +68,9 @@ static esp_err_t save_handler(httpd_req_t *req) {
     char decoded[MAX_SSID_LEN] = {0};
     char *ssid_start = strstr(buf, "ssid=");
     char *pass_start = strstr(buf, "password=");
-    
-    if (ssid_start && pass_start) {
+    char *token_start = strstr(buf, "api_token=");
+        
+    if (ssid_start && pass_start && token_start) {
         ssid_start += 5;
         pass_start += 9;
         
@@ -139,8 +142,29 @@ static esp_err_t save_handler(httpd_req_t *req) {
             strcpy(server_url, decoded);
         }
 
+        // Extract and decode API token
+        memset(decoded, 0, sizeof(decoded));
+        char *token_src = token_start + 10; // Skip "api_token="
+        char *token_dst = decoded;
+        while (*token_src && *token_src != '&') {
+            if (*token_src == '+') {
+                *token_dst = ' ';
+            } else if (*token_src == '%' && token_src[1] && token_src[2]) {
+                int high = token_src[1] >= 'A' ? (token_src[1] - 'A' + 10) : (token_src[1] - '0');
+                int low = token_src[2] >= 'A' ? (token_src[2] - 'A' + 10) : (token_src[2] - '0');
+                *token_dst = (high << 4) | low;
+                token_src += 2;
+            } else {
+                *token_dst = *token_src;
+            }
+            token_src++;
+            token_dst++;
+        }
+        strcpy(api_token, decoded);
+
         store_wifi_credentials(ssid, password);
         store_server_url(server_url);
+        store_api_token(api_token);
         
         const char *response = "Configuration saved. Device will restart...";
         httpd_resp_send(req, response, strlen(response));
@@ -164,6 +188,7 @@ void start_config_portal(void) {
         }
     };
     
+    ESP_ERROR_CHECK(esp_wifi_stop());
     ESP_ERROR_CHECK(esp_wifi_set_mode(WIFI_MODE_AP));
     ESP_ERROR_CHECK(esp_wifi_set_config(WIFI_IF_AP, &ap_config));
     ESP_ERROR_CHECK(esp_wifi_start());
