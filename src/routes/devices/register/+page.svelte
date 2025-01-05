@@ -24,19 +24,19 @@
                 href="/devices" 
                 class="text-blue-400 hover:text-blue-300 transition-colors"
             >
-                ← Back to Devices
+                ← {t.devices.back}
             </a>
-            <h1 class="text-4xl font-bold mt-4">Register New Device</h1>
+            <h1 class="text-4xl font-bold mt-4">{t.devices.registerNew}</h1>
         </div>
 
         <div class="bg-gray-800 rounded-lg p-8 max-w-2xl mx-auto">
             <div class="prose prose-invert mb-8">
-                <h2>Instructions</h2>
+                <h2>{t.devices.instructions.title}</h2>
                 <ol class="list-decimal list-inside">
-                    <li>Connect your ESP32 device to your computer via USB</li>
-                    <li>Click the Install button below</li>
-                    <li>Select the correct USB port when prompted</li>
-                    <li>Wait for the installation to complete</li>
+                    <li>{t.devices.instructions.step1}</li>
+                    <li>{t.devices.instructions.step2}</li>
+                    <li>{t.devices.instructions.step3}</li>
+                    <li>{t.devices.instructions.step4}</li>
                 </ol>
             </div>
 
@@ -46,7 +46,7 @@
                     class="inline-block"
                 >
                     <button class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg transition-colors">
-                        Install Firmware
+                        {t.devices.installButton}
                     </button>
                 </esp-web-install-button>
             </div>

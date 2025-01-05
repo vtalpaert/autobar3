@@ -43,7 +43,7 @@ export const translations = {
     },
     devices: {
       title: 'My Devices',
-      registerNew: 'Register New Device',
+      registerNew: 'Flash New Device',
       noDevices: 'No devices registered yet'
     },
     createCocktail: {
@@ -126,8 +126,17 @@ export const translations = {
     },
     devices: {
       title: 'Mes Appareils',
-      registerNew: 'Enregistrer un Nouvel Appareil',
-      noDevices: 'Aucun appareil enregistré'
+      registerNew: 'Flasher un Nouvel Appareil',
+      noDevices: 'Aucun appareil enregistré',
+      instructions: {
+        title: 'Instructions',
+        step1: 'Connectez votre ESP32 à votre ordinateur via USB',
+        step2: 'Cliquez sur le bouton Installer ci-dessous',
+        step3: 'Sélectionnez le bon port USB lorsque demandé',
+        step4: "Attendez que l'installation soit terminée"
+      },
+      back: 'Retour aux Appareils',
+      installButton: 'Installer le Firmware'
     },
     createCocktail: {
       title: 'Créer un Nouveau Cocktail',
