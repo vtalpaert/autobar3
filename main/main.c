@@ -122,7 +122,8 @@ static esp_err_t save_handler(httpd_req_t *req) {
     }
     buf[content_len] = '\0';
     
-    // Simple form data parsing
+    // URL decode helper function
+    char decoded[MAX_SSID_LEN] = {0};
     char *ssid_start = strstr(buf, "ssid=");
     char *pass_start = strstr(buf, "password=");
     
@@ -132,10 +133,49 @@ static esp_err_t save_handler(httpd_req_t *req) {
         
         char *ssid_end = strchr(ssid_start, '&');
         if (ssid_end) {
-            memcpy(ssid, ssid_start, ssid_end - ssid_start);
+            size_t len = ssid_end - ssid_start;
+            char temp[MAX_SSID_LEN] = {0};
+            memcpy(temp, ssid_start, len);
+            
+            // URL decode the SSID
+            char *src = temp;
+            char *dst = decoded;
+            while (*src) {
+                if (*src == '+') {
+                    *dst = ' ';
+                } else if (*src == '%' && src[1] && src[2]) {
+                    int high = src[1] >= 'A' ? (src[1] - 'A' + 10) : (src[1] - '0');
+                    int low = src[2] >= 'A' ? (src[2] - 'A' + 10) : (src[2] - '0');
+                    *dst = (high << 4) | low;
+                    src += 2;
+                } else {
+                    *dst = *src;
+                }
+                src++;
+                dst++;
+            }
+            strcpy(ssid, decoded);
         }
         
-        memcpy(password, pass_start, strlen(pass_start));
+        // Also decode password
+        memset(decoded, 0, sizeof(decoded));
+        char *src = pass_start;
+        char *dst = decoded;
+        while (*src && *src != '&') {
+            if (*src == '+') {
+                *dst = ' ';
+            } else if (*src == '%' && src[1] && src[2]) {
+                int high = src[1] >= 'A' ? (src[1] - 'A' + 10) : (src[1] - '0');
+                int low = src[2] >= 'A' ? (src[2] - 'A' + 10) : (src[2] - '0');
+                *dst = (high << 4) | low;
+                src += 2;
+            } else {
+                *dst = *src;
+            }
+            src++;
+            dst++;
+        }
+        strcpy(password, decoded);
         
         // Store credentials
         store_wifi_credentials(ssid, password);
