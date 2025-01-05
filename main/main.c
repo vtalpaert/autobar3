@@ -20,14 +20,33 @@ extern const uint8_t server_cert_pem_start[] asm("_binary_server_cert_pem_start"
 extern const uint8_t server_cert_pem_end[] asm("_binary_server_cert_pem_end");
 
 
+// Structure to store response data
+typedef struct {
+    char *buffer;
+    size_t size;
+} response_buffer_t;
+
 static esp_err_t http_event_handler(esp_http_client_event_t *evt) {
+    response_buffer_t *resp = (response_buffer_t *)evt->user_data;
+    
     switch(evt->event_id) {
         case HTTP_EVENT_ERROR:
             ESP_LOGI(TAG, "HTTP_EVENT_ERROR");
             break;
         case HTTP_EVENT_ON_DATA:
             if (evt->data_len) {
-                printf("%.*s", evt->data_len, (char*)evt->data);
+                // Reallocate buffer to fit new data
+                char *new_buffer = realloc(resp->buffer, resp->size + evt->data_len + 1);
+                if (new_buffer == NULL) {
+                    ESP_LOGE(TAG, "Failed to allocate memory for response buffer");
+                    return ESP_FAIL;
+                }
+                resp->buffer = new_buffer;
+                
+                // Copy new data into buffer
+                memcpy(resp->buffer + resp->size, evt->data, evt->data_len);
+                resp->size += evt->data_len;
+                resp->buffer[resp->size] = '\0';
             }
             break;
         default:
@@ -55,6 +74,12 @@ static bool verify_device(void) {
     cJSON_AddStringToObject(root, "firmwareVersion", FIRMWARE_VERSION);
     char *post_data = cJSON_PrintUnformatted(root);
     
+    // Initialize response buffer
+    response_buffer_t resp = {
+        .buffer = NULL,
+        .size = 0
+    };
+    
     esp_http_client_config_t config = {
         .url = verify_url,
         .method = HTTP_METHOD_POST,
@@ -62,7 +87,11 @@ static bool verify_device(void) {
         .transport_type = HTTP_TRANSPORT_OVER_SSL,
         .buffer_size = 2048,
         .buffer_size_tx = 1024,
-        .disable_auto_redirect = true
+        .disable_auto_redirect = true,
+        .timeout_ms = 10000,           // 10 second timeout
+        .keep_alive_enable = true,     // Enable keep-alive
+        .event_handler = http_event_handler,
+        .user_data = &resp
     };
     
     esp_http_client_handle_t client = esp_http_client_init(&config);
@@ -85,34 +114,8 @@ static bool verify_device(void) {
             ESP_LOGI(TAG, "HTTP Status Code: %d", status_code);
             
             if (status_code == 200) {
-                // Get content length
-                int content_length = esp_http_client_get_content_length(client);
-                if (content_length < 0) {
-                    content_length = 512; // Default size if length not provided
-                }
-                
-                // Allocate buffer for response
-                char *response_buffer = malloc(content_length + 1);
-                if (!response_buffer) {
-                    ESP_LOGE(TAG, "Failed to allocate memory for response");
-                    continue;
-                }
-                memset(response_buffer, 0, content_length + 1);
-                
-                // Read response data
-                int read_len = 0;
-                int total_read = 0;
-                while (total_read < content_length) {
-                    read_len = esp_http_client_read(client, response_buffer + total_read, 
-                                                  content_length - total_read);
-                    if (read_len <= 0) {
-                        break;
-                    }
-                    total_read += read_len;
-                }
-                
-                if (total_read > 0) {
-                    cJSON *response = cJSON_Parse(response_buffer);
+                if (resp.buffer && resp.size > 0) {
+                    cJSON *response = cJSON_Parse(resp.buffer);
                     if (response) {
                         cJSON *token_valid = cJSON_GetObjectItem(response, "tokenValid");
                         cJSON *message = cJSON_GetObjectItem(response, "message");
@@ -135,11 +138,13 @@ static bool verify_device(void) {
                         ESP_LOGE(TAG, "Failed to parse JSON response");
                     }
                 } else {
-                    ESP_LOGE(TAG, "Failed to read server response (read %d bytes)", total_read);
+                    ESP_LOGE(TAG, "Empty server response (buffer size: %d bytes)", resp.size);
                 }
                 
                 // Clean up response buffer
-                free(response_buffer);
+                free(resp.buffer);
+                resp.buffer = NULL;
+                resp.size = 0;
             } else {
                 ESP_LOGE(TAG, "Unexpected HTTP status code: %d", status_code);
             }
@@ -147,6 +152,23 @@ static bool verify_device(void) {
             ESP_LOGE(TAG, "HTTP request failed: %s (error code: %d)", esp_err_to_name(err), err);
             int error_num = esp_http_client_get_errno(client);
             ESP_LOGE(TAG, "HTTP client errno: %d", error_num);
+            
+            // Log the error code and any transport error
+            ESP_LOGE(TAG, "HTTP client error: %s", esp_err_to_name(err));
+            if (err == ESP_ERR_HTTP_CONNECT) {
+                ESP_LOGE(TAG, "Connection failed - check server URL and connectivity");
+            } else if (err == ESP_ERR_HTTP_CONNECTING) {
+                ESP_LOGE(TAG, "Client connecting to server");
+            } else if (err == ESP_ERR_HTTP_EAGAIN) {
+                ESP_LOGE(TAG, "HTTP client error: ESP_ERR_HTTP_EAGAIN - try again later");
+            }
+            
+            // Check connection state
+            if (esp_http_client_is_complete_data_received(client)) {
+                ESP_LOGI(TAG, "Data transmission was complete");
+            } else {
+                ESP_LOGE(TAG, "Data transmission was incomplete");
+            }
         }
         
         retry_count++;
