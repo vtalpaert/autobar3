@@ -14,12 +14,20 @@
     <div class="container mx-auto px-4 py-16">
         <div class="flex justify-between items-center mb-8">
             <h1 class="text-4xl font-bold">{t.devices.title}</h1>
-            <a 
-                href="/devices/register" 
-                class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded transition-colors"
-            >
-                {t.devices.registerNew}
-            </a>
+            <div class="space-x-4">
+                <a 
+                    href="/devices/register" 
+                    class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded transition-colors"
+                >
+                    {t.devices.registerNew}
+                </a>
+                <a 
+                    href="/devices/enroll" 
+                    class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded transition-colors"
+                >
+                    {t.devices.enroll}
+                </a>
+            </div>
         </div>
         
         <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">

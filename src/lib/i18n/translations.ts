@@ -59,7 +59,20 @@ export const translations = {
         step4: 'Wait for the installation to complete'
       },
       back: 'Back to Devices',
-      installButton: 'Install Firmware'
+      installButton: 'Install Firmware',
+      enroll: 'Enroll via WiFi',
+      ap: {
+        title: 'WiFi Setup Instructions',
+        step1: 'Power on your ESP32 device',
+        step2: 'Connect to the WiFi network named "RobotCocktail"',
+        step3: 'Open http://192.168.4.1 in your browser',
+        step4: 'Fill in your WiFi credentials and server URL',
+        step5: 'The device will restart and connect to your network',
+        networkName: 'Network Name:',
+        networkValue: 'RobotCocktail',
+        password: 'Password:',
+        passwordValue: 'configure'
+      }
     },
     createCocktail: {
       title: 'Create New Cocktail',
@@ -157,7 +170,20 @@ export const translations = {
         step4: "Attendez que l'installation soit terminée"
       },
       back: 'Retour aux Appareils',
-      installButton: 'Installer le Firmware'
+      installButton: 'Installer le Firmware',
+      enroll: 'Enregistrer via WiFi',
+      ap: {
+        title: 'Instructions de Configuration WiFi',
+        step1: 'Allumez votre appareil ESP32',
+        step2: 'Connectez-vous au réseau WiFi nommé "RobotCocktail"',
+        step3: 'Ouvrez http://192.168.4.1 dans votre navigateur',
+        step4: 'Remplissez vos identifiants WiFi et l\'URL du serveur',
+        step5: 'L\'appareil redémarrera et se connectera à votre réseau',
+        networkName: 'Nom du Réseau:',
+        networkValue: 'RobotCocktail',
+        password: 'Mot de passe:',
+        passwordValue: 'robotcocktail'
+      }
     },
     createCocktail: {
       title: 'Créer un Nouveau Cocktail',
