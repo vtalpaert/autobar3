@@ -2,6 +2,8 @@
 
 A web platform and hardware solution for automated cocktail mixing machines.
 
+![home page](docs/screenshot_home_page.png)
+
 ## Overview
 
 RobotCocktail is a modern reimagining of the [Autobar v1 project](https://github.com/vtalpaert/autobar). While the original project used Django and Raspberry Pi, this new version brings several key improvements:
@@ -46,6 +48,10 @@ This script generates:
 ### Hardware
 
 The firmware is built locally into the `static/firmware` folder so that user may flash their device the first time via a webpage.
+
+#### Configure using the access point
+
+![access point](docs/screenshot_access_point.png)
 
 #### Develop the firmware
 
