@@ -31,7 +31,27 @@ The project consists of two main parts:
 
 ## Getting Started
 
-Documentation for setup and usage coming soon.
+### Hardware
+
+The firmware is built locally into the `static/firmware` folder so that user may flash their device the first time via a webpage.
+
+#### Develop the firmware
+
+The following instructions are intended for VS Code
+
+```bash
+sudo apt-get install git wget flex bison gperf python3 python3-pip python3-venv cmake ninja-build ccache libffi-dev libssl-dev dfu-util libusb-1.0-0
+```
+
+Install the ESP-IDF plugin and configure the extension. Version v5.3.2 is the only one tested for now.
+Building the project will copy the firmware binaries to the static folder.
+
+### Web
+
+```bash
+npm install
+npm run dev
+```
 
 ## Contributing
 
