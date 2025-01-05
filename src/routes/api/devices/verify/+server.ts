@@ -36,8 +36,16 @@ export async function POST({ request }) {
         })
         .where(eq(table.device.id, device.id));
 
-    return json({
+    const response = {
         tokenValid: true,
         message: "Hello from the server"
+    };
+    
+    return new Response(JSON.stringify(response), {
+        status: 200,
+        headers: {
+            'Content-Type': 'application/json',
+            'Content-Length': JSON.stringify(response).length.toString()
+        }
     });
 }

@@ -4,7 +4,12 @@ import * as table from '$lib/server/db/schema';
 import { eq } from 'drizzle-orm';
 import { nanoid } from 'nanoid';
 
-export async function POST({ request }) {
+export async function POST({ request, locals }) {
+    // Check if user is logged in and has a verified profile
+    if (!locals.user?.profile?.verified) {
+        return new Response('Unauthorized - Profile not verified', { status: 401 });
+    }
+
     const deviceId = await request.text();
     const token = nanoid(32); // Generate a secure random token
     

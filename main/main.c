@@ -60,6 +60,9 @@ static bool verify_device(void) {
         .method = HTTP_METHOD_POST,
         .cert_pem = (char *)server_cert_pem_start,
         .transport_type = HTTP_TRANSPORT_OVER_SSL,
+        .buffer_size = 2048,
+        .buffer_size_tx = 1024,
+        .disable_auto_redirect = true
     };
     
     esp_http_client_handle_t client = esp_http_client_init(&config);
