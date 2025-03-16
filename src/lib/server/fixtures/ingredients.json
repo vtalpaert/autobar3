@@ -1,0 +1,62 @@
+[
+  {
+    "name": "Vodka",
+    "alcoholPercentage": 40.0,
+    "density": 950,
+    "addedSeparately": false
+  },
+  {
+    "name": "Rum",
+    "alcoholPercentage": 37.5,
+    "density": 980,
+    "addedSeparately": false
+  },
+  {
+    "name": "Orange Juice",
+    "alcoholPercentage": 0.0,
+    "density": 1040,
+    "addedSeparately": false
+  },
+  {
+    "name": "Gin",
+    "alcoholPercentage": 40.0,
+    "density": 940,
+    "addedSeparately": false
+  },
+  {
+    "name": "Tequila",
+    "alcoholPercentage": 38.0,
+    "density": 950,
+    "addedSeparately": false
+  },
+  {
+    "name": "Cranberry Juice",
+    "alcoholPercentage": 0.0,
+    "density": 1030,
+    "addedSeparately": false
+  },
+  {
+    "name": "Lime Juice",
+    "alcoholPercentage": 0.0,
+    "density": 1030,
+    "addedSeparately": false
+  },
+  {
+    "name": "Simple Syrup",
+    "alcoholPercentage": 0.0,
+    "density": 1300,
+    "addedSeparately": false
+  },
+  {
+    "name": "Soda Water",
+    "alcoholPercentage": 0.0,
+    "density": 1000,
+    "addedSeparately": false
+  },
+  {
+    "name": "Tonic Water",
+    "alcoholPercentage": 0.0,
+    "density": 1005,
+    "addedSeparately": false
+  }
+]
