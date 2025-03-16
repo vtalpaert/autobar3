@@ -1,4 +1,4 @@
-import { sqliteTable, text, integer } from 'drizzle-orm/sqlite-core';
+import { sqliteTable, text, integer, real } from 'drizzle-orm/sqlite-core';
 
 export const user = sqliteTable('user', {
 	id: text('id').primaryKey(),
@@ -38,6 +38,14 @@ export const device = sqliteTable('device', {
 	apiToken: text('api_token').unique()
 });
 
+export const ingredient = sqliteTable('ingredient', {
+	id: text('id').primaryKey(),
+	name: text('name').notNull().unique(),
+	alcoholPercentage: real('alcohol_percentage').notNull(),
+	density: real('density').notNull().default(1000), // Default 1000 g/L (water)
+	addedSeparately: integer('added_separately', { mode: 'boolean' }).notNull().default(false)
+});
+
 export const cocktail = sqliteTable('cocktail', {
 	id: text('id').primaryKey(),
 	name: text('name').notNull(),
@@ -54,3 +62,4 @@ export type User = typeof user.$inferSelect;
 export type Profile = typeof profile.$inferSelect;
 export type Cocktail = typeof cocktail.$inferSelect;
 export type Device = typeof device.$inferSelect;
+export type Ingredient = typeof ingredient.$inferSelect;
