@@ -50,6 +50,15 @@
                     <span class="text-3xl font-bold">{data.counts.ingredients}</span>
                 </div>
             </a>
+            
+            <!-- Doses Card -->
+            <a href="/admin/doses" class="block bg-gray-800 p-6 rounded-lg hover:bg-gray-700 transition">
+                <h2 class="text-2xl font-bold mb-2">Doses</h2>
+                <p class="text-gray-400 mb-4">Manage cocktail ingredient doses</p>
+                <div class="flex justify-between items-center">
+                    <span class="text-3xl font-bold">{data.counts.doses || 0}</span>
+                </div>
+            </a>
         </div>
     </div>
 </div>

@@ -45,7 +45,18 @@ export const translations = {
       createNew: 'Create New Cocktail',
       instructions: 'Instructions',
       filterAll: 'All Cocktails',
-      filterMine: 'My Cocktails'
+      filterMine: 'My Cocktails',
+      ingredients: 'Ingredients',
+      edit: 'Edit',
+      editCocktail: 'Edit Cocktail',
+      saveChanges: 'Save Changes',
+      addIngredient: 'Add Ingredient',
+      remove: 'Remove',
+      cancel: 'Cancel',
+      selectIngredient: 'Select Ingredient',
+      chooseIngredient: 'Choose an ingredient',
+      quantity: 'Quantity',
+      backToCocktail: '← Back to Cocktail'
     },
     devices: {
       title: 'My Devices',
