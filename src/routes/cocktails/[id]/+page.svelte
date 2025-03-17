@@ -35,10 +35,38 @@
                 </div>
             {/if}
             
-            <div class="text-sm text-gray-400">
-                <p>{t.cocktails.createdBy} {data.cocktail.creatorName}</p>
-                <p>{t.cocktails.addedOn} {formattedDate}</p>
+            <div class="flex justify-between items-center mt-8 mb-4">
+                <div class="text-sm text-gray-400">
+                    <p>{t.cocktails.createdBy} {data.cocktail.creatorName}</p>
+                    <p>{t.cocktails.addedOn} {formattedDate}</p>
+                </div>
+                
+                {#if data.user && (data.user.isAdmin || data.cocktail.creatorId === data.user.id)}
+                    <a 
+                        href="/cocktails/{data.cocktail.id}/edit" 
+                        class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded transition-colors"
+                    >
+                        {t.cocktails.edit}
+                    </a>
+                {/if}
             </div>
+            
+            {#if data.cocktail.doses && data.cocktail.doses.length > 0}
+                <div class="mt-6">
+                    <h2 class="text-2xl font-bold mb-3">{t.cocktails.ingredients}</h2>
+                    <ul class="divide-y divide-gray-700">
+                        {#each data.cocktail.doses as dose}
+                            <li class="py-2 flex items-center">
+                                <span class="inline-flex items-center justify-center w-6 h-6 bg-blue-600 rounded-full mr-3 text-sm font-bold">
+                                    {dose.number}
+                                </span>
+                                <span class="font-medium">{dose.ingredient.name}</span>
+                                <span class="ml-2 text-gray-400">{dose.quantity}ml</span>
+                            </li>
+                        {/each}
+                    </ul>
+                </div>
+            {/if}
         </div>
     </div>
 </div>

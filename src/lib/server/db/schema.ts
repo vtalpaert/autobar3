@@ -76,3 +76,8 @@ export type Cocktail = typeof cocktail.$inferSelect;
 export type Device = typeof device.$inferSelect;
 export type Ingredient = typeof ingredient.$inferSelect;
 export type Dose = typeof dose.$inferSelect;
+
+// Extended types for UI
+export type CocktailWithDoses = Cocktail & {
+    doses: (Dose & { ingredient: Ingredient })[];
+};

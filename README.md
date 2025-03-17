@@ -20,9 +20,10 @@ The project consists of two main parts:
 
 1. **Web Platform**
    - User authentication and management
-   - Cocktail recipe database with ingredients and doses
+   - Cocktail recipe database with ingredients and doses management
    - Device management interface
    - API endpoints for device communication
+   - Cocktail creation and editing with ingredient doses
 
 2. **Hardware Implementation**
    - ESP32-based cocktail mixing machine (primary target)

@@ -8,6 +8,7 @@ export const load: PageServerLoad = async ({ params, locals }) => {
     if (!locals.user) {
         throw redirect(302, '/auth/login');
     }
+    
     const cocktails = await db
         .select({
             id: table.cocktail.id,
@@ -15,6 +16,7 @@ export const load: PageServerLoad = async ({ params, locals }) => {
             description: table.cocktail.description,
             instructions: table.cocktail.instructions,
             creatorName: table.user.username,
+            creatorId: table.cocktail.creatorId,
             createdAt: table.cocktail.createdAt
         })
         .from(table.cocktail)
@@ -27,6 +29,22 @@ export const load: PageServerLoad = async ({ params, locals }) => {
     if (!cocktail) {
         throw error(404, 'Cocktail not found');
     }
+    
+    // Get doses with ingredients for this cocktail
+    const doses = await db
+        .select({
+            id: table.dose.id,
+            quantity: table.dose.quantity,
+            number: table.dose.number,
+            ingredient: table.ingredient
+        })
+        .from(table.dose)
+        .innerJoin(table.ingredient, eq(table.dose.ingredientId, table.ingredient.id))
+        .where(eq(table.dose.cocktailId, params.id))
+        .orderBy(table.dose.number);
+    
+    // Add doses to cocktail
+    cocktail.doses = doses;
 
     const profile = await db
         .select()

@@ -56,7 +56,13 @@ export const translations = {
       selectIngredient: 'Select Ingredient',
       chooseIngredient: 'Choose an ingredient',
       quantity: 'Quantity',
-      backToCocktail: '← Back to Cocktail'
+      backToCocktail: '← Back to Cocktail',
+      moveUp: 'Move Up',
+      moveDown: 'Move Down',
+      delete: 'Delete Cocktail',
+      deleteConfirmTitle: 'Delete Cocktail?',
+      deleteConfirmMessage: 'Are you sure you want to delete this cocktail? This action cannot be undone.',
+      confirmDelete: 'Yes, Delete'
     },
     devices: {
       title: 'My Devices',
@@ -171,7 +177,24 @@ export const translations = {
       createNew: 'Créer un Nouveau Cocktail',
       instructions: 'Instructions',
       filterAll: 'Tous les Cocktails',
-      filterMine: 'Mes Cocktails'
+      filterMine: 'Mes Cocktails',
+      ingredients: 'Ingrédients',
+      edit: 'Modifier',
+      editCocktail: 'Modifier le Cocktail',
+      saveChanges: 'Enregistrer',
+      addIngredient: 'Ajouter un Ingrédient',
+      remove: 'Supprimer',
+      cancel: 'Annuler',
+      selectIngredient: 'Sélectionner un Ingrédient',
+      chooseIngredient: 'Choisir un ingrédient',
+      quantity: 'Quantité',
+      backToCocktail: '← Retour au Cocktail',
+      moveUp: 'Monter',
+      moveDown: 'Descendre',
+      delete: 'Supprimer le Cocktail',
+      deleteConfirmTitle: 'Supprimer le Cocktail ?',
+      deleteConfirmMessage: 'Êtes-vous sûr de vouloir supprimer ce cocktail ? Cette action ne peut pas être annulée.',
+      confirmDelete: 'Oui, Supprimer'
     },
     devices: {
       title: 'Mes Appareils',
