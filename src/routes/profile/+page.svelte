@@ -13,7 +13,26 @@
 
 <div class="min-h-screen bg-gradient-to-b from-gray-900 to-gray-800 text-white">
   <div class="container mx-auto px-4 py-8">
-    <h1 class="text-3xl font-bold mb-8">{t.profile.title}</h1>
+    <div class="flex items-center justify-between mb-8">
+      <h1 class="text-3xl font-bold">
+        {isOwnProfile ? t.profile.title : t.profile.viewingProfile}
+      </h1>
+      
+      {#if !isOwnProfile}
+        <a 
+          href="/collaborations" 
+          class="text-blue-400 hover:text-blue-300"
+        >
+          ← {t.profile.backToCollaborations}
+        </a>
+      {/if}
+    </div>
+    
+    {#if !isOwnProfile && data.user?.isAdmin && !data.hasActiveCollaboration}
+      <div class="mb-6 p-4 bg-blue-800 text-white rounded-lg">
+        {t.profile.adminViewNotice}
+      </div>
+    {/if}
 
     <div class="max-w-2xl mx-auto bg-gray-800 p-6 rounded-lg shadow-lg">
       <div class="flex justify-between items-center mb-6">

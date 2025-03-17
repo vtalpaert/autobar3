@@ -165,10 +165,17 @@ export const load: PageServerLoad = async (event) => {
         }
     }
     
+    // Get current user's profile for admin check
+    const currentProfile = currentUser ? await db
+        .select()
+        .from(table.profile)
+        .where(eq(table.profile.userId, currentUser.id))
+        .get() : null;
+        
     return {
         user: currentUser ? {
             ...currentUser,
-            isAdmin: profile.isAdmin
+            isAdmin: currentProfile?.isAdmin || false
         } : null,
         viewedUser,
         profile,

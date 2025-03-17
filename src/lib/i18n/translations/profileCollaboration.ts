@@ -27,7 +27,10 @@ export const profileCollaboration = {
       pendingRequest: 'Pending request',
       activeCollaboration: 'Active collaboration',
       collaboratorProfile: 'Collaborator profile',
-      accessDenied: 'You can only view profiles of users you are collaborating with'
+      accessDenied: 'You can only view profiles of users you are collaborating with',
+      backToCollaborations: 'Back to Collaborations',
+      adminViewNotice: 'You are viewing this profile because you are an administrator',
+      viewingProfile: 'User Profile'
     },
     collaboration: {
       title: 'Collaborations',
@@ -90,7 +93,10 @@ export const profileCollaboration = {
       pendingRequest: 'Demande en attente',
       activeCollaboration: 'Collaboration active',
       collaboratorProfile: 'Profil de collaborateur',
-      accessDenied: 'Vous ne pouvez voir que les profils des utilisateurs avec qui vous collaborez'
+      accessDenied: 'Vous ne pouvez voir que les profils des utilisateurs avec qui vous collaborez',
+      backToCollaborations: 'Retour aux Collaborations',
+      adminViewNotice: 'Vous consultez ce profil car vous êtes administrateur',
+      viewingProfile: 'Profil d\'utilisateur'
     },
     collaboration: {
       title: 'Collaborations',
