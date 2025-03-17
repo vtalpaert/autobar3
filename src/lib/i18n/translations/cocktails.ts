@@ -1,0 +1,82 @@
+export const cocktails = {
+  en: {
+    cocktails: {
+      title: 'Cocktail Recipes',
+      viewDetails: 'View Details',
+      backToCocktails: '← Back to Cocktails',
+      createdBy: 'Created by',
+      addedOn: 'Added on',
+      createNew: 'Create New Cocktail',
+      instructions: 'Instructions',
+      filterAll: 'All Cocktails',
+      filterMine: 'My Cocktails',
+      ingredients: 'Ingredients',
+      edit: 'Edit',
+      editCocktail: 'Edit Cocktail',
+      saveChanges: 'Save Changes',
+      addIngredient: 'Add Ingredient',
+      remove: 'Remove',
+      cancel: 'Cancel',
+      selectIngredient: 'Select Ingredient',
+      chooseIngredient: 'Choose an ingredient',
+      quantity: 'Quantity',
+      backToCocktail: '← Back to Cocktail',
+      moveUp: 'Move Up',
+      moveDown: 'Move Down',
+      delete: 'Delete Cocktail',
+      deleteConfirmTitle: 'Delete Cocktail?',
+      deleteConfirmMessage: 'Are you sure you want to delete this cocktail? This action cannot be undone.',
+      confirmDelete: 'Yes, Delete'
+    },
+    createCocktail: {
+      title: 'Create New Cocktail',
+      name: 'Cocktail Name',
+      description: 'Description',
+      instructions: 'Instructions',
+      create: 'Create Cocktail',
+      namePlaceholder: 'Enter cocktail name',
+      descriptionPlaceholder: 'Enter a brief description',
+      instructionsPlaceholder: 'Enter preparation instructions'
+    }
+  },
+  fr: {
+    cocktails: {
+      title: 'Recettes de Cocktails',
+      viewDetails: 'Voir les Détails',
+      backToCocktails: '← Retour aux Cocktails',
+      createdBy: 'Créé par',
+      addedOn: 'Ajouté le',
+      createNew: 'Créer un Nouveau Cocktail',
+      instructions: 'Instructions',
+      filterAll: 'Tous les Cocktails',
+      filterMine: 'Mes Cocktails',
+      ingredients: 'Ingrédients',
+      edit: 'Modifier',
+      editCocktail: 'Modifier le Cocktail',
+      saveChanges: 'Enregistrer',
+      addIngredient: 'Ajouter un Ingrédient',
+      remove: 'Supprimer',
+      cancel: 'Annuler',
+      selectIngredient: 'Sélectionner un Ingrédient',
+      chooseIngredient: 'Choisir un ingrédient',
+      quantity: 'Quantité',
+      backToCocktail: '← Retour au Cocktail',
+      moveUp: 'Monter',
+      moveDown: 'Descendre',
+      delete: 'Supprimer le Cocktail',
+      deleteConfirmTitle: 'Supprimer le Cocktail ?',
+      deleteConfirmMessage: 'Êtes-vous sûr de vouloir supprimer ce cocktail ? Cette action ne peut pas être annulée.',
+      confirmDelete: 'Oui, Supprimer'
+    },
+    createCocktail: {
+      title: 'Créer un Nouveau Cocktail',
+      name: 'Nom du Cocktail',
+      description: 'Description',
+      instructions: 'Instructions',
+      create: 'Créer le Cocktail',
+      namePlaceholder: 'Entrez le nom du cocktail',
+      descriptionPlaceholder: 'Entrez une brève description',
+      instructionsPlaceholder: 'Entrez les instructions de préparation'
+    }
+  }
+};

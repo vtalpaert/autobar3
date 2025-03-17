@@ -69,6 +69,20 @@ export const dose = sqliteTable('dose', {
 	number: integer('number').notNull(), // Order in which the dose must be served
 });
 
+export const collaborationRequest = sqliteTable('collaboration_request', {
+	id: text('id').primaryKey(),
+	senderId: text('sender_id')
+		.notNull()
+		.references(() => profile.id, { onDelete: 'cascade' }),
+	receiverId: text('receiver_id')
+		.notNull()
+		.references(() => profile.id, { onDelete: 'cascade' }),
+	status: text('status').notNull().default('pending'), // pending, accepted, rejected
+	message: text('message'),
+	createdAt: integer('created_at', { mode: 'timestamp' }).notNull(),
+	updatedAt: integer('updated_at', { mode: 'timestamp' })
+});
+
 export type Session = typeof session.$inferSelect;
 export type User = typeof user.$inferSelect;
 export type Profile = typeof profile.$inferSelect;
@@ -76,8 +90,15 @@ export type Cocktail = typeof cocktail.$inferSelect;
 export type Device = typeof device.$inferSelect;
 export type Ingredient = typeof ingredient.$inferSelect;
 export type Dose = typeof dose.$inferSelect;
+export type CollaborationRequest = typeof collaborationRequest.$inferSelect;
 
 // Extended types for UI
 export type CocktailWithDoses = Cocktail & {
     doses: (Dose & { ingredient: Ingredient })[];
+};
+
+// Extended types for collaboration requests
+export type CollaborationRequestWithProfiles = CollaborationRequest & {
+    sender: { username: string, artistName: string | null };
+    receiver: { username: string, artistName: string | null };
 };

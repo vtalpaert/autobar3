@@ -17,6 +17,7 @@ Thank you for your interest in contributing to RobotCocktail! This document prov
 │       ├── admin/        # Admin panel
 │       ├── auth/         # Authentication pages
 │       ├── cocktails/    # Cocktail management with ingredients and doses
+│       ├── collaborations/ # Artist collaboration system
 │       ├── devices/      # Device management
 │       └── profile/      # User profile pages
 ├── static/               # Static assets

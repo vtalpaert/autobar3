@@ -34,6 +34,7 @@ export const translations = {
       cocktails: 'My Cocktails',
       devices: 'My Devices',
       profile: 'My Profile',
+      collaborations: 'My Collaborations',
       logout: 'Logout'
     },
     cocktails: {
@@ -131,6 +132,28 @@ export const translations = {
       passwordMismatch: 'New passwords do not match',
       updateSuccess: 'Profile updated successfully',
       passwordSuccess: 'Password changed successfully'
+    },
+    collaboration: {
+      title: 'Collaborations',
+      subtitle: 'Connect with other cocktail artists',
+      findArtists: 'Find Artists',
+      requests: 'Collaboration Requests',
+      noRequests: 'No pending requests',
+      pendingRequests: 'Pending Requests',
+      sentRequests: 'Sent Requests',
+      acceptedRequests: 'Accepted Collaborations',
+      send: 'Send Request',
+      accept: 'Accept',
+      reject: 'Reject',
+      cancel: 'Cancel Request',
+      message: 'Message',
+      messagePlaceholder: 'Write a message to introduce yourself...',
+      requestSent: 'Collaboration request sent',
+      requestAccepted: 'Collaboration request accepted',
+      requestRejected: 'Collaboration request rejected',
+      requestCancelled: 'Collaboration request cancelled',
+      collaborationWith: 'Collaboration with',
+      since: 'Since'
     }
   },
   fr: {
@@ -166,6 +189,7 @@ export const translations = {
       cocktails: 'Mes Cocktails',
       devices: 'Mes Appareils',
       profile: 'Mon Profil',
+      collaborations: 'Mes Collaborations',
       logout: 'Déconnexion'
     },
     cocktails: {
@@ -257,6 +281,28 @@ export const translations = {
       passwordMismatch: 'Les nouveaux mots de passe ne correspondent pas',
       updateSuccess: 'Profil mis à jour avec succès',
       passwordSuccess: 'Mot de passe changé avec succès'
+    },
+    collaboration: {
+      title: 'Collaborations',
+      subtitle: 'Connectez-vous avec d\'autres artistes cocktail',
+      findArtists: 'Trouver des Artistes',
+      requests: 'Demandes de Collaboration',
+      noRequests: 'Aucune demande en attente',
+      pendingRequests: 'Demandes en Attente',
+      sentRequests: 'Demandes Envoyées',
+      acceptedRequests: 'Collaborations Acceptées',
+      send: 'Envoyer une Demande',
+      accept: 'Accepter',
+      reject: 'Refuser',
+      cancel: 'Annuler la Demande',
+      message: 'Message',
+      messagePlaceholder: 'Écrivez un message pour vous présenter...',
+      requestSent: 'Demande de collaboration envoyée',
+      requestAccepted: 'Demande de collaboration acceptée',
+      requestRejected: 'Demande de collaboration rejetée',
+      requestCancelled: 'Demande de collaboration annulée',
+      collaborationWith: 'Collaboration avec',
+      since: 'Depuis'
     }
   }
 } as const;
