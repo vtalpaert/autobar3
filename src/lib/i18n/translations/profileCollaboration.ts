@@ -16,7 +16,18 @@ export const profileCollaboration = {
       changePassword: 'Change Password',
       passwordMismatch: 'New passwords do not match',
       updateSuccess: 'Profile updated successfully',
-      passwordSuccess: 'Password changed successfully'
+      passwordSuccess: 'Password changed successfully',
+      edit: 'Edit Profile',
+      editProfile: 'Edit Profile',
+      backToProfile: 'Back to Profile',
+      noArtistName: 'No artist name set',
+      cocktailsCreated: 'Cocktails Created',
+      collaborations: 'Active Collaborations',
+      collaboration: 'Collaboration',
+      pendingRequest: 'Pending request',
+      activeCollaboration: 'Active collaboration',
+      collaboratorProfile: 'Collaborator profile',
+      accessDenied: 'You can only view profiles of users you are collaborating with'
     },
     collaboration: {
       title: 'Collaborations',
@@ -41,7 +52,14 @@ export const profileCollaboration = {
       since: 'Since',
       endCollaboration: 'End Collaboration',
       endCollaborationConfirm: 'Are you sure you want to end this collaboration?',
-      collaborationEnded: 'Collaboration ended successfully'
+      collaborationEnded: 'Collaboration ended successfully',
+      alreadyCollaborating: 'Already collaborating',
+      requestSentStatus: 'Request sent',
+      requestReceivedStatus: 'Request received',
+      noArtistsFound: 'No artists found matching your search.',
+      searchPlaceholder: 'Search by username or artist name...',
+      sendRequestTitle: 'Send Collaboration Request',
+      viewProfile: 'View Profile'
     }
   },
   fr: {
@@ -61,7 +79,18 @@ export const profileCollaboration = {
       changePassword: 'Changer le mot de passe',
       passwordMismatch: 'Les nouveaux mots de passe ne correspondent pas',
       updateSuccess: 'Profil mis à jour avec succès',
-      passwordSuccess: 'Mot de passe changé avec succès'
+      passwordSuccess: 'Mot de passe changé avec succès',
+      edit: 'Modifier le Profil',
+      editProfile: 'Modifier le Profil',
+      backToProfile: 'Retour au Profil',
+      noArtistName: 'Aucun nom d\'artiste défini',
+      cocktailsCreated: 'Cocktails Créés',
+      collaborations: 'Collaborations Actives',
+      collaboration: 'Collaboration',
+      pendingRequest: 'Demande en attente',
+      activeCollaboration: 'Collaboration active',
+      collaboratorProfile: 'Profil de collaborateur',
+      accessDenied: 'Vous ne pouvez voir que les profils des utilisateurs avec qui vous collaborez'
     },
     collaboration: {
       title: 'Collaborations',
@@ -86,7 +115,14 @@ export const profileCollaboration = {
       since: 'Depuis',
       endCollaboration: 'Terminer la Collaboration',
       endCollaborationConfirm: 'Êtes-vous sûr de vouloir mettre fin à cette collaboration ?',
-      collaborationEnded: 'Collaboration terminée avec succès'
+      collaborationEnded: 'Collaboration terminée avec succès',
+      alreadyCollaborating: 'Déjà en collaboration',
+      requestSentStatus: 'Demande envoyée',
+      requestReceivedStatus: 'Demande reçue',
+      noArtistsFound: 'Aucun artiste trouvé correspondant à votre recherche.',
+      searchPlaceholder: 'Rechercher par nom d\'utilisateur ou nom d\'artiste...',
+      sendRequestTitle: 'Envoyer une Demande de Collaboration',
+      viewProfile: 'Voir le Profil'
     }
   }
 };

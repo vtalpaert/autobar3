@@ -119,10 +119,10 @@
                                     {t.collaboration.since} {new Date(collab.request.updatedAt).toLocaleDateString()}
                                 </p>
                                 <a 
-                                    href={`/profile/${collab.otherProfile.userId}`}
+                                    href={`/profile?id=${collab.otherProfile.userId}`}
                                     class="mt-3 inline-block text-blue-400 hover:text-blue-300 text-sm"
                                 >
-                                    View Profile
+                                    {t.collaboration.viewProfile}
                                 </a>
                             </div>
                         {/each}

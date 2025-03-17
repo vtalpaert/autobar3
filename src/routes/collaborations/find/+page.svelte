@@ -50,7 +50,7 @@
                 <input
                     type="text"
                     bind:value={searchTerm}
-                    placeholder="Search by username or artist name..."
+                    placeholder={t.collaboration.searchPlaceholder}
                     class="w-full bg-gray-700 text-white rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
             </div>
@@ -78,15 +78,15 @@
                         <div>
                             {#if collaboratingIds.includes(artist.id)}
                                 <span class="text-green-400 text-sm">
-                                    Already collaborating
+                                    {t.collaboration.alreadyCollaborating}
                                 </span>
                             {:else if sentRequestIds.includes(artist.id)}
                                 <span class="text-blue-400 text-sm">
-                                    Request sent
+                                    {t.collaboration.requestSentStatus}
                                 </span>
                             {:else if receivedRequestIds.includes(artist.id)}
                                 <span class="text-yellow-400 text-sm">
-                                    Request received
+                                    {t.collaboration.requestReceivedStatus}
                                 </span>
                             {:else}
                                 <button 
@@ -105,7 +105,7 @@
                 
                 {#if filteredArtists.length === 0}
                     <div class="col-span-2 text-center py-8 text-gray-400">
-                        No artists found matching your search.
+                        {t.collaboration.noArtistsFound}
                     </div>
                 {/if}
             </div>
@@ -117,7 +117,7 @@
 {#if selectedArtistId}
     <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
         <div class="bg-gray-800 p-6 rounded-lg shadow-lg max-w-md w-full text-white">
-            <h3 class="text-xl font-bold mb-4">Send Collaboration Request</h3>
+            <h3 class="text-xl font-bold mb-4">{t.collaboration.sendRequestTitle}</h3>
             
             <form method="POST" action="?/sendRequest" use:enhance={({ form }) => {
                 return async ({ result, update }) => {
