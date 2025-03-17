@@ -16,7 +16,7 @@ Thank you for your interest in contributing to RobotCocktail! This document prov
 │   └── routes/           # SvelteKit routes
 │       ├── admin/        # Admin panel
 │       ├── auth/         # Authentication pages
-│       ├── cocktails/    # Cocktail management
+│       ├── cocktails/    # Cocktail management with ingredients and doses
 │       ├── devices/      # Device management
 │       └── profile/      # User profile pages
 ├── static/               # Static assets

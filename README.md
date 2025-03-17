@@ -20,7 +20,7 @@ The project consists of two main parts:
 
 1. **Web Platform**
    - User authentication and management
-   - Cocktail recipe database
+   - Cocktail recipe database with ingredients and doses
    - Device management interface
    - API endpoints for device communication
 

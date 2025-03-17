@@ -57,9 +57,22 @@ export const cocktail = sqliteTable('cocktail', {
 	createdAt: integer('created_at', { mode: 'timestamp' }).notNull()
 });
 
+export const dose = sqliteTable('dose', {
+	id: text('id').primaryKey(),
+	cocktailId: text('cocktail_id')
+		.notNull()
+		.references(() => cocktail.id, { onDelete: 'cascade' }),
+	ingredientId: text('ingredient_id')
+		.notNull()
+		.references(() => ingredient.id, { onDelete: 'cascade' }),
+	quantity: real('quantity').notNull(), // Volume in ml
+	number: integer('number').notNull(), // Order in which the dose must be served
+});
+
 export type Session = typeof session.$inferSelect;
 export type User = typeof user.$inferSelect;
 export type Profile = typeof profile.$inferSelect;
 export type Cocktail = typeof cocktail.$inferSelect;
 export type Device = typeof device.$inferSelect;
 export type Ingredient = typeof ingredient.$inferSelect;
+export type Dose = typeof dose.$inferSelect;
