@@ -281,5 +281,56 @@ export const actions: Actions = {
             .where(eq(table.collaborationRequest.id, requestId));
         
         return { success: true };
+    },
+    
+    endCollaboration: async ({ request, locals }) => {
+        if (!locals.user) {
+            throw redirect(302, '/auth/login');
+        }
+        
+        const formData = await request.formData();
+        const requestId = formData.get('requestId')?.toString();
+        
+        if (!requestId) {
+            return { error: 'Request ID is required' };
+        }
+        
+        // Get user profile
+        const profile = await db
+            .select()
+            .from(table.profile)
+            .where(eq(table.profile.userId, locals.user.id))
+            .get();
+            
+        if (!profile) {
+            throw error(404, 'Profile not found');
+        }
+        
+        // Get collaboration request
+        const collaborationRequest = await db
+            .select()
+            .from(table.collaborationRequest)
+            .where(
+                and(
+                    eq(table.collaborationRequest.id, requestId),
+                    or(
+                        eq(table.collaborationRequest.senderId, profile.id),
+                        eq(table.collaborationRequest.receiverId, profile.id)
+                    ),
+                    eq(table.collaborationRequest.status, 'accepted')
+                )
+            )
+            .get();
+            
+        if (!collaborationRequest) {
+            throw error(404, 'Collaboration not found');
+        }
+        
+        // Delete the collaboration
+        await db
+            .delete(table.collaborationRequest)
+            .where(eq(table.collaborationRequest.id, requestId));
+        
+        return { success: true };
     }
 };

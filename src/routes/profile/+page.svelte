@@ -109,7 +109,18 @@
               </form>
             </div>
           {:else if data.collaborationStatus === 'active'}
-            <p class="text-green-400">{t.profile.activeCollaboration}</p>
+            <div class="flex flex-col space-y-2">
+              <p class="text-green-400">{t.profile.activeCollaboration}</p>
+              <form method="POST" action="/collaborations?/endCollaboration">
+                <input type="hidden" name="requestId" value={data.collaborationRequestId} />
+                <button 
+                  type="submit" 
+                  class="bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded-lg text-sm transition-colors"
+                >
+                  {t.profile.endCollaboration}
+                </button>
+              </form>
+            </div>
           {/if}
         </div>
       {/if}
