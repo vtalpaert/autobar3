@@ -17,6 +17,11 @@ export const load: PageServerLoad = async (event) => {
         .get();
 
     if (!profile) throw error(404, 'Profile not found');
+    
+    // Check if profile is verified
+    if (!profile.isVerified) {
+        throw redirect(302, '/profile/unverified');
+    }
 
     return {
         user: {

@@ -9,6 +9,16 @@
     export let form;
     
     $: t = translations[$currentLanguage];
+    
+    // Redirect to unverified page if not verified
+    import { browser } from '$app/environment';
+    import { goto } from '$app/navigation';
+    
+    $: {
+        if (browser && data.user && !data.user.profile?.verified) {
+            goto('/profile/unverified');
+        }
+    }
 </script>
 
 <Header user={data.user} />
