@@ -15,7 +15,7 @@
     import { goto } from '$app/navigation';
     
     $: {
-        if (browser && data.user && !data.user.profile?.verified) {
+        if (browser && data.user && data.user.profile && !data.user.profile.isVerified) {
             goto('/profile/unverified');
         }
     }

@@ -114,6 +114,9 @@ export const load: PageServerLoad = async ({ locals }) => {
     return {
         user: {
             ...locals.user,
+            profile: {
+                ...profile
+            },
             isAdmin: profile.isAdmin
         },
         pendingRequests,
