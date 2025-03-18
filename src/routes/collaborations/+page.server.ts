@@ -111,6 +111,11 @@ export const load: PageServerLoad = async ({ locals }) => {
         })
     );
     
+    // Check if profile is verified
+    if (!profile.isVerified) {
+        throw redirect(302, '/profile/unverified');
+    }
+    
     return {
         user: {
             ...locals.user,

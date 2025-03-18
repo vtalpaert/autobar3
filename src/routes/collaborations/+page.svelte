@@ -10,15 +10,7 @@
     
     $: t = translations[$currentLanguage];
     
-    // Redirect to unverified page if not verified
-    import { browser } from '$app/environment';
-    import { goto } from '$app/navigation';
-    
-    $: {
-        if (browser && data.user && data.user.profile && !data.user.profile.isVerified) {
-            goto('/profile/unverified');
-        }
-    }
+    // Profile verification is now handled on the server side
 </script>
 
 <Header user={data.user} />
