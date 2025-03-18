@@ -7,8 +7,8 @@
     export let data: PageData;
     $: t = translations[$currentLanguage];
     
-    let showOnlyMine = true;
-    $: filteredCocktails = showOnlyMine 
+    let filterOption = 'mine';
+    $: filteredCocktails = filterOption === 'mine' 
         ? data.cocktails.filter(c => c.creatorId === data.profile.id)
         : data.cocktails;
 </script>
@@ -21,11 +21,11 @@
             <div class="flex items-center gap-4">
                 <h1 class="text-4xl font-bold">{t.cocktails.title}</h1>
                 <select 
-                    bind:value={showOnlyMine}
+                    bind:value={filterOption}
                     class="bg-gray-700 text-white px-3 py-1 rounded-lg border border-gray-600"
                 >
-                    <option value={true}>{t.cocktails.filterMine}</option>
-                    <option value={false}>{t.cocktails.filterAll}</option>
+                    <option value="mine">{t.cocktails.filterMine}</option>
+                    <option value="all">{t.cocktails.filterCollaborations}</option>
                 </select>
             </div>
             <a 
