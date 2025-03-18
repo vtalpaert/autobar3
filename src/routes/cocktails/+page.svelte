@@ -7,9 +7,9 @@
     export let data: PageData;
     $: t = translations[$currentLanguage];
     
-    let showOnlyMine = false;
+    let showOnlyMine = true;
     $: filteredCocktails = showOnlyMine 
-        ? data.cocktails.filter(c => c.creatorId === data.user.id)
+        ? data.cocktails.filter(c => c.creatorId === data.profile.id)
         : data.cocktails;
 </script>
 
@@ -24,8 +24,8 @@
                     bind:value={showOnlyMine}
                     class="bg-gray-700 text-white px-3 py-1 rounded-lg border border-gray-600"
                 >
-                    <option value={false}>{t.cocktails.filterAll}</option>
                     <option value={true}>{t.cocktails.filterMine}</option>
+                    <option value={false}>{t.cocktails.filterAll}</option>
                 </select>
             </div>
             <a 

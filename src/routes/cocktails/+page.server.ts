@@ -24,6 +24,7 @@ export const load: PageServerLoad = async ({ locals }) => {
             id: table.cocktail.id,
             name: table.cocktail.name,
             description: table.cocktail.description,
+            creatorId: table.cocktail.creatorId,
             creatorName: table.user.username
         })
         .from(table.cocktail)
@@ -35,6 +36,7 @@ export const load: PageServerLoad = async ({ locals }) => {
         user: {
             ...locals.user,
             isAdmin: profile?.isAdmin || false
-        }
+        },
+        profile
     };
 };
