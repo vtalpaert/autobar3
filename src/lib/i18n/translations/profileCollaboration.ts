@@ -30,7 +30,8 @@ export const profileCollaboration = {
       accessDenied: 'You can only view profiles of users you are collaborating with',
       backToCollaborations: 'Back to Collaborations',
       adminViewNotice: 'You are viewing this profile because you are an administrator',
-      viewingProfile: 'User Profile'
+      viewingProfile: 'User Profile',
+      endCollaboration: 'End Collaboration'
     },
     collaboration: {
       title: 'Collaborations',
@@ -96,7 +97,8 @@ export const profileCollaboration = {
       accessDenied: 'Vous ne pouvez voir que les profils des utilisateurs avec qui vous collaborez',
       backToCollaborations: 'Retour aux Collaborations',
       adminViewNotice: 'Vous consultez ce profil car vous êtes administrateur',
-      viewingProfile: 'Profil d\'utilisateur'
+      viewingProfile: 'Profil d\'utilisateur',
+      endCollaboration: 'Mettre fin à la Collaboration'
     },
     collaboration: {
       title: 'Collaborations',
