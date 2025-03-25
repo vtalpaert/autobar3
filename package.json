@@ -66,6 +66,7 @@
 		"vitest": "^2.0.4"
 	},
 	"dependencies": {
+		"@sveltejs/kit": "^2.0.0",
 		"@libsql/client": "^0.9.0",
 		"@node-rs/argon2": "^1.1.0",
 		"@oslojs/crypto": "^1.0.1",

@@ -16,7 +16,7 @@ ORGANIZATIONAL_UNIT="IT"
 COMMON_NAME="localhost"
 
 # Get local IP address
-LOCAL_IP=$(hostname -I | cut -d' ' -f1)
+LOCAL_IP=$(hostname -i | cut -d' ' -f1)
 
 # Create certificates directory if it doesn't exist
 mkdir -p "$CERT_DIR"
