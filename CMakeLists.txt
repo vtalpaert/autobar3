@@ -16,10 +16,14 @@ set(out_path "${CMAKE_SOURCE_DIR}/static/firmware")
 # Create output directory if it doesn't exist
 file(MAKE_DIRECTORY ${out_path})
 
+# First, ensure the main application is built
+add_custom_target(app_binary ALL DEPENDS ${PROJECT_NAME}.elf)
+
 # Create merged binary using esptool.py
 add_custom_command(
     OUTPUT ${out_path}/merged-firmware-esp32.bin
-    DEPENDS bootloader partition-table ${PROJECT_NAME}.elf
+    DEPENDS bootloader partition-table app_binary
+    COMMAND ${CMAKE_COMMAND} -E echo "Creating merged firmware binary..."
     COMMAND esptool.py --chip esp32 merge_bin 
             -o ${out_path}/merged-firmware-esp32.bin
             --flash_mode dio
