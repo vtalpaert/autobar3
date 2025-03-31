@@ -1,0 +1,14 @@
+name: Build docker image
+on: [push]
+jobs:
+  docker:
+    runs-on: ubuntu-latest
+    steps:
+      -
+        name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+      -
+        name: Build
+        uses: docker/build-push-action@v6
+        with:
+          tags: autobar-preview:latest
