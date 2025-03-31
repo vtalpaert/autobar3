@@ -1,25 +1,14 @@
 import { error, redirect } from '@sveltejs/kit';
-import { db } from '$lib/server/db';
-import * as table from '$lib/server/db/schema';
 import { eq, and, or, ne, count } from 'drizzle-orm';
 import type { PageServerLoad, Actions } from './$types';
+import { db } from '$lib/server/db';
+import * as table from '$lib/server/db/schema';
+import { selectVerifiedProfile } from '$lib/server/auth.js';
 
 export const load: PageServerLoad = async ({ locals }) => {
-    if (!locals.user) {
-        throw redirect(302, '/auth/login');
-    }
-    
-    // Get user profile
-    const profile = await db
-        .select()
-        .from(table.profile)
-        .where(eq(table.profile.userId, locals.user.id))
-        .get();
-        
-    if (!profile) {
-        throw error(404, 'Profile not found');
-    }
-    
+    // Check if user is logged in, profile exists and is verified
+    const profile = await selectVerifiedProfile(locals.user);
+
     // Get all verified profiles except the current user
     const artistsWithCocktails = await db
         .select({
@@ -40,7 +29,7 @@ export const load: PageServerLoad = async ({ locals }) => {
         )
         .groupBy(table.profile.id, table.user.username, table.profile.artistName)
         .orderBy(table.user.username);
-    
+
     // Get pending requests (received)
     const pendingRequests = await db
         .select({
@@ -56,7 +45,7 @@ export const load: PageServerLoad = async ({ locals }) => {
                 eq(table.collaborationRequest.status, 'pending')
             )
         );
-    
+
     // Get sent requests
     const sentRequests = await db
         .select({
@@ -72,7 +61,7 @@ export const load: PageServerLoad = async ({ locals }) => {
                 eq(table.collaborationRequest.status, 'pending')
             )
         );
-    
+
     // Get active collaborations
     const acceptedRequests = await db
         .select({
@@ -91,14 +80,14 @@ export const load: PageServerLoad = async ({ locals }) => {
                 eq(table.collaborationRequest.status, 'accepted')
             )
         );
-    
+
     // Get profiles for active collaborations
     const activeCollaborations = await Promise.all(
         acceptedRequests.map(async (request) => {
-            const otherProfileId = request.senderId === profile.id 
-                ? request.receiverId 
+            const otherProfileId = request.senderId === profile.id
+                ? request.receiverId
                 : request.senderId;
-            
+
             const otherProfileData = await db
                 .select({
                     id: table.profile.id,
@@ -110,14 +99,14 @@ export const load: PageServerLoad = async ({ locals }) => {
                 .innerJoin(table.user, eq(table.user.id, table.profile.userId))
                 .where(eq(table.profile.id, otherProfileId))
                 .get();
-            
+
             return {
                 request,
                 otherProfile: otherProfileData
             };
         })
     );
-    
+
     return {
         user: {
             ...locals.user,
@@ -132,40 +121,28 @@ export const load: PageServerLoad = async ({ locals }) => {
 
 export const actions: Actions = {
     sendRequest: async ({ request, locals }) => {
-        if (!locals.user) {
-            throw redirect(302, '/auth/login');
-        }
-        
+        // Check if user is logged in, profile exists and is verified
+        const profile = await selectVerifiedProfile(locals.user);
+
         const formData = await request.formData();
         const receiverId = formData.get('receiverId')?.toString();
         const message = formData.get('message')?.toString() || '';
-        
+
         if (!receiverId) {
             return { error: 'Receiver ID is required' };
         }
-        
-        // Get user profile
-        const profile = await db
-            .select()
-            .from(table.profile)
-            .where(eq(table.profile.userId, locals.user.id))
-            .get();
-            
-        if (!profile) {
-            throw error(404, 'Profile not found');
-        }
-        
+
         // Check if receiver exists
         const receiver = await db
             .select()
             .from(table.profile)
             .where(eq(table.profile.id, receiverId))
             .get();
-            
+
         if (!receiver) {
             throw error(404, 'Receiver not found');
         }
-        
+
         // Check if a request already exists
         const existingRequest = await db
             .select()
@@ -178,11 +155,11 @@ export const actions: Actions = {
                 )
             )
             .get();
-            
+
         if (existingRequest) {
             return { error: 'A request already exists' };
         }
-        
+
         // Create the collaboration request
         await db.insert(table.collaborationRequest).values({
             id: crypto.randomUUID(),
@@ -192,8 +169,8 @@ export const actions: Actions = {
             status: 'pending',
             createdAt: new Date()
         });
-        
-        return { 
+
+        return {
             success: true,
             receiverId
         };

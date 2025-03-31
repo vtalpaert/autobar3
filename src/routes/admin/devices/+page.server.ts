@@ -1,21 +1,14 @@
 import { redirect } from '@sveltejs/kit';
+import { eq } from 'drizzle-orm';
 import type { PageServerLoad, Actions } from './$types';
 import { db } from '$lib/server/db';
 import * as table from '$lib/server/db/schema';
-import { eq } from 'drizzle-orm';
+import { selectVerifiedProfile } from '$lib/server/auth.js';
 
 export const load: PageServerLoad = async ({ locals }) => {
-    if (!locals.user) {
-        throw redirect(302, '/auth/login');
-    }
-
+    // Check if user is logged in, profile exists and is verified
+    const profile = await selectVerifiedProfile(locals.user);
     // Check if user is admin
-    const profile = await db
-        .select()
-        .from(table.profile)
-        .where(eq(table.profile.userId, locals.user.id))
-        .get();
-
     if (!profile?.isAdmin) {
         throw redirect(302, '/');
     }

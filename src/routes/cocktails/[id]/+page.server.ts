@@ -1,14 +1,14 @@
-import { error, redirect } from '@sveltejs/kit';
-import { db } from '$lib/server/db';
-import * as table from '$lib/server/db/schema';
+import { error } from '@sveltejs/kit';
 import { eq } from 'drizzle-orm';
 import type { PageServerLoad } from './$types';
+import { db } from '$lib/server/db';
+import * as table from '$lib/server/db/schema';
+import { selectVerifiedProfile } from '$lib/server/auth.js';
 
 export const load: PageServerLoad = async ({ params, locals }) => {
-    if (!locals.user) {
-        throw redirect(302, '/auth/login');
-    }
-    
+    // Check if user is logged in, profile exists and is verified
+    const profile = await selectVerifiedProfile(locals.user);
+
     const cocktails = await db
         .select({
             id: table.cocktail.id,
@@ -25,11 +25,11 @@ export const load: PageServerLoad = async ({ params, locals }) => {
         .where(eq(table.cocktail.id, params.id));
 
     const cocktail = cocktails[0];
-    
+
     if (!cocktail) {
         throw error(404, 'Cocktail not found');
     }
-    
+
     // Get doses with ingredients for this cocktail
     const doses = await db
         .select({
@@ -42,17 +42,11 @@ export const load: PageServerLoad = async ({ params, locals }) => {
         .innerJoin(table.ingredient, eq(table.dose.ingredientId, table.ingredient.id))
         .where(eq(table.dose.cocktailId, params.id))
         .orderBy(table.dose.number);
-    
+
     // Add doses to cocktail
     cocktail.doses = doses;
 
-    const profile = await db
-        .select()
-        .from(table.profile)
-        .where(eq(table.profile.userId, locals.user.id))
-        .get();
-
-    return { 
+    return {
         cocktail,
         user: {
             ...locals.user,

@@ -1,25 +1,14 @@
 import { error, redirect } from '@sveltejs/kit';
-import { db } from '$lib/server/db';
-import * as table from '$lib/server/db/schema';
 import { eq, and, or } from 'drizzle-orm';
 import type { PageServerLoad, Actions } from './$types';
+import { db } from '$lib/server/db';
+import * as table from '$lib/server/db/schema';
+import { selectVerifiedProfile } from '$lib/server/auth.js';
 
 export const load: PageServerLoad = async ({ locals }) => {
-    if (!locals.user) {
-        throw redirect(302, '/auth/login');
-    }
-    
-    // Get user profile
-    const profile = await db
-        .select()
-        .from(table.profile)
-        .where(eq(table.profile.userId, locals.user.id))
-        .get();
-        
-    if (!profile) {
-        throw error(404, 'Profile not found');
-    }
-    
+    // Check if user is logged in, profile exists and is verified
+    const profile = await selectVerifiedProfile(locals.user);
+
     // Get pending requests (received)
     const pendingRequests = await db
         .select({
@@ -42,7 +31,7 @@ export const load: PageServerLoad = async ({ locals }) => {
             )
         )
         .orderBy(table.collaborationRequest.createdAt);
-    
+
     // Get sent requests
     const sentRequests = await db
         .select({
@@ -65,7 +54,7 @@ export const load: PageServerLoad = async ({ locals }) => {
             )
         )
         .orderBy(table.collaborationRequest.createdAt);
-    
+
     // Get active collaborations
     const acceptedRequests = await db
         .select({
@@ -84,14 +73,14 @@ export const load: PageServerLoad = async ({ locals }) => {
                 eq(table.collaborationRequest.status, 'accepted')
             )
         );
-    
+
     // Get profiles for active collaborations
     const activeCollaborations = await Promise.all(
         acceptedRequests.map(async (request) => {
-            const otherProfileId = request.senderId === profile.id 
-                ? request.receiverId 
+            const otherProfileId = request.senderId === profile.id
+                ? request.receiverId
                 : request.senderId;
-            
+
             const otherProfileData = await db
                 .select({
                     id: table.profile.id,
@@ -103,19 +92,14 @@ export const load: PageServerLoad = async ({ locals }) => {
                 .innerJoin(table.user, eq(table.user.id, table.profile.userId))
                 .where(eq(table.profile.id, otherProfileId))
                 .get();
-            
+
             return {
                 request,
                 otherProfile: otherProfileData
             };
         })
     );
-    
-    // Check if profile is verified
-    if (!profile.isVerified) {
-        throw redirect(302, '/profile/unverified');
-    }
-    
+
     return {
         user: {
             ...locals.user,
@@ -132,28 +116,16 @@ export const load: PageServerLoad = async ({ locals }) => {
 
 export const actions: Actions = {
     acceptRequest: async ({ request, locals }) => {
-        if (!locals.user) {
-            throw redirect(302, '/auth/login');
-        }
-        
+        // Check if user is logged in, profile exists and is verified
+        const profile = await selectVerifiedProfile(locals.user);
+
         const formData = await request.formData();
         const requestId = formData.get('requestId')?.toString();
-        
+
         if (!requestId) {
             return { error: 'Request ID is required' };
         }
-        
-        // Get user profile
-        const profile = await db
-            .select()
-            .from(table.profile)
-            .where(eq(table.profile.userId, locals.user.id))
-            .get();
-            
-        if (!profile) {
-            throw error(404, 'Profile not found');
-        }
-        
+
         // Get collaboration request
         const collaborationRequest = await db
             .select()
@@ -166,46 +138,34 @@ export const actions: Actions = {
                 )
             )
             .get();
-            
+
         if (!collaborationRequest) {
             throw error(404, 'Collaboration request not found');
         }
-        
+
         // Update request status
         await db
             .update(table.collaborationRequest)
-            .set({ 
+            .set({
                 status: 'accepted',
                 updatedAt: new Date()
             })
             .where(eq(table.collaborationRequest.id, requestId));
-        
+
         return { success: true };
     },
-    
+
     rejectRequest: async ({ request, locals }) => {
-        if (!locals.user) {
-            throw redirect(302, '/auth/login');
-        }
-        
+        // Check if user is logged in, profile exists and is verified
+        const profile = await selectVerifiedProfile(locals.user);
+
         const formData = await request.formData();
         const requestId = formData.get('requestId')?.toString();
-        
+
         if (!requestId) {
             return { error: 'Request ID is required' };
         }
-        
-        // Get user profile
-        const profile = await db
-            .select()
-            .from(table.profile)
-            .where(eq(table.profile.userId, locals.user.id))
-            .get();
-            
-        if (!profile) {
-            throw error(404, 'Profile not found');
-        }
-        
+
         // Get collaboration request
         const collaborationRequest = await db
             .select()
@@ -218,46 +178,34 @@ export const actions: Actions = {
                 )
             )
             .get();
-            
+
         if (!collaborationRequest) {
             throw error(404, 'Collaboration request not found');
         }
-        
+
         // Update request status
         await db
             .update(table.collaborationRequest)
-            .set({ 
+            .set({
                 status: 'rejected',
                 updatedAt: new Date()
             })
             .where(eq(table.collaborationRequest.id, requestId));
-        
+
         return { success: true };
     },
-    
+
     cancelRequest: async ({ request, locals }) => {
-        if (!locals.user) {
-            throw redirect(302, '/auth/login');
-        }
-        
+        // Check if user is logged in, profile exists and is verified
+        const profile = await selectVerifiedProfile(locals.user);
+
         const formData = await request.formData();
         const requestId = formData.get('requestId')?.toString();
-        
+
         if (!requestId) {
             return { error: 'Request ID is required' };
         }
-        
-        // Get user profile
-        const profile = await db
-            .select()
-            .from(table.profile)
-            .where(eq(table.profile.userId, locals.user.id))
-            .get();
-            
-        if (!profile) {
-            throw error(404, 'Profile not found');
-        }
-        
+
         // Get collaboration request
         const collaborationRequest = await db
             .select()
@@ -270,42 +218,30 @@ export const actions: Actions = {
                 )
             )
             .get();
-            
+
         if (!collaborationRequest) {
             throw error(404, 'Collaboration request not found');
         }
-        
+
         // Delete the request
         await db
             .delete(table.collaborationRequest)
             .where(eq(table.collaborationRequest.id, requestId));
-        
+
         return { success: true };
     },
-    
+
     endCollaboration: async ({ request, locals }) => {
-        if (!locals.user) {
-            throw redirect(302, '/auth/login');
-        }
-        
+        // Check if user is logged in, profile exists and is verified
+        const profile = await selectVerifiedProfile(locals.user);
+
         const formData = await request.formData();
         const requestId = formData.get('requestId')?.toString();
-        
+
         if (!requestId) {
             return { error: 'Request ID is required' };
         }
-        
-        // Get user profile
-        const profile = await db
-            .select()
-            .from(table.profile)
-            .where(eq(table.profile.userId, locals.user.id))
-            .get();
-            
-        if (!profile) {
-            throw error(404, 'Profile not found');
-        }
-        
+
         // Get collaboration request
         const collaborationRequest = await db
             .select()
@@ -321,16 +257,16 @@ export const actions: Actions = {
                 )
             )
             .get();
-            
+
         if (!collaborationRequest) {
             throw error(404, 'Collaboration not found');
         }
-        
+
         // Delete the collaboration
         await db
             .delete(table.collaborationRequest)
             .where(eq(table.collaborationRequest.id, requestId));
-        
+
         return { success: true };
     }
 };

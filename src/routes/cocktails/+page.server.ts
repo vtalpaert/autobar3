@@ -1,23 +1,13 @@
+import { redirect } from '@sveltejs/kit';
+import { eq, and, inArray } from 'drizzle-orm';
+import type { PageServerLoad } from './$types';
 import { db } from '$lib/server/db';
 import * as table from '$lib/server/db/schema';
-import { eq, and, inArray } from 'drizzle-orm';
-import { redirect } from '@sveltejs/kit';
-import type { PageServerLoad } from './$types';
+import { selectVerifiedProfile } from '$lib/server/auth.js';
 
 export const load: PageServerLoad = async ({ locals }) => {
-    if (!locals.user) {
-        throw redirect(302, '/auth/login');
-    }
-
-    const profile = await db
-        .select()
-        .from(table.profile)
-        .where(eq(table.profile.userId, locals.user.id))
-        .get();
-
-    if (!profile || !profile.isVerified) {
-        throw redirect(302, '/profile/unverified');
-    }
+    // Check if user is logged in, profile exists and is verified
+    const profile = await selectVerifiedProfile(locals.user);
 
     // Get all active collaborations for the current user
     const collaborations = await db
@@ -35,21 +25,21 @@ export const load: PageServerLoad = async ({ locals }) => {
             db.select({
                 collaboratorProfileId: table.collaborationRequest.senderId,
             })
-            .from(table.collaborationRequest)
-            .where(
-                and(
-                    eq(table.collaborationRequest.receiverId, profile.id),
-                    eq(table.collaborationRequest.status, 'accepted')
+                .from(table.collaborationRequest)
+                .where(
+                    and(
+                        eq(table.collaborationRequest.receiverId, profile.id),
+                        eq(table.collaborationRequest.status, 'accepted')
+                    )
                 )
-            )
         );
-    
+
     // Extract profile IDs of collaborators
     const collaboratorProfileIds = collaborations.map(c => c.collaboratorProfileId);
-    
+
     // Add the user's own profile ID to include their own cocktails
     const allowedProfileIds = [profile.id, ...collaboratorProfileIds];
-    
+
     // Get cocktails created by the user and their collaborators
     const cocktails = await db
         .select({
@@ -64,7 +54,7 @@ export const load: PageServerLoad = async ({ locals }) => {
         .innerJoin(table.user, eq(table.user.id, table.profile.userId))
         .where(inArray(table.cocktail.creatorId, allowedProfileIds));
 
-    return { 
+    return {
         cocktails,
         user: {
             ...locals.user,

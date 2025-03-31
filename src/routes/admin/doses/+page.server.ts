@@ -1,26 +1,18 @@
+import { nanoid } from 'nanoid';
 import { redirect, fail } from '@sveltejs/kit';
+import { eq } from 'drizzle-orm';
 import type { PageServerLoad, Actions } from './$types';
 import { db } from '$lib/server/db';
 import * as table from '$lib/server/db/schema';
-import { eq } from 'drizzle-orm';
-import { nanoid } from 'nanoid';
+import { selectVerifiedProfile } from '$lib/server/auth.js';
 
 // Constant for density conversion (from ml to g)
 const FACTOR_VOLUME_TO_MASS = 1; // Adjust as needed
 
 export const load: PageServerLoad = async ({ locals }) => {
-    // Check if user is logged in
-    if (!locals.user) {
-        throw redirect(302, '/auth/login');
-    }
-
-    // Get user profile and check if admin
-    const profile = await db
-        .select()
-        .from(table.profile)
-        .where(eq(table.profile.userId, locals.user.id))
-        .get();
-
+    // Check if user is logged in, profile exists and is verified
+    const profile = await selectVerifiedProfile(locals.user);
+    // Check if user is admin
     if (!profile?.isAdmin) {
         throw redirect(302, '/');
     }
@@ -89,61 +81,61 @@ export const actions: Actions = {
         if (!locals.user) {
             return fail(401, { message: 'Not authenticated' });
         }
-        
+
         // Get user profile and check if admin
         const profile = await db
             .select()
             .from(table.profile)
             .where(eq(table.profile.userId, locals.user.id))
             .get();
-            
+
         if (!profile?.isAdmin) {
             return fail(403, { message: 'Unauthorized - Admin access required' });
         }
-        
+
         const formData = await request.formData();
         const cocktailId = formData.get('cocktailId')?.toString();
         const ingredientId = formData.get('ingredientId')?.toString();
         const quantityStr = formData.get('quantity')?.toString();
         const numberStr = formData.get('number')?.toString();
-        
+
         if (!cocktailId || !ingredientId || !quantityStr || !numberStr) {
             return fail(400, { message: 'All fields are required' });
         }
-        
+
         const quantity = parseFloat(quantityStr);
         const number = parseInt(numberStr);
-        
+
         if (isNaN(quantity) || quantity < 0) {
             return fail(400, { message: 'Quantity must be a positive number' });
         }
-        
+
         if (isNaN(number) || number < 1) {
             return fail(400, { message: 'Order number must be a positive integer' });
         }
-        
+
         // Check if cocktail exists
         const cocktail = await db
             .select()
             .from(table.cocktail)
             .where(eq(table.cocktail.id, cocktailId))
             .get();
-            
+
         if (!cocktail) {
             return fail(400, { message: 'Selected cocktail does not exist' });
         }
-        
+
         // Check if ingredient exists
         const ingredient = await db
             .select()
             .from(table.ingredient)
             .where(eq(table.ingredient.id, ingredientId))
             .get();
-            
+
         if (!ingredient) {
             return fail(400, { message: 'Selected ingredient does not exist' });
         }
-        
+
         // Check if this dose already exists
         const existingDose = await db
             .select()
@@ -151,11 +143,11 @@ export const actions: Actions = {
             .where(eq(table.dose.cocktailId, cocktailId))
             .where(eq(table.dose.ingredientId, ingredientId))
             .get();
-            
+
         if (existingDose) {
             return fail(400, { message: 'This ingredient is already added to the cocktail' });
         }
-        
+
         // Add the new dose
         await db.insert(table.dose).values({
             id: nanoid(),
@@ -164,37 +156,37 @@ export const actions: Actions = {
             quantity,
             number
         });
-        
-        return { 
+
+        return {
             success: true,
             message: `Successfully added dose to cocktail`
         };
     },
-    
+
     deleteDose: async ({ request, locals }) => {
         // Check if user is logged in
         if (!locals.user) {
             return fail(401, { message: 'Not authenticated' });
         }
-        
+
         // Get user profile and check if admin
         const profile = await db
             .select()
             .from(table.profile)
             .where(eq(table.profile.userId, locals.user.id))
             .get();
-            
+
         if (!profile?.isAdmin) {
             return fail(403, { message: 'Unauthorized - Admin access required' });
         }
-        
+
         const formData = await request.formData();
         const id = formData.get('id')?.toString();
-        
+
         if (!id) {
             return fail(400, { message: 'Dose ID is required' });
         }
-        
+
         try {
             console.log('Deleting dose with ID:', id);
             await db.delete(table.dose).where(eq(table.dose.id, id));

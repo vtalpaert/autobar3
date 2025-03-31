@@ -1,27 +1,17 @@
 import { error, fail, redirect } from '@sveltejs/kit';
 import type { Actions, PageServerLoad } from './$types';
-import { db } from '$lib/server/db';
-import * as table from '$lib/server/db/schema';
 import { eq } from 'drizzle-orm';
 import { Argon2id } from 'oslo/password';
+import { db } from '$lib/server/db';
+import * as table from '$lib/server/db/schema';
+import { selectVerifiedProfile } from '$lib/server/auth.js';
 import { translations } from '$lib/i18n/translations/index';
 
 export const load: PageServerLoad = async (event) => {
     const user = event.locals.user;
-    if (!user) throw redirect(302, '/auth/login');
 
-    const profile = await db
-        .select()
-        .from(table.profile)
-        .where(eq(table.profile.userId, user.id))
-        .get();
-
-    if (!profile) throw error(404, 'Profile not found');
-    
-    // Check if profile is verified
-    if (!profile.isVerified) {
-        throw redirect(302, '/profile/unverified');
-    }
+    // Check if user is logged in, profile exists and is verified
+    const profile = await selectVerifiedProfile(user);
 
     return {
         user: {

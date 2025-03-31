@@ -28,7 +28,7 @@
           </a>
         {/if}
         <a 
-          href="https://github.com/vtalpaert/autobar" 
+          href="https://github.com/vtalpaert/autobar3" 
           target="_blank" 
           rel="noopener noreferrer" 
           class="bg-gray-700 hover:bg-gray-600 text-white font-bold py-3 px-6 rounded-lg transition-colors"
