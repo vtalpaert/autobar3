@@ -14,12 +14,15 @@ FROM node:18-alpine AS node-builder
 ENV GCP_BUILDPACKS=1
 WORKDIR /app
 COPY package*.json .
-RUN ls && npm i -D @sveltejs/adapter-node
-RUN npm ci
+RUN npm i -D @sveltejs/adapter-node && npm ci
 COPY --from=firmware-builder /workspace/static/firmware/merged-firmware-esp32.bin static/firmware/merged-firmware-esp32.bin
 COPY --from=certificates-generator /certificates/ certificates/
-COPY .env *.config.* LICENSE tsconfig.json ./
+COPY .env.example *.config.* LICENSE tsconfig.json ./
 COPY src src/
 COPY static static/ 
-RUN ls && npm run build
-RUN npm prune --production
+RUN cp .env.example .env && npm run build && npm prune --production
+
+FROM node-builder AS node-preview
+WORKDIR /app
+RUN npm i && npm run db:push -- --force && npm run db:load-ingredients:install
+ENTRYPOINT [ "npm", "run", "preview" ]
