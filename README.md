@@ -28,12 +28,31 @@ The project consists of two main parts:
 
 2. **Hardware Implementation**
    - ESP32-based cocktail mixing machine (primary target)
-   - Support for legacy Raspberry Pi implementation
-   - Automated OTA updates
+   - Support for legacy Raspberry Pi implementation (todo)
+   - Automated OTA updates (todo)
    - Weight-based pour measurement
    - Multiple pump control
 
-## Getting Started
+### ESP32 configuration using the access point
+
+Using the Devices page, use "Flash New Device" and then "Enroll via WiFi" for instructions. You should obtain a page as below.
+
+![access point](docs/screenshot_access_point.png)
+
+## Getting Started with Docker
+
+If you have docker installed, you might prefer to run the project using:
+
+```bash
+docker build -t autobar3 .
+docker run --rm -it autobar3
+```
+
+> A command to add an admin user is missing
+
+## Local development
+
+### Certificates
 
 First, generate SSL certificates for local development:
 
@@ -44,27 +63,28 @@ First, generate SSL certificates for local development:
 This script generates:
 
 - Self-signed certificates for HTTPS development server
-- A PEM file for ESP32 firmware to verify HTTPS connections
-- These certificates are for development only and should not be used in production
+- A corresponding PEM file shipped inside the ESP32 firmware in order to verify HTTPS connections
 
-### Hardware
+> These certificates are for development only and should not be used in production
 
-The firmware is built locally into the `static/firmware` folder so that user may flash their device the first time via a webpage.
+### Develop the firmware
 
-#### Configure using the access point
+The firmware is built locally into the `static/firmware` folder so that user may flash their device the first time via the webpage.
 
-![access point](docs/screenshot_access_point.png)
+#### Using the ESP-IDF plugin VS Code
 
-#### Develop the firmware
-
-The following instructions are intended for VS Code
+The following dependencies are required
 
 ```bash
 sudo apt-get install git wget flex bison gperf python3 python3-pip python3-venv cmake ninja-build ccache libffi-dev libssl-dev dfu-util libusb-1.0-0
 ```
 
 Install the ESP-IDF plugin and configure the extension. Version v5.3.2 is the only one tested for now.
-Building the project will copy the firmware binaries to the static folder.
+The `CMakeLists.txt` includes commands to copy the firmware binaries to the static folder.
+
+#### Using docker
+
+(TODO) VS Code devcontainer or pure docker command
 
 ### Web
 
@@ -77,7 +97,7 @@ npm run dev
 
 The development server will run with HTTPS using the generated self-signed certificates.
 
-Note: For production deployment, replace the development certificates with proper SSL certificates from a trusted Certificate Authority.
+> Note: For production deployment, replace the development certificates with proper SSL certificates from a trusted Certificate Authority.
 
 ## Contributing
 
