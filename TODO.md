@@ -3,6 +3,7 @@
 ## Phase 1: Database Schema and Core Functionality
 
 ### 1. Create Order Table Schema
+
 - Add Order table to schema.ts with the following fields:
   - id (primary key)
   - createdAt (timestamp)
@@ -19,6 +20,7 @@
 > The status is deduced by interaction with the device. If the device has fetch the order at least once, then the status moves to in_progress. If the quantity reported in doseProgress is equal to the dose, then we update the currentDoseId to the next one and so on
 
 ### 2. Update Device Schema
+
 - Add lastPingAt field to device table (timestamp)
 - Add a human friendly name field to device table (text, nullable)
 - Update the admin page
@@ -26,13 +28,28 @@
 > The device being online is deduced from the lastPingAt
 
 ### 3. Create API Endpoints for Device Communication
-- Create endpoint for devices to ask the action it should be doing. The response is generally the Dose they should process (and corresponding Order number) or a standby
-- Create endpoint for devices to report a dose Progress (and which Dose is it doing along Order number)
-- Create endpoint for devices to report errors regarding an Order
+
+- Create endpoint for devices to ask the action it should be doing: `POST /api/devices/action`
+  - Request: `{ "token": "device_api_token" }`
+  - Response:
+    - If no order: `{ "action": "standby" }`
+    - If order exists: `{ "action": "pour", "orderId": "id", "doseId": "id", "ingredientId": "id", "quantity": 45.0 }`
+- Create endpoint for devices to report dose progress: `POST /api/devices/progress`
+  - Request: `{ "token": "device_api_token", "orderId": "id", "doseId": "id", "progress": 25.5 }`
+  - Response:
+    - Normal: `{ "success": true, "message": "Progress updated", "continue": true }`
+    - If cancelled: `{ "success": true, "message": "Order cancelled", "continue": false }`
+- Create endpoint for devices to report errors: `POST /api/devices/error`
+  - Request: `{ "token": "device_api_token", "orderId": "id", "message": "Error description" }`
+  - Response: `{ "success": true, "message": "Error recorded" }`
+- Existing endpoint for device verification: `POST /api/devices/verify`
+  - Request: `{ "token": "device_api_token", "firmwareVersion": "1.0.0" }`
+  - Response: `{ "tokenValid": true, "message": "Hello from the server" }`
 
 ## Phase 2: User Interface - My Bar Page
 
 ### 1. Create My Bar Page
+
 - Create +page.server.ts to fetch current user's orders and devices
 - Create +page.svelte with UI for displaying orders and devices
 - Add status indicators for devices (online/offline)
@@ -40,25 +57,37 @@
 - Show history of past orders
 
 ### 2. Update Header Component
+
 - Add "My Bar" link to the header navigation
 - Update dropdown menu to include My Bar
 
 ### 3. Add Order Button to Cocktails
+
 - Update cocktail detail page to include "Order" button
 - Add form action to create a new order
 - Add logic to select default device or prompt user to select one. If only one device for the user, it should always be this device. Use the human friendly name if it exists, or use id
 
+### 4. Add Cancel Order Functionality
+
+- Add a "Cancel" button on the My Bar page for in-progress orders
+- Create endpoint for cancelling orders: `POST /api/orders/cancel`
+- Update order status to 'cancelled' when user cancels an order
+- Ensure device stops pouring when next progress update is received
+
 ### 4. Add a rename field in My Devices
+
 - Add a field to rename the device with a human friendly name
 
 ## Phase 3: Order Processing Logic
 
 ### 1. Create Order Processing Service
+
 - Implement logic to process orders sequentially
 - Add functionality to track dose progress
 - Implement error handling for failed pours
 
 ### 2. Device Communication
+
 - Create polling mechanism for devices to check for pending orders
 - Implement order status updates from devices
 - Add timeout detection for unresponsive devices
@@ -66,12 +95,14 @@
 ## Phase 4: Admin Testing Interface
 
 ### 1. Create Device Simulator Admin Page
+
 - Create admin page for simulating device behavior
 - Add interface to view pending orders for simulation
 - Implement controls to simulate pouring doses
 - Add ability to simulate errors and interruptions
 
 ### 2. Enhance Admin Dashboard
+
 - Add orders section to admin dashboard
 - Create interface for monitoring all active orders
 - Add ability to cancel or modify orders
@@ -79,15 +110,18 @@
 ## Phase 5: Enhanced User Experience
 
 ### 1. Real-time Updates
+
 - Implement server-sent events or WebSockets for real-time order updates
 - Add animations for order progress
 
 ### 2. Error Recovery
+
 - Create user interface for handling common errors
 - Implement retry mechanisms for failed pours
 - Add notifications for user intervention (e.g., empty ingredient)
 
 ### 3. Order Queue Management
+
 - Implement order queuing for multiple orders on same device
 - Add estimated wait time calculations
 - Create interface for viewing and managing queue

@@ -25,6 +25,7 @@ The project consists of two main parts:
    - API endpoints for device communication
    - Cocktail creation and editing with ingredient doses
    - Artist collaboration system for joint cocktail creation
+   - Order management system for cocktail preparation
 
 2. **Hardware Implementation**
    - ESP32-based cocktail mixing machine (primary target)
