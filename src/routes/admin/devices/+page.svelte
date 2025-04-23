@@ -4,6 +4,13 @@
     import { enhance } from '$app/forms';
 
     export let data: PageData;
+    
+    // Function to check if device is online (pinged in the last 5 minutes)
+    function isDeviceOnline(lastPingAt: Date | null): boolean {
+        if (!lastPingAt) return false;
+        const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000);
+        return new Date(lastPingAt) > fiveMinutesAgo;
+    }
 </script>
 
 <Header user={data.user} />
@@ -27,7 +34,9 @@
                     {#each data.devices as device}
                         <div class="flex items-center justify-between bg-gray-700 p-4 rounded-lg">
                             <div>
-                                <p class="font-bold">Device {device.id.slice(0, 8)}</p>
+                                <p class="font-bold">
+                                    {device.name ? device.name : `Device ${device.id.slice(0, 8)}`}
+                                </p>
                                 <p class="text-sm text-gray-400">
                                     Firmware: {device.firmwareVersion}
                                 </p>
@@ -40,6 +49,16 @@
                                 {#if device.lastUsedAt}
                                     <p class="text-sm text-gray-400">
                                         Last used: {new Date(device.lastUsedAt).toLocaleDateString()}
+                                    </p>
+                                {/if}
+                                {#if device.lastPingAt}
+                                    <p class="text-sm text-gray-400">
+                                        Last online: {new Date(device.lastPingAt).toLocaleString()}
+                                    </p>
+                                    <p class="text-sm">
+                                        <span class={`px-2 py-0.5 rounded-full text-xs ${isDeviceOnline(device.lastPingAt) ? 'bg-green-600' : 'bg-red-600'}`}>
+                                            {isDeviceOnline(device.lastPingAt) ? 'Online' : 'Offline'}
+                                        </span>
                                     </p>
                                 {/if}
                             </div>

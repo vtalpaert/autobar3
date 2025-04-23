@@ -45,6 +45,10 @@ export const load: PageServerLoad = async ({ locals }) => {
     const [doseCount] = await db
         .select({ count: count() })
         .from(table.dose);
+        
+    const [orderCount] = await db
+        .select({ count: count() })
+        .from(table.order);
 
     return {
         counts: {
@@ -53,7 +57,8 @@ export const load: PageServerLoad = async ({ locals }) => {
             cocktails: cocktailCount.count,
             devices: deviceCount.count,
             ingredients: ingredientCount.count,
-            doses: doseCount.count
+            doses: doseCount.count,
+            orders: orderCount.count
         },
         user: {
             ...locals.user,

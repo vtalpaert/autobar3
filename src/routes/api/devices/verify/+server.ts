@@ -27,12 +27,12 @@ export async function POST({ request }) {
         });
     }
 
-    // Update the firmware version
+    // Update the firmware version and ping time
     await db
         .update(table.device)
         .set({ 
             firmwareVersion,
-            lastUsedAt: new Date()
+            lastPingAt: new Date()
         })
         .where(eq(table.device.id, device.id));
 

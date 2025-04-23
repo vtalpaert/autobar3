@@ -31,10 +31,12 @@ export const device = sqliteTable('device', {
 	profileId: text('profile_id')
 		.notNull()
 		.references(() => profile.id),
+	name: text('name'), // Human friendly name
 	firmwareVersion: text('firmware_version').notNull().default('unknown'),
 	isDefault: integer('is_default', { mode: 'boolean' }).notNull().default(false),
 	addedAt: integer('added_at', { mode: 'timestamp' }).notNull(),
 	lastUsedAt: integer('last_used_at', { mode: 'timestamp' }),
+	lastPingAt: integer('last_ping_at', { mode: 'timestamp' }), // Track when device was last online
 	apiToken: text('api_token').unique()
 });
 
@@ -101,4 +103,35 @@ export type CocktailWithDoses = Cocktail & {
 export type CollaborationRequestWithProfiles = CollaborationRequest & {
     sender: { username: string, artistName: string | null };
     receiver: { username: string, artistName: string | null };
+};
+
+// Order table for tracking cocktail orders
+export const order = sqliteTable('order', {
+	id: text('id').primaryKey(),
+	createdAt: integer('created_at', { mode: 'timestamp' }).notNull(),
+	updatedAt: integer('updated_at', { mode: 'timestamp' }).notNull(),
+	customerId: text('customer_id')
+		.notNull()
+		.references(() => profile.id),
+	deviceId: text('device_id')
+		.notNull()
+		.references(() => device.id),
+	cocktailId: text('cocktail_id')
+		.notNull()
+		.references(() => cocktail.id),
+	currentDoseId: text('current_dose_id')
+		.references(() => dose.id),
+	doseProgress: real('dose_progress').notNull().default(0), // amount poured of current dose in ml
+	status: text('status').notNull().default('pending'), // enum: 'pending', 'in_progress', 'completed', 'failed', 'cancelled'
+	errorMessage: text('error_message')
+});
+
+export type Order = typeof order.$inferSelect;
+
+// Extended types for orders
+export type OrderWithDetails = Order & {
+    customer: { username: string, artistName: string | null };
+    device: { id: string };
+    cocktail: { name: string };
+    currentDose?: { id: string, ingredientId: string, quantity: number, number: number };
 };

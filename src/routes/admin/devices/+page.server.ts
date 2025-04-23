@@ -22,6 +22,8 @@ export const load: PageServerLoad = async ({ locals }) => {
             isDefault: table.device.isDefault,
             addedAt: table.device.addedAt,
             lastUsedAt: table.device.lastUsedAt,
+            lastPingAt: table.device.lastPingAt,
+            name: table.device.name,
             ownerUsername: table.user.username
         })
         .from(table.device)
