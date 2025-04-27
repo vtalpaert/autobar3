@@ -33,6 +33,7 @@ export async function POST({ request }) {
         .where(eq(table.device.id, device.id));
 
     // Find pending or in-progress orders for this device
+    // Process in creation order (oldest first)
     const order = await db
         .select()
         .from(table.order)
@@ -46,6 +47,8 @@ export async function POST({ request }) {
                 )
             )
         )
+        .orderBy(table.order.createdAt)
+        .limit(1)
         .get();
 
     if (!order) {
