@@ -2,49 +2,7 @@
 
 ## Phase 1: Database Schema and Core Functionality
 
-### 1. Create Order Table Schema
-
-- Add Order table to schema.ts with the following fields:
-  - id (primary key)
-  - createdAt (timestamp)
-  - updatedAt (timestamp)
-  - customerId (references profile.id)
-  - deviceId (references device.id)
-  - cocktailId (references cocktail.id)
-  - currentDoseId (references dose.id, nullable)
-  - doseProgress (real, amount poured of current dose in ml)
-  - status (enum: 'pending', 'in_progress', 'completed', 'failed', 'cancelled')
-  - errorMessage (text, nullable)
-- Create the corresponding admin page
-
-> The status is deduced by interaction with the device. If the device has fetch the order at least once, then the status moves to in_progress. If the quantity reported in doseProgress is equal to the dose, then we update the currentDoseId to the next one and so on
-
-### 2. Update Device Schema
-
-- Add lastPingAt field to device table (timestamp)
-- Add a human friendly name field to device table (text, nullable)
-- Update the admin page
-
-> The device being online is deduced from the lastPingAt
-
-### 3. Create API Endpoints for Device Communication
-
-- Create endpoint for devices to ask the action it should be doing: `GET /api/devices/action`
-  - Request: Query parameter `token=device_api_token`
-  - Response:
-    - If no order: `{ "action": "standby" }`
-    - If order exists: `{ "action": "pour", "orderId": "id", "doseId": "id", "ingredientId": "id", "quantity": 45.0 }`
-- Create endpoint for devices to report dose progress: `POST /api/devices/progress`
-  - Request: `{ "token": "device_api_token", "orderId": "id", "doseId": "id", "progress": 25.5 }`
-  - Response:
-    - Normal: `{ "success": true, "message": "Progress updated", "continue": true }`
-    - If cancelled: `{ "success": true, "message": "Order cancelled", "continue": false }`
-- Create endpoint for devices to report errors: `POST /api/devices/error`
-  - Request: `{ "token": "device_api_token", "orderId": "id", "message": "Error description" }`
-  - Response: `{ "success": true, "message": "Error recorded" }`
-- Existing endpoint for device verification: `POST /api/devices/verify`
-  - Request: `{ "token": "device_api_token", "firmwareVersion": "1.0.0" }`
-  - Response: `{ "tokenValid": true, "message": "Hello from the server" }`
+[DONE]
 
 ## Phase 2: User Interface - My Bar Page
 
@@ -70,11 +28,11 @@
 ### 4. Add Cancel Order Functionality
 
 - Add a "Cancel" button on the My Bar page for in-progress orders
-- Create endpoint for cancelling orders: `POST /api/orders/cancel`
-- Update order status to 'cancelled' when user cancels an order
+- Create endpoint for cancelling orders from the device: `POST /api/devices/cancel/order` (and fix incorrect endpoints definition)
+- Update order status to 'cancelled' when user or device cancels an order
 - Ensure device stops pouring when next progress update is received
 
-### 4. Add a rename field in My Devices
+### 5. Add a rename field in My Devices
 
 - Add a field to rename the device with a human friendly name
 
