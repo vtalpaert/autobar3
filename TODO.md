@@ -6,7 +6,13 @@
 
 ## Phase 2: User Interface - My Bar Page
 
-### 1. Create My Bar Page
+### 1. Add Order Button to Cocktails
+
+- Update cocktail detail page to include "Order" button
+- Add form action to create a new order
+- Add logic to select default device or prompt user to select one. If only one device for the user, it should always be this device. Use the human friendly name if it exists, or use id
+
+### 2. Create My Bar Page
 
 - Create +page.server.ts to fetch current user's orders and devices
 - Create +page.svelte with UI for displaying orders and devices
@@ -14,16 +20,10 @@
 - Display current order status if one exists
 - Show history of past orders
 
-### 2. Update Header Component
+### 3. Update Header Component
 
 - Add "My Bar" link to the header navigation
 - Update dropdown menu to include My Bar
-
-### 3. Add Order Button to Cocktails
-
-- Update cocktail detail page to include "Order" button
-- Add form action to create a new order
-- Add logic to select default device or prompt user to select one. If only one device for the user, it should always be this device. Use the human friendly name if it exists, or use id
 
 ### 4. Add Cancel Order Functionality
 
@@ -36,21 +36,7 @@
 
 - Add a field to rename the device with a human friendly name
 
-## Phase 3: Order Processing Logic
-
-### 1. Create Order Processing Service
-
-- Implement logic to process orders sequentially
-- Add functionality to track dose progress
-- Implement error handling for failed pours
-
-### 2. Device Communication
-
-- Create polling mechanism for devices to check for pending orders
-- Implement order status updates from devices
-- Add timeout detection for unresponsive devices
-
-## Phase 4: Admin Testing Interface
+## Phase 3: Admin Testing Interface
 
 ### 1. Create Device Simulator Admin Page
 
@@ -65,6 +51,20 @@
 - Create interface for monitoring all active orders
 - Add ability to cancel or modify orders
 
+## Phase 4: Order Processing Logic
+
+### 1. Create Order Processing Service
+
+- Implement logic to process orders sequentially
+- Add functionality to track dose progress
+- Implement error handling for failed pours
+
+### 2. Device Communication
+
+- Create polling mechanism for devices to check for pending orders
+- Implement order status updates from devices
+- Add timeout detection for unresponsive devices
+
 ## Phase 5: Enhanced User Experience
 
 ### 1. Real-time Updates
@@ -78,15 +78,9 @@
 - Implement retry mechanisms for failed pours
 - Add notifications for user intervention (e.g., empty ingredient)
 
-### 3. Order Queue Management
-
-- Implement order queuing for multiple orders on same device
-- Add estimated wait time calculations
-- Create interface for viewing and managing queue
-
 ## Implementation Order
 
-1. Database schema changes (Order table, Device updates)
+1. DONE: Database schema changes (Order table, Device updates)
 2. Basic My Bar page with order history
 3. Header updates to include My Bar link
 4. Order button on cocktail pages

@@ -4,9 +4,29 @@ Thank you for your interest in contributing to RobotCocktail! This document prov
 
 Please keep this document updated to help navigate the project.
 
-For detailed information about the project structure, see [Project Structure](docs/project_structure.md).
-
 For API documentation, see [API Documentation](docs/api.md).
+
+## Coding Conventions
+
+### General
+
+- Use clear, descriptive names for variables, functions, and classes
+- Write self-documenting code with appropriate comments
+- Follow language-specific style guides
+
+### Web Platform
+
+- Follow Tailwind CSS best practices
+- Use functional components
+- Implement responsive design
+- Write unit tests for components
+
+### Hardware
+
+- Document pin configurations
+- Include wiring diagrams for new features
+- Test hardware changes thoroughly
+- Test OTA update capability
 
 ## Pull Request Process
 

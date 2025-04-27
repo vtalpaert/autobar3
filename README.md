@@ -14,11 +14,6 @@ RobotCocktail is a modern reimagining of the [Autobar v1 project](https://github
 - Over-the-air (OTA) updates for connected devices
 - RESTful API for device communication
 
-## Documentation
-
-- [Project Structure](docs/project_structure.md)
-- [API Documentation](docs/api.md)
-
 ## Components
 
 The project consists of two main parts:
@@ -27,7 +22,7 @@ The project consists of two main parts:
    - User authentication and management
    - Cocktail recipe database with ingredients and doses management
    - Device management interface
-   - API endpoints for device communication
+   - [API endpoints](docs/api.md) for device communication
    - Cocktail creation and editing with ingredient doses
    - Artist collaboration system for joint cocktail creation
    - Order management system for cocktail preparation
