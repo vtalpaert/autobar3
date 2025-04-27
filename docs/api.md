@@ -11,12 +11,12 @@ The following API endpoints are available for device communication:
 
 ## Device Action
 
-- `GET /api/devices/action`
+- `POST /api/devices/action`
   - Retrieves the next action for the device to perform
-  - Request: Query parameter `token=device_api_token`
+  - Request: `{ "token": "device_api_token" }`
   - Response:
     - If no order: `{ "action": "standby" }`
-    - If order exists: `{ "action": "pour", "orderId": "id", "doseId": "id", "ingredientId": "id", "quantity": 45.0 }`
+    - If order exists: `{ "action": "pour", "orderId": "id", "doseId": "id", "ingredientId": "id", "quantityLeft": 45.0 }`
 
 ## Progress Reporting
 
@@ -24,19 +24,19 @@ The following API endpoints are available for device communication:
   - Reports progress on a dose being poured
   - Request: `{ "token": "device_api_token", "orderId": "id", "doseId": "id", "progress": 25.5 }`
   - Response:
-    - Normal: `{ "success": true, "message": "Progress updated", "continue": true }`
-    - If cancelled: `{ "success": true, "message": "Order cancelled", "continue": false }`
+    - Normal: `{ "message": "Progress updated", "continue": true }`
+    - If cancelled: `{ "message": "Order cancelled", "continue": false }`
 
 ## Error Reporting
 
 - `POST /api/devices/error`
   - Reports an error during order processing
   - Request: `{ "token": "device_api_token", "orderId": "id", "message": "Error description" }`
-  - Response: `{ "success": true, "message": "Error recorded" }`
+  - Response: `{ "message": "Error recorded" }`
 
 ## Order Cancellation
 
-- `POST /api/orders/cancel`
+- `POST /api/devices/cancel/order`
   - Cancels an in-progress order
   - Request: `{ "orderId": "id" }`
-  - Response: `{ "success": true, "message": "Order cancelled" }`
+  - Response: `{ "message": "Order cancelled" }`

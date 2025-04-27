@@ -11,7 +11,7 @@ export async function POST({ request }) {
         return json({
             tokenValid: false,
             message: "Missing token or firmware version"
-        });
+        }, { status: 401 });
     }
 
     const device = await db
@@ -24,7 +24,7 @@ export async function POST({ request }) {
         return json({
             tokenValid: false,
             message: `Your token '${token}' is invalid, you should enroll again`
-        });
+        }, { status: 401 });
     }
 
     // Update the firmware version and ping time
@@ -36,16 +36,8 @@ export async function POST({ request }) {
         })
         .where(eq(table.device.id, device.id));
 
-    const response = {
+    return json({
         tokenValid: true,
         message: "Hello from the server"
-    };
-
-    return new Response(JSON.stringify(response), {
-        status: 200,
-        headers: {
-            'Content-Type': 'application/json',
-            'Content-Length': JSON.stringify(response).length.toString()
-        }
     });
 }
