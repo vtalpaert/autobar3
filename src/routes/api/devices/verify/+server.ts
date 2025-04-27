@@ -30,7 +30,7 @@ export async function POST({ request }) {
     // Update the firmware version and ping time
     await db
         .update(table.device)
-        .set({ 
+        .set({
             firmwareVersion,
             lastPingAt: new Date()
         })
@@ -40,7 +40,7 @@ export async function POST({ request }) {
         tokenValid: true,
         message: "Hello from the server"
     };
-    
+
     return new Response(JSON.stringify(response), {
         status: 200,
         headers: {

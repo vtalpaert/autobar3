@@ -12,11 +12,11 @@ export async function POST({ request, locals }) {
 
     const deviceId = await request.text();
     const token = nanoid(32); // Generate a secure random token
-    
+
     await db
         .update(table.device)
         .set({ apiToken: token })
         .where(eq(table.device.id, deviceId));
-    
+
     return json({ token });
 }

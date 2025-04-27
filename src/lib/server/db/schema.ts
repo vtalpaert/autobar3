@@ -85,25 +85,6 @@ export const collaborationRequest = sqliteTable('collaboration_request', {
 	updatedAt: integer('updated_at', { mode: 'timestamp' })
 });
 
-export type Session = typeof session.$inferSelect;
-export type User = typeof user.$inferSelect;
-export type Profile = typeof profile.$inferSelect;
-export type Cocktail = typeof cocktail.$inferSelect;
-export type Device = typeof device.$inferSelect;
-export type Ingredient = typeof ingredient.$inferSelect;
-export type Dose = typeof dose.$inferSelect;
-export type CollaborationRequest = typeof collaborationRequest.$inferSelect;
-
-// Extended types for UI
-export type CocktailWithDoses = Cocktail & {
-    doses: (Dose & { ingredient: Ingredient })[];
-};
-
-// Extended types for collaboration requests
-export type CollaborationRequestWithProfiles = CollaborationRequest & {
-    sender: { username: string, artistName: string | null };
-    receiver: { username: string, artistName: string | null };
-};
 
 // Order table for tracking cocktail orders
 export const order = sqliteTable('order', {
@@ -126,7 +107,26 @@ export const order = sqliteTable('order', {
 	errorMessage: text('error_message')
 });
 
+export type Session = typeof session.$inferSelect;
+export type User = typeof user.$inferSelect;
+export type Profile = typeof profile.$inferSelect;
+export type Cocktail = typeof cocktail.$inferSelect;
+export type Device = typeof device.$inferSelect;
+export type Ingredient = typeof ingredient.$inferSelect;
+export type Dose = typeof dose.$inferSelect;
+export type CollaborationRequest = typeof collaborationRequest.$inferSelect;
 export type Order = typeof order.$inferSelect;
+
+// Extended types for UI
+export type CocktailWithDoses = Cocktail & {
+    doses: (Dose & { ingredient: Ingredient })[];
+};
+
+// Extended types for collaboration requests
+export type CollaborationRequestWithProfiles = CollaborationRequest & {
+    sender: { username: string, artistName: string | null };
+    receiver: { username: string, artistName: string | null };
+};
 
 // Extended types for orders
 export type OrderWithDetails = Order & {

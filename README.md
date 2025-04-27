@@ -14,6 +14,11 @@ RobotCocktail is a modern reimagining of the [Autobar v1 project](https://github
 - Over-the-air (OTA) updates for connected devices
 - RESTful API for device communication
 
+## Documentation
+
+- [Project Structure](docs/project_structure.md)
+- [API Documentation](docs/api.md)
+
 ## Components
 
 The project consists of two main parts:

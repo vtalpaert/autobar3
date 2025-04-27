@@ -29,8 +29,8 @@
 
 ### 3. Create API Endpoints for Device Communication
 
-- Create endpoint for devices to ask the action it should be doing: `POST /api/devices/action`
-  - Request: `{ "token": "device_api_token" }`
+- Create endpoint for devices to ask the action it should be doing: `GET /api/devices/action`
+  - Request: Query parameter `token=device_api_token`
   - Response:
     - If no order: `{ "action": "standby" }`
     - If order exists: `{ "action": "pour", "orderId": "id", "doseId": "id", "ingredientId": "id", "quantity": 45.0 }`
