@@ -6,8 +6,9 @@ import * as table from '$lib/server/db/schema';
 import { selectVerifiedProfile } from '$lib/server/auth.js';
 
 export const load: PageServerLoad = async ({ locals }) => {
+    // Check if user is logged in, profile exists and is verified
     const profile = await selectVerifiedProfile(locals.user);
-    
+
     // Get user's devices
     const devices = await db
         .select({
@@ -21,7 +22,7 @@ export const load: PageServerLoad = async ({ locals }) => {
         })
         .from(table.device)
         .where(eq(table.device.profileId, profile.id));
-    
+
     // Get active orders (pending or in_progress)
     const activeOrders = await db
         .select({
@@ -61,7 +62,7 @@ export const load: PageServerLoad = async ({ locals }) => {
             )
         )
         .orderBy(desc(table.order.createdAt));
-    
+
     // Get completed orders (completed, failed, cancelled)
     const pastOrders = await db
         .select({
@@ -90,7 +91,7 @@ export const load: PageServerLoad = async ({ locals }) => {
         )
         .orderBy(desc(table.order.createdAt))
         .limit(10); // Limit to last 10 orders
-    
+
     return {
         devices,
         activeOrders,
@@ -107,11 +108,11 @@ export const actions: Actions = {
         const profile = await selectVerifiedProfile(locals.user);
         const formData = await request.formData();
         const orderId = formData.get('orderId')?.toString();
-        
+
         if (!orderId) {
             throw error(400, 'Order ID is required');
         }
-        
+
         // Verify the order belongs to the user
         const order = await db
             .select()
@@ -123,16 +124,16 @@ export const actions: Actions = {
                 )
             )
             .get();
-        
+
         if (!order) {
             throw error(404, 'Order not found');
         }
-        
+
         // Only allow cancellation of pending or in-progress orders
         if (order.status !== 'pending' && order.status !== 'in_progress') {
             throw error(400, 'Cannot cancel an order that is not pending or in progress');
         }
-        
+
         // Update order status to cancelled
         await db
             .update(table.order)
@@ -141,7 +142,7 @@ export const actions: Actions = {
                 updatedAt: new Date()
             })
             .where(eq(table.order.id, orderId));
-        
+
         return { success: true };
     }
 };

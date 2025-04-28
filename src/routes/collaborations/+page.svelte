@@ -6,7 +6,6 @@
 	import Header from '$lib/components/Header.svelte';
 
 	export let data: PageData;
-	export let form;
 
 	$: t = translations[$currentLanguage];
 

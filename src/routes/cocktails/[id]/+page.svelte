@@ -1,4 +1,5 @@
 <script lang="ts">
+    import { enhance } from '$app/forms';
     import type { PageData } from './$types';
     import { translations } from '$lib/i18n/translations';
     import { currentLanguage } from '$lib/i18n/store';
@@ -54,7 +55,7 @@
                     {/if}
                     
                     {#if data.user}
-                        <form method="POST" action="?/createOrder">
+                        <form method="POST" action="?/createOrder" use:enhance>
                             <button 
                                 type="submit"
                                 class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded transition-colors"
