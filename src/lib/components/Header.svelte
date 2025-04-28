@@ -29,6 +29,12 @@
         >
           {t.header.cocktails}
         </a>
+        <a 
+          href="/my-bar"
+          class="text-white hover:text-gray-300"
+        >
+          {t.header.myBar}
+        </a>
         <!-- Language Selector -->
         <select
           class="bg-gray-700 text-white px-3 py-1 rounded-lg border border-gray-600"
@@ -47,7 +53,7 @@
             aria-haspopup="true"
             aria-controls="user-menu"
           >
-            <span class="font-medium">Welcome, {user.username}</span>
+            <span class="font-medium">{t.header.welcome}, {user.username}</span>
             <svg
               class="w-4 h-4"
               fill="none"
@@ -78,6 +84,14 @@
                 on:click={closeDropdown}
               >
                 {t.header.cocktails}
+              </a>
+              <a
+                href="/my-bar"
+                class="block w-full text-left px-4 py-2 text-white hover:bg-gray-600"
+                role="menuitem"
+                on:click={closeDropdown}
+              >
+                {t.header.myBar}
               </a>
               <a
                 href="/devices"
@@ -135,7 +149,7 @@
             href="/auth/login"
             class="text-white hover:text-gray-300"
           >
-            Login
+            {t.header.login}
           </a>
         {/if}
       </div>

@@ -24,6 +24,8 @@
 
 - Add "My Bar" link to the header navigation
 - Update dropdown menu to include My Bar
+- Add translations for My Bar header items
+- Add other missing translations in the header
 
 ### 4. Add Cancel Order Functionality
 

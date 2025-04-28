@@ -30,10 +30,13 @@ export const ui = {
     },
     header: {
       cocktails: 'My Cocktails',
+      myBar: 'My Bar',
       devices: 'My Devices',
       profile: 'My Profile',
       collaborations: 'My Collaborations',
-      logout: 'Logout'
+      logout: 'Logout',
+      login: 'Login',
+      welcome: 'Welcome'
     }
   },
   fr: {
@@ -67,10 +70,13 @@ export const ui = {
     },
     header: {
       cocktails: 'Mes Cocktails',
+      myBar: 'Mon Bar',
       devices: 'Mes Appareils',
       profile: 'Mon Profil',
       collaborations: 'Mes Collaborations',
-      logout: 'Déconnexion'
+      logout: 'Déconnexion',
+      login: 'Connexion',
+      welcome: 'Bienvenue'
     }
   }
 };
