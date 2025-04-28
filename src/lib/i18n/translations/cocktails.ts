@@ -26,7 +26,8 @@ export const cocktails = {
       delete: 'Delete Cocktail',
       deleteConfirmTitle: 'Delete Cocktail?',
       deleteConfirmMessage: 'Are you sure you want to delete this cocktail? This action cannot be undone.',
-      confirmDelete: 'Yes, Delete'
+      confirmDelete: 'Yes, Delete',
+      order: 'Order'
     },
     createCocktail: {
       title: 'Create New Cocktail',
@@ -66,7 +67,8 @@ export const cocktails = {
       delete: 'Supprimer le Cocktail',
       deleteConfirmTitle: 'Supprimer le Cocktail ?',
       deleteConfirmMessage: 'Êtes-vous sûr de vouloir supprimer ce cocktail ? Cette action ne peut pas être annulée.',
-      confirmDelete: 'Oui, Supprimer'
+      confirmDelete: 'Oui, Supprimer',
+      order: 'Commander'
     },
     createCocktail: {
       title: 'Créer un Nouveau Cocktail',

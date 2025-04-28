@@ -7,7 +7,9 @@
     export let data: PageData;
     $: t = translations[$currentLanguage];
 
-    $: formattedDate = new Date(data.cocktail.createdAt).toLocaleDateString();
+    $: formattedDate = $currentLanguage === 'fr' 
+        ? new Date(data.cocktail.createdAt).toLocaleDateString('fr-FR', {day: '2-digit', month: '2-digit', year: 'numeric'})
+        : new Date(data.cocktail.createdAt).toLocaleDateString();
 </script>
 
 <Header user={data.user} />
@@ -41,14 +43,27 @@
                     <p>{t.cocktails.addedOn} {formattedDate}</p>
                 </div>
                 
-                {#if data.user && (data.user.isAdmin || data.cocktail.creatorId === data.user.id)}
-                    <a 
-                        href="/cocktails/{data.cocktail.id}/edit" 
-                        class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded transition-colors"
-                    >
-                        {t.cocktails.edit}
-                    </a>
-                {/if}
+                <div class="flex gap-2">
+                    {#if data.user && (data.user.isAdmin || data.cocktail.creatorId === data.user.id)}
+                        <a 
+                            href="/cocktails/{data.cocktail.id}/edit" 
+                            class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded transition-colors"
+                        >
+                            {t.cocktails.edit}
+                        </a>
+                    {/if}
+                    
+                    {#if data.user}
+                        <form method="POST" action="?/createOrder">
+                            <button 
+                                type="submit"
+                                class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded transition-colors"
+                            >
+                                {t.cocktails.order || 'Order'}
+                            </button>
+                        </form>
+                    {/if}
+                </div>
             </div>
             
             {#if data.cocktail.doses && data.cocktail.doses.length > 0}

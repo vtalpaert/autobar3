@@ -103,6 +103,7 @@
 
 ## Later changes (out of scope for now)
 
+- Add dropdown selection for devices when user has multiple devices
 - Add possibility for multiple Profile to use same device. For example there is an owner profile, but you may grant permission to some users to use your device
 - Separate cooperation logic in cocktail recipes sharing and device sharing
 - Add a device configuration page for users, where they can explicitly tell which ingredients are available for the device
