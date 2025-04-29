@@ -25,5 +25,5 @@ RUN cp .env.example .env && npm run build && npm prune --production
 
 FROM node-builder AS node-preview
 WORKDIR /app
-RUN npm i && npm run db:push -- --force && npm run db:load-ingredients:install
+RUN npm i && npm run db:push -- --force && npm run db:load-ingredients:install && npm run db:create-admin
 ENTRYPOINT [ "npm", "run", "preview" ]

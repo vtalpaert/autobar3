@@ -42,14 +42,14 @@ Using the Devices page, use "Flash New Device" and then "Enroll via WiFi" for in
 
 ## Getting Started with Docker
 
-If you have docker installed, you might prefer to run the project using:
+If you have docker installed, you might prefer to run the project for a quick demo by using:
 
 ```bash
 docker build -t autobar3 .
 docker run --rm -it autobar3
 ```
 
-> A command to add an admin user is missing
+The admin authentification is in `.env.example`. You may change the values before building the image.
 
 ## Local development
 
