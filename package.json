@@ -17,7 +17,8 @@
 		"db:migrate": "drizzle-kit migrate",
 		"db:studio": "drizzle-kit studio",
 		"db:load-ingredients": "npx tsx src/lib/server/scripts/load-ingredients.ts",
-		"db:load-ingredients:install": "npm install --save-dev dotenv && npm run db:load-ingredients"
+		"db:load-ingredients:install": "npm install --save-dev dotenv && npm run db:load-ingredients",
+		"db:create-admin": "npx tsx src/lib/server/scripts/create-admin.ts"
 	},
 	"files": [
 		"dist",
