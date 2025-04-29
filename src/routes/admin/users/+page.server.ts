@@ -21,6 +21,7 @@ export const load: PageServerLoad = async ({ locals }) => {
             username: table.user.username,
             artistName: table.profile.artistName,
             isVerified: table.profile.isVerified,
+            isAdmin: table.profile.isAdmin,
             createdAt: table.profile.createdAt
         })
         .from(table.profile)

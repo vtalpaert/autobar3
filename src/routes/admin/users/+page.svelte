@@ -30,7 +30,9 @@
                     {#each unverifiedProfiles as profile}
                         <div class="flex items-center justify-between bg-gray-700 p-4 rounded-lg">
                             <div>
-                                <p class="font-bold">{profile.username}</p>
+                                <p class="font-bold">
+                                    <a href="/profile?id={profile.userId}" class="hover:underline">{profile.username}</a>
+                                </p>
                                 <p class="text-sm text-gray-400">Created: {new Date(profile.createdAt).toLocaleDateString()}</p>
                             </div>
                             <form 
@@ -60,10 +62,17 @@
                 {#each data.profiles as profile}
                     <div class="flex items-center justify-between bg-gray-700 p-4 rounded-lg">
                         <div>
-                            <p class="font-bold">{profile.username}</p>
+                            <p class="font-bold">
+                                <a href="/profile?id={profile.userId}" class="hover:underline">{profile.username}</a>
+                            </p>
                             <p class="text-sm text-gray-400">Artist Name: {profile.artistName || 'Not set'}</p>
                             <p class="text-sm text-gray-400">
-                                Status: {profile.isVerified ? 'Verified' : 'Unverified'}
+                                <span class="{profile.isVerified ? 'bg-green-600' : 'bg-yellow-600'} text-white text-xs px-2 py-1 rounded">
+                                    {profile.isVerified ? 'Verified' : 'Unverified'}
+                                </span>
+                                {#if profile.isAdmin}
+                                    <span class="ml-2 bg-purple-700 text-white text-xs px-2 py-1 rounded">Admin</span>
+                                {/if}
                             </p>
                         </div>
                         <form 
@@ -71,6 +80,11 @@
                             action="?/deleteUser" 
                             use:enhance
                             class="flex gap-2"
+                            on:submit|preventDefault={(e) => {
+                                if (confirm('Are you sure you want to delete this user? This action cannot be undone.')) {
+                                    e.target.submit();
+                                }
+                            }}
                         >
                             <input type="hidden" name="userId" value={profile.userId} />
                             <button 
