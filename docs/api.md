@@ -38,5 +38,5 @@ The following API endpoints are available for device communication:
 
 - `POST /api/devices/cancel/order`
   - Cancels an in-progress order
-  - Request: `{ "orderId": "id" }`
-  - Response: `{ "message": "Order cancelled" }`
+  - Request: `{ "token": "device_api_token", "orderId": "id" }`
+  - Response: `{ "success": true, "message": "Order cancelled" }`
