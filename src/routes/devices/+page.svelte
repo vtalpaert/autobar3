@@ -8,6 +8,13 @@
     export let data: PageData;
     $: t = translations[$currentLanguage];
 
+    // Format date based on language
+    function formatDate(dateString: string): string {
+        return $currentLanguage === 'fr' 
+            ? new Date(dateString).toLocaleDateString('fr-FR', {day: '2-digit', month: '2-digit', year: 'numeric'})
+            : new Date(dateString).toLocaleDateString();
+    }
+
     // Track which device is being edited
     let editingDeviceId: string | null = null;
     let deviceNameInput: string = '';
@@ -72,14 +79,14 @@
                         <form method="POST" action="?/renameDevice" use:enhance={handleEnhance}>
                             <input type="hidden" name="deviceId" value={device.id} />
                             <div class="flex flex-col space-y-2 mb-4">
-                                <label for="deviceName" class="text-sm text-gray-400">Device Name</label>
+                                <label for="deviceName" class="text-sm text-gray-400">{t.devices.deviceName}</label>
                                 <input 
                                     type="text" 
                                     id="deviceName" 
                                     name="deviceName" 
                                     bind:value={deviceNameInput}
                                     class="bg-gray-700 text-white px-3 py-2 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                    placeholder="Enter a friendly name"
+                                    placeholder={t.devices.friendlyName}
                                     required
                                 />
                                 <div class="flex space-x-2 mt-2">
@@ -87,14 +94,14 @@
                                         type="submit" 
                                         class="bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded text-sm"
                                     >
-                                        Save
+                                        {t.devices.save}
                                     </button>
                                     <button 
                                         type="button" 
                                         class="bg-gray-600 hover:bg-gray-700 text-white px-3 py-1 rounded text-sm"
                                         on:click={cancelEditing}
                                     >
-                                        Cancel
+                                        {t.devices.cancel}
                                     </button>
                                 </div>
                             </div>
@@ -108,17 +115,17 @@
                                 class="text-blue-400 hover:text-blue-300 text-sm"
                                 on:click={() => startEditing(device)}
                             >
-                                Rename
+                                {t.devices.rename}
                             </button>
                         </div>
-                        <p class="text-sm text-gray-400 mb-2">ID: {device.id.slice(0, 8)}</p>
-                        <p class="text-gray-300 mb-2">Firmware: {device.firmwareVersion}</p>
+                        <p class="text-sm text-gray-400 mb-2">{t.devices.deviceId}: {device.id.slice(0, 8)}</p>
+                        <p class="text-gray-300 mb-2">{t.devices.firmware}: {device.firmwareVersion}</p>
                         <p class="text-sm text-gray-400">
-                            Added: {new Date(device.addedAt).toLocaleDateString()}
+                            {t.devices.added}: {formatDate(device.addedAt)}
                         </p>
                         {#if device.lastUsedAt}
                             <p class="text-sm text-gray-400">
-                                Last used: {new Date(device.lastUsedAt).toLocaleDateString()}
+                                {t.devices.lastUsed}: {formatDate(device.lastUsedAt)}
                             </p>
                         {/if}
                     {/if}

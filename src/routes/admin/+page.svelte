@@ -68,6 +68,19 @@
                     <span class="text-3xl font-bold">{data.counts.orders || 0}</span>
                 </div>
             </a>
+            
+            <!-- Device Simulator Card -->
+            <a href="/admin/simulator" class="block bg-gray-800 p-6 rounded-lg hover:bg-gray-700 transition">
+                <h2 class="text-2xl font-bold mb-2">Device Simulator</h2>
+                <p class="text-gray-400 mb-4">Test device interactions and order processing</p>
+                <div class="flex justify-between items-center">
+                    <span class="text-3xl font-bold">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 12h14M12 5l7 7-7 7" />
+                        </svg>
+                    </span>
+                </div>
+            </a>
         </div>
     </div>
 </div>

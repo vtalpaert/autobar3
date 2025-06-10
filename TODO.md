@@ -6,37 +6,7 @@
 
 ## Phase 2: User Interface - My Bar Page
 
-### 1. Add Order Button to Cocktails
-
-- Update cocktail detail page to include "Order" button
-- Add form action to create a new order
-- Add logic to select default device or prompt user to select one. If only one device for the user, it should always be this device. Use the human friendly name if it exists, or use id
-
-### 2. Create My Bar Page
-
-- Create +page.server.ts to fetch current user's orders and devices
-- Create +page.svelte with UI for displaying orders and devices
-- Add status indicators for devices (online/offline)
-- Display current order status if one exists
-- Show history of past orders
-
-### 3. Update Header Component
-
-- Add "My Bar" link to the header navigation
-- Update dropdown menu to include My Bar
-- Add translations for My Bar header items
-- Add other missing translations in the header
-
-### 4. Add Cancel Order Functionality
-
-- Add a "Cancel" button on the My Bar page for in-progress orders
-- Create endpoint for cancelling orders from the device: `POST /api/devices/cancel/order` (and fix incorrect endpoints definition)
-- Update order status to 'cancelled' when user or device cancels an order
-- Ensure device stops pouring when next progress update is received
-
-### 5. Add a rename field in My Devices
-
-- Add a field to rename the device with a human friendly name
+[DONE]
 
 ## Phase 3: Admin Testing Interface
 
@@ -58,6 +28,7 @@
 ### 1. Create Order Processing Service
 
 - Implement logic to process orders sequentially
+- Fix error when reporting progress on a different order seems to progress the current order
 - Add functionality to track dose progress
 - Implement error handling for failed pours
 
