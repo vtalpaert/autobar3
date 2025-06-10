@@ -2,9 +2,11 @@
     import { translations } from '$lib/i18n/translations';
     import { currentLanguage } from '$lib/i18n/store';
     import Header from '$lib/components/Header.svelte';
-    import type { PageData } from './$types';
+    import { enhance } from '$app/forms';
+    import type { PageData, ActionData } from './$types';
 
     export let data: PageData;
+    export let form: ActionData;
     $: t = translations[$currentLanguage];
     
     // Notification system
@@ -35,6 +37,35 @@
         notifications = notifications.filter(n => n.id !== id);
     }
 
+    // Handle form responses
+    $: if (form) {
+        if (form.success) {
+            showNotification(form.message, 'success');
+            
+            // Update current action state if checkAction was successful
+            if (form.action) {
+                currentAction = form.action;
+                currentOrderId = form.orderId || null;
+                currentDoseId = form.doseId || null;
+                currentIngredientId = form.ingredientId || null;
+                currentQuantity = form.quantityLeft || 0;
+            }
+            
+            // Clear current action if pour was completed or cancelled
+            if (form.completed || form.cancelled || form.errorReported) {
+                if (!useManualIds) {
+                    currentAction = null;
+                    currentOrderId = null;
+                    currentDoseId = null;
+                    currentIngredientId = null;
+                    currentQuantity = 0;
+                }
+            }
+        } else {
+            showNotification(form.message, 'error');
+        }
+    }
+
     // Format date based on language
     function formatDate(dateString: string): string {
         return $currentLanguage === 'fr' 
@@ -43,8 +74,9 @@
     }
 
     // Selected device and order
-    let selectedDevice = data.devices && data.devices.length > 0 ? data.devices[0] : null;
-    $: filteredOrders = data.activeOrders ? data.activeOrders.filter(order => order.deviceId === selectedDevice?.id) : [];
+    let selectedDeviceId = data.devices && data.devices.length > 0 ? data.devices[0].id : '';
+    $: selectedDevice = data.devices.find(d => d.id === selectedDeviceId) || null;
+    $: filteredOrders = data.activeOrders ? data.activeOrders.filter(order => order.deviceId === selectedDeviceId) : [];
     $: selectedOrder = filteredOrders.length > 0 ? filteredOrders[0] : null;
     
     // Current action state
@@ -54,159 +86,50 @@
     let currentIngredientId = null;
     let currentQuantity = 0;
     
+    // Manual override variables for testing error scenarios
+    let manualOrderId = '';
+    let manualDoseId = '';
+    let useManualIds = false;
+    let simulateAsDevice = null;
+    
     // Reset action state when device changes
-    $: if (selectedDevice) {
+    $: if (selectedDeviceId) {
         currentAction = null;
         currentOrderId = null;
         currentDoseId = null;
         currentIngredientId = null;
         currentQuantity = 0;
+        // Reset manual overrides
+        manualOrderId = '';
+        manualDoseId = '';
+        useManualIds = false;
+        simulateAsDevice = null;
     }
     
-    // Device simulation functions
-    async function verifyDevice() {
-        if (!selectedDevice?.apiToken) {
-            showNotification('No device selected', 'error');
-            return;
-        }
-        
-        try {
-            const response = await fetch('/api/devices/verify', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    token: selectedDevice.apiToken,
-                    firmwareVersion: '1.0.0-simulator'
-                })
-            });
-            
-            const result = await response.json();
-            if (result.tokenValid) {
-                showNotification('Device verification successful', 'success');
-            } else {
-                showNotification(`Verification failed: ${result.message}`, 'error');
-            }
-        } catch (error) {
-            showNotification(`Error: ${error.message}`, 'error');
+    // Helper functions for quick error scenario setup
+    function setupWrongOrderProgress() {
+        const wrongOrder = data.activeOrders.find(order => order.id !== currentOrderId);
+        if (wrongOrder) {
+            manualOrderId = wrongOrder.id;
+            manualDoseId = currentDoseId || 'dose-123';
+            useManualIds = true;
+            showNotification('Set up for wrong order progress test', 'info');
+        } else {
+            showNotification("No other orders available to simulate wrong order", 'warning');
         }
     }
     
-    async function checkForAction() {
-        if (!selectedDevice?.apiToken) {
-            showNotification('No device selected', 'error');
+    function setupWrongDoseProgress() {
+        if (!currentOrderId) {
+            showNotification("No current order. Check for action first.", 'warning');
             return;
         }
-        
-        try {
-            const response = await fetch('/api/devices/action', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    token: selectedDevice.apiToken
-                })
-            });
-            
-            const result = await response.json();
-            currentAction = result.action;
-            
-            if (result.action === 'pour') {
-                currentOrderId = result.orderId;
-                currentDoseId = result.doseId;
-                currentIngredientId = result.ingredientId;
-                currentQuantity = result.quantityLeft;
-                
-                // Find the order in our list
-                selectedOrder = data.activeOrders.find(order => order.id === result.orderId);
-                
-                showNotification(`Ready to pour: ${result.quantityLeft}ml for order ${result.orderId}`, 'info');
-            } else {
-                currentOrderId = null;
-                currentDoseId = null;
-                currentIngredientId = null;
-                currentQuantity = 0;
-                showNotification(`Device status: ${result.action}`, 'info');
-            }
-        } catch (error) {
-            showNotification(`Error: ${error.message}`, 'error');
-        }
+        manualOrderId = currentOrderId;
+        manualDoseId = 'wrong-dose-id-' + Date.now();
+        useManualIds = true;
+        showNotification('Set up for wrong dose progress test', 'info');
     }
     
-    async function simulatePourProgress(progressPercentage) {
-        if (!selectedDevice?.apiToken || !currentOrderId || !currentDoseId) {
-            showNotification("No active pour in progress. Check for action first.", 'warning');
-            return;
-        }
-        
-        const progressAmount = currentQuantity * (progressPercentage / 100);
-        
-        try {
-            const response = await fetch('/api/devices/progress', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    token: selectedDevice.apiToken,
-                    orderId: currentOrderId,
-                    doseId: currentDoseId,
-                    progress: progressAmount
-                })
-            });
-            
-            const result = await response.json();
-            if (result.continue) {
-                showNotification(`Progress reported: ${progressAmount.toFixed(1)}ml (${progressPercentage}%)`, 'success');
-                
-                // If we completed the dose, clear the current action
-                if (progressPercentage >= 100) {
-                    showNotification('Dose completed', 'success');
-                    currentAction = null;
-                    currentOrderId = null;
-                    currentDoseId = null;
-                    currentIngredientId = null;
-                    currentQuantity = 0;
-                }
-            } else {
-                showNotification('Order was cancelled or completed', 'warning');
-                currentAction = null;
-                currentOrderId = null;
-                currentDoseId = null;
-                currentIngredientId = null;
-                currentQuantity = 0;
-            }
-        } catch (error) {
-            showNotification(`Error: ${error.message}`, 'error');
-        }
-    }
-    
-    async function simulateError(errorMessage) {
-        if (!selectedDevice?.apiToken || !currentOrderId) {
-            showNotification("No active order. Check for action first.", 'warning');
-            return;
-        }
-        
-        try {
-            const response = await fetch('/api/devices/error', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    token: selectedDevice.apiToken,
-                    orderId: currentOrderId,
-                    message: errorMessage
-                })
-            });
-            
-            const result = await response.json();
-            showNotification(`Error reported: ${result.message}`, 'error');
-            
-            // Clear current action after error
-            currentAction = null;
-            currentOrderId = null;
-            currentDoseId = null;
-            currentIngredientId = null;
-            currentQuantity = 0;
-        } catch (error) {
-            showNotification(`Error: ${error.message}`, 'error');
-        }
-    }
 </script>
 
 <Header user={data.user} />
@@ -225,103 +148,220 @@
         <h2 class="text-2xl font-semibold mb-4">Select Device to Simulate</h2>
         <select 
             class="w-full p-2 border rounded bg-gray-700 text-white border-gray-600"
-            bind:value={selectedDevice}
+            bind:value={selectedDeviceId}
         >
             {#each data.devices as device}
-                <option value={device}>{device.name || `Device ${device.id.slice(0, 8)}`} ({device.ownerUsername})</option>
+                <option value={device.id}>{device.name || `Device ${device.id.slice(0, 8)}`} - Owner: {device.ownerUsername}</option>
             {/each}
         </select>
         
         {#if selectedDevice}
-            <div class="mt-4 flex space-x-4">
-                <button 
-                    class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition"
-                    on:click={verifyDevice}
-                >
-                    Verify Device
-                </button>
-                <button 
-                    class="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 transition"
-                    on:click={checkForAction}
-                >
-                    Check for Action
-                </button>
+            <div class="mt-4">
+                <p class="mb-2 text-gray-300">
+                    Selected: <strong>{selectedDevice.name || `Device ${selectedDevice.id.slice(0, 8)}`}</strong> 
+                    (Owner: {selectedDevice.ownerUsername})
+                </p>
+                <div class="flex space-x-4">
+                    <form method="POST" action="?/verify" use:enhance>
+                        <input type="hidden" name="deviceId" value={selectedDevice.id} />
+                        <button 
+                            type="submit"
+                            class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition"
+                        >
+                            Verify Device
+                        </button>
+                    </form>
+                    <form method="POST" action="?/checkAction" use:enhance>
+                        <input type="hidden" name="deviceId" value={selectedDevice.id} />
+                        <button 
+                            type="submit"
+                            class="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 transition"
+                        >
+                            Check for Action
+                        </button>
+                    </form>
+                </div>
             </div>
         {/if}
     </div>
     
-    <!-- Current Action Status -->
-    {#if currentAction}
-        <div class="mb-8 p-6 bg-gray-800 border border-gray-700 rounded-lg shadow-lg">
-            <h2 class="text-2xl font-semibold mb-2">Current Action: {currentAction}</h2>
-            
-            {#if currentAction === 'pour'}
-                <div class="mb-4">
+    <!-- Testing Controls - Always visible for admin testing -->
+    <div class="mb-8 p-6 bg-gray-800 border border-gray-700 rounded-lg shadow-lg">
+        <h2 class="text-2xl font-semibold mb-4">Testing Controls</h2>
+        
+        <!-- Current Action Status -->
+        {#if currentAction}
+            <div class="mb-4 p-4 bg-gray-700 rounded">
+                <h3 class="font-semibold mb-2">Current Action: {currentAction}</h3>
+                {#if currentAction === 'pour'}
                     <p><strong>Order ID:</strong> {currentOrderId}</p>
                     <p><strong>Dose ID:</strong> {currentDoseId}</p>
                     <p><strong>Ingredient ID:</strong> {currentIngredientId}</p>
-                    <p><strong>Quantity:</strong> {currentQuantity}ml</p>
+                    <p><strong>Total Quantity to Pour:</strong> {(currentQuantity / 10).toFixed(1)}cL ({currentQuantity}ml)</p>
+                {/if}
+            </div>
+        {/if}
+        
+        <!-- Manual Override Controls -->
+        <div class="mb-4 p-4 bg-gray-700 rounded">
+            <h3 class="font-semibold mb-2">Manual Override (for testing errors)</h3>
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-sm font-medium mb-1">Order ID:</label>
+                    <input 
+                        type="text" 
+                        bind:value={manualOrderId}
+                        placeholder="Enter any order ID"
+                        class="w-full p-2 bg-gray-600 border border-gray-500 rounded text-white"
+                    />
                 </div>
-                
-                <div class="flex flex-wrap gap-2">
-                    <button 
-                        class="px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700 transition"
-                        on:click={() => simulatePourProgress(25)}
-                    >
-                        Pour 25%
-                    </button>
-                    <button 
-                        class="px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700 transition"
-                        on:click={() => simulatePourProgress(50)}
-                    >
-                        Pour 50%
-                    </button>
-                    <button 
-                        class="px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700 transition"
-                        on:click={() => simulatePourProgress(75)}
-                    >
-                        Pour 75%
-                    </button>
-                    <button 
-                        class="px-3 py-1 bg-green-600 text-white rounded hover:bg-green-700 transition"
-                        on:click={() => simulatePourProgress(100)}
-                    >
-                        Complete Pour
-                    </button>
+                <div>
+                    <label class="block text-sm font-medium mb-1">Dose ID:</label>
+                    <input 
+                        type="text" 
+                        bind:value={manualDoseId}
+                        placeholder="Enter any dose ID"
+                        class="w-full p-2 bg-gray-600 border border-gray-500 rounded text-white"
+                    />
                 </div>
-                
-                <div class="mt-4">
-                    <h3 class="font-semibold mb-2">Simulate Errors:</h3>
-                    <div class="flex flex-wrap gap-2">
-                        <button 
-                            class="px-3 py-1 bg-red-600 text-white rounded hover:bg-red-700 transition text-sm"
-                            on:click={() => simulateError("Empty ingredient")}
-                        >
-                            Empty Ingredient
-                        </button>
-                        <button 
-                            class="px-3 py-1 bg-red-600 text-white rounded hover:bg-red-700 transition text-sm"
-                            on:click={() => simulateError("Pump failure")}
-                        >
-                            Pump Failure
-                        </button>
-                        <button 
-                            class="px-3 py-1 bg-red-600 text-white rounded hover:bg-red-700 transition text-sm"
-                            on:click={() => simulateError("Glass not detected")}
-                        >
-                            No Glass
-                        </button>
-                        <button 
-                            class="px-3 py-1 bg-red-600 text-white rounded hover:bg-red-700 transition text-sm"
-                            on:click={() => simulateError("Connection timeout")}
-                        >
-                            Timeout
-                        </button>
-                    </div>
-                </div>
-            {/if}
+            </div>
+            <label class="flex items-center mt-2">
+                <input type="checkbox" bind:checked={useManualIds} class="mr-2" />
+                Use manual IDs instead of current action
+            </label>
         </div>
-    {/if}
+        
+        <!-- Wrong Device Simulation -->
+        <div class="mb-4 p-4 bg-gray-700 rounded">
+            <h3 class="font-semibold mb-2">Wrong Device Simulation</h3>
+            <select 
+                bind:value={simulateAsDevice}
+                class="w-full p-2 bg-gray-600 border border-gray-500 rounded text-white"
+            >
+                <option value={null}>Use selected device (correct behavior)</option>
+                {#each data.devices as device}
+                    {#if device.id !== selectedDevice?.id}
+                        <option value={device}>{device.name || `Device ${device.id.slice(0, 8)}`} - Owner: {device.ownerUsername}</option>
+                    {/if}
+                {/each}
+            </select>
+        </div>
+        
+        <!-- Quick Setup Buttons -->
+        <div class="mb-4">
+            <h3 class="font-semibold mb-2">Quick Error Setup:</h3>
+            <div class="flex flex-wrap gap-2">
+                <button 
+                    class="px-3 py-1 bg-orange-600 text-white rounded hover:bg-orange-700 transition text-sm"
+                    on:click={setupWrongOrderProgress}
+                >
+                    Setup Wrong Order Test
+                </button>
+                <button 
+                    class="px-3 py-1 bg-orange-600 text-white rounded hover:bg-orange-700 transition text-sm"
+                    on:click={setupWrongDoseProgress}
+                >
+                    Setup Wrong Dose Test
+                </button>
+            </div>
+        </div>
+        
+        <!-- Progress Controls -->
+        {#if (currentAction === 'pour' || useManualIds) && selectedDevice}
+            <div class="mb-4">
+                <h3 class="font-semibold mb-2">Pour Progress (in cL):</h3>
+                {#if currentAction === 'pour' && !useManualIds}
+                    <p class="text-sm text-gray-300 mb-2">
+                        Total to pour: {(currentQuantity / 10).toFixed(1)}cL
+                    </p>
+                {/if}
+                <div class="flex flex-wrap gap-2 mb-2">
+                    {#each [0.5, 1.0, 2.0, 3.0, 5.0] as quantityCl}
+                        <form method="POST" action="?/progress" use:enhance class="inline">
+                            <input type="hidden" name="deviceId" value={selectedDevice.id} />
+                            <input type="hidden" name="orderId" value={useManualIds ? manualOrderId : currentOrderId} />
+                            <input type="hidden" name="doseId" value={useManualIds ? manualDoseId : currentDoseId} />
+                            <input type="hidden" name="progressAmount" value={quantityCl * 10} />
+                            <input type="hidden" name="isManual" value={useManualIds} />
+                            {#if simulateAsDevice}
+                                <input type="hidden" name="overrideDeviceId" value={simulateAsDevice.id} />
+                            {/if}
+                            <button 
+                                type="submit"
+                                class="px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700 transition"
+                            >
+                                Pour {quantityCl}cL
+                            </button>
+                        </form>
+                    {/each}
+                </div>
+                <div class="flex items-center gap-2">
+                    <span class="text-sm">Custom amount:</span>
+                    <input 
+                        type="number" 
+                        step="0.1" 
+                        min="0" 
+                        max="10" 
+                        placeholder="cL"
+                        class="w-20 p-1 bg-gray-600 border border-gray-500 rounded text-white text-sm"
+                        id="customAmount"
+                    />
+                    <form method="POST" action="?/progress" use:enhance class="inline">
+                        <input type="hidden" name="deviceId" value={selectedDevice.id} />
+                        <input type="hidden" name="orderId" value={useManualIds ? manualOrderId : currentOrderId} />
+                        <input type="hidden" name="doseId" value={useManualIds ? manualDoseId : currentDoseId} />
+                        <input type="hidden" name="progressAmount" value="" id="customAmountHidden" />
+                        <input type="hidden" name="isManual" value={useManualIds} />
+                        {#if simulateAsDevice}
+                            <input type="hidden" name="overrideDeviceId" value={simulateAsDevice.id} />
+                        {/if}
+                        <button 
+                            type="submit"
+                            class="px-3 py-1 bg-green-600 text-white rounded hover:bg-green-700 transition text-sm"
+                            on:click={(e) => {
+                                const customInput = document.getElementById('customAmount') as HTMLInputElement;
+                                const hiddenInput = document.getElementById('customAmountHidden') as HTMLInputElement;
+                                const value = parseFloat(customInput.value);
+                                if (isNaN(value) || value <= 0) {
+                                    e.preventDefault();
+                                    alert('Please enter a valid amount in cL');
+                                    return;
+                                }
+                                hiddenInput.value = (value * 10).toString(); // Convert cL to ml
+                            }}
+                        >
+                            Pour Custom
+                        </button>
+                    </form>
+                </div>
+            </div>
+        {/if}
+        
+        <!-- Error Controls -->
+        {#if (currentAction === 'pour' || useManualIds) && selectedDevice}
+            <div class="mt-4">
+                <h3 class="font-semibold mb-2">Simulate Hardware Errors:</h3>
+                <div class="flex flex-wrap gap-2">
+                    {#each ['Empty ingredient', 'Pump failure', 'Glass not detected', 'Connection timeout'] as errorMsg}
+                        <form method="POST" action="?/error" use:enhance class="inline">
+                            <input type="hidden" name="deviceId" value={selectedDevice.id} />
+                            <input type="hidden" name="orderId" value={useManualIds ? manualOrderId : currentOrderId} />
+                            <input type="hidden" name="errorMessage" value={errorMsg} />
+                            {#if simulateAsDevice}
+                                <input type="hidden" name="overrideDeviceId" value={simulateAsDevice.id} />
+                            {/if}
+                            <button 
+                                type="submit"
+                                class="px-3 py-1 bg-red-600 text-white rounded hover:bg-red-700 transition text-sm"
+                            >
+                                {errorMsg}
+                            </button>
+                        </form>
+                    {/each}
+                </div>
+            </div>
+        {/if}
+    </div>
     
     <!-- Orders for Selected Device -->
     <div class="mb-8 p-6 bg-gray-800 rounded-lg shadow-lg">
