@@ -78,5 +78,39 @@ export const actions: Actions = {
             .where(eq(table.order.id, orderId));
 
         return { success: true };
+    },
+
+    cancelOrder: async ({ request, locals }) => {
+        if (!locals.user) {
+            throw redirect(302, '/auth/login');
+        }
+
+        const adminProfile = await db
+            .select()
+            .from(table.profile)
+            .where(eq(table.profile.userId, locals.user.id))
+            .get();
+
+        if (!adminProfile?.isAdmin) {
+            throw redirect(302, '/');
+        }
+
+        const formData = await request.formData();
+        const orderId = formData.get('orderId')?.toString();
+
+        if (!orderId) {
+            return { error: 'Order ID is required' };
+        }
+
+        // Update order status to cancelled
+        await db
+            .update(table.order)
+            .set({ 
+                status: 'cancelled',
+                updatedAt: new Date()
+            })
+            .where(eq(table.order.id, orderId));
+
+        return { success: true };
     }
 };

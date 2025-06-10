@@ -70,19 +70,36 @@
                                         {order.doseProgress ? `${order.doseProgress.toFixed(1)} ml` : '-'}
                                     </td>
                                     <td class="py-3 px-4">
-                                        <form 
-                                            method="POST" 
-                                            action="?/deleteOrder" 
-                                            use:enhance
-                                        >
-                                            <input type="hidden" name="orderId" value={order.id} />
-                                            <button 
-                                                type="submit"
-                                                class="bg-red-600 hover:bg-red-700 text-white px-2 py-1 rounded text-sm"
+                                        <div class="flex gap-2">
+                                            {#if order.status === 'pending' || order.status === 'in_progress'}
+                                                <form 
+                                                    method="POST" 
+                                                    action="?/cancelOrder" 
+                                                    use:enhance
+                                                >
+                                                    <input type="hidden" name="orderId" value={order.id} />
+                                                    <button 
+                                                        type="submit"
+                                                        class="bg-orange-600 hover:bg-orange-700 text-white px-2 py-1 rounded text-sm"
+                                                    >
+                                                        Cancel
+                                                    </button>
+                                                </form>
+                                            {/if}
+                                            <form 
+                                                method="POST" 
+                                                action="?/deleteOrder" 
+                                                use:enhance
                                             >
-                                                Delete
-                                            </button>
-                                        </form>
+                                                <input type="hidden" name="orderId" value={order.id} />
+                                                <button 
+                                                    type="submit"
+                                                    class="bg-red-600 hover:bg-red-700 text-white px-2 py-1 rounded text-sm"
+                                                >
+                                                    Delete
+                                                </button>
+                                            </form>
+                                        </div>
                                     </td>
                                 </tr>
                                 {#if order.errorMessage}
