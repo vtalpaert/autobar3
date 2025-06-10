@@ -48,7 +48,8 @@
                 currentOrderId = form.orderId || null;
                 currentDoseId = form.doseId || null;
                 currentIngredientId = form.ingredientId || null;
-                currentQuantity = form.quantityLeft || 0;
+                currentQuantity = form.doseQuantity || 0;
+                currentProgress = form.doseProgress || 0;
             }
             
             // Clear current action if pour was completed or cancelled
@@ -59,6 +60,7 @@
                     currentDoseId = null;
                     currentIngredientId = null;
                     currentQuantity = 0;
+                    currentProgress = 0;
                 }
             }
         } else {
@@ -85,6 +87,7 @@
     let currentDoseId = null;
     let currentIngredientId = null;
     let currentQuantity = 0;
+    let currentProgress = 0;
     
     // Manual override variables for testing error scenarios
     let manualOrderId = '';
@@ -99,6 +102,7 @@
         currentDoseId = null;
         currentIngredientId = null;
         currentQuantity = 0;
+        currentProgress = 0;
         // Reset manual overrides
         manualOrderId = '';
         manualDoseId = '';
@@ -197,7 +201,9 @@
                     <p><strong>Order ID:</strong> {currentOrderId}</p>
                     <p><strong>Dose ID:</strong> {currentDoseId}</p>
                     <p><strong>Ingredient ID:</strong> {currentIngredientId}</p>
-                    <p><strong>Total Quantity to Pour:</strong> {(currentQuantity / 10).toFixed(1)}cL ({currentQuantity}ml)</p>
+                    <p><strong>Total Dose Quantity:</strong> {(currentQuantity / 10).toFixed(1)}cL ({currentQuantity}ml)</p>
+                    <p><strong>Current Progress:</strong> {(currentProgress / 10).toFixed(1)}cL ({currentProgress}ml)</p>
+                    <p><strong>Remaining to Pour:</strong> {((currentQuantity - currentProgress) / 10).toFixed(1)}cL ({currentQuantity - currentProgress}ml)</p>
                 {/if}
             </div>
         {/if}
@@ -272,7 +278,9 @@
                 <h3 class="font-semibold mb-2">Pour Progress (in cL):</h3>
                 {#if currentAction === 'pour' && !useManualIds}
                     <p class="text-sm text-gray-300 mb-2">
-                        Total to pour: {(currentQuantity / 10).toFixed(1)}cL
+                        Total dose: {(currentQuantity / 10).toFixed(1)}cL | 
+                        Progress: {(currentProgress / 10).toFixed(1)}cL | 
+                        Remaining: {((currentQuantity - currentProgress) / 10).toFixed(1)}cL
                     </p>
                 {/if}
                 <div class="flex flex-wrap gap-2 mb-2">

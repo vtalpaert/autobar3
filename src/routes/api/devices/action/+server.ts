@@ -142,14 +142,12 @@ export async function POST({ request }) {
         });
     }
 
-    // Calculate quantity left to pour
-    const quantityLeft = Math.max(0, currentDose.quantity - (order.doseProgress || 0));
-
     return json({
         action: "pour",
         orderId: order.id,
         doseId: currentDose.id,
         ingredientId: currentDose.ingredientId,
-        quantityLeft: quantityLeft
+        doseQuantity: currentDose.quantity,
+        doseProgress: order.doseProgress || 0
     });
 }

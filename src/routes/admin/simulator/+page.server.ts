@@ -141,9 +141,10 @@ export const actions: Actions = {
                 orderId: result.orderId,
                 doseId: result.doseId,
                 ingredientId: result.ingredientId,
-                quantityLeft: result.quantityLeft,
+                doseQuantity: result.doseQuantity,
+                doseProgress: result.doseProgress,
                 message: result.action === 'pour' 
-                    ? `Ready to pour: ${result.quantityLeft}ml for order ${result.orderId}`
+                    ? `Ready to pour: ${result.doseQuantity - result.doseProgress}ml remaining for order ${result.orderId} (${result.doseProgress}ml/${result.doseQuantity}ml done)`
                     : `Device status: ${result.action}`
             };
         } catch (error) {

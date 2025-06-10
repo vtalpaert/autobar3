@@ -16,7 +16,7 @@ The following API endpoints are available for device communication:
   - Request: `{ "token": "device_api_token" }`
   - Response:
     - If no order: `{ "action": "standby" }`
-    - If order exists: `{ "action": "pour", "orderId": "id", "doseId": "id", "ingredientId": "id", "quantityLeft": 45.0 }`
+    - If order exists: `{ "action": "pour", "orderId": "id", "doseId": "id", "ingredientId": "id", "doseQuantity": 50.0, "doseProgress": 5.0 }`
 
 ## Progress Reporting
 
