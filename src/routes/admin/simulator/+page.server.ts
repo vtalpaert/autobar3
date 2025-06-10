@@ -26,20 +26,32 @@ export const load: PageServerLoad = async ({ locals }) => {
         .innerJoin(table.profile, eq(table.profile.id, table.device.profileId))
         .innerJoin(table.user, eq(table.user.id, table.profile.userId));
 
-    // Get active orders
+    // Get active orders with detailed information
     const activeOrders = await db
         .select({
             id: table.order.id,
             status: table.order.status,
             createdAt: table.order.createdAt,
+            updatedAt: table.order.updatedAt,
             deviceId: table.order.deviceId,
             cocktailId: table.order.cocktailId,
             currentDoseId: table.order.currentDoseId,
             doseProgress: table.order.doseProgress,
-            cocktailName: table.cocktail.name
+            cocktailName: table.cocktail.name,
+            customerUsername: table.user.username,
+            customerArtistName: table.profile.artistName,
+            // Current dose details
+            currentDoseQuantity: table.dose.quantity,
+            currentDoseNumber: table.dose.number,
+            currentIngredientId: table.ingredient.id,
+            currentIngredientName: table.ingredient.name
         })
         .from(table.order)
         .innerJoin(table.cocktail, eq(table.order.cocktailId, table.cocktail.id))
+        .innerJoin(table.profile, eq(table.order.customerId, table.profile.id))
+        .innerJoin(table.user, eq(table.profile.userId, table.user.id))
+        .leftJoin(table.dose, eq(table.order.currentDoseId, table.dose.id))
+        .leftJoin(table.ingredient, eq(table.dose.ingredientId, table.ingredient.id))
         .where(or(
             eq(table.order.status, 'pending'),
             eq(table.order.status, 'in_progress')
@@ -135,17 +147,31 @@ export const actions: Actions = {
             });
 
             const result = await response.json();
+            
+            // Get ingredient name if we have an ingredientId
+            let ingredientName = null;
+            if (result.ingredientId) {
+                const ingredient = await db
+                    .select({ name: table.ingredient.name })
+                    .from(table.ingredient)
+                    .where(eq(table.ingredient.id, result.ingredientId))
+                    .get();
+                ingredientName = ingredient?.name || 'Unknown';
+            }
+            
             return { 
                 success: true, 
                 action: result.action,
                 orderId: result.orderId,
                 doseId: result.doseId,
                 ingredientId: result.ingredientId,
+                ingredientName: ingredientName,
                 doseQuantity: result.doseQuantity,
                 doseProgress: result.doseProgress,
                 message: result.action === 'pour' 
                     ? `Ready to pour: ${result.doseQuantity - result.doseProgress}ml remaining for order ${result.orderId} (${result.doseProgress}ml/${result.doseQuantity}ml done)`
                     : `Device status: ${result.action}`
+                // Don't refresh for checkAction - it's just reading state
             };
         } catch (error) {
             return fail(500, { message: `Error: ${error.message}` });
@@ -203,13 +229,15 @@ export const actions: Actions = {
                 return { 
                     success: true, 
                     message: `Progress reported from ${deviceName}: ${(progressAmount / 10).toFixed(1)}cL (${progressAmount}ml) for order ${orderInfo}`,
-                    completed: false // We don't know completion status from absolute amounts
+                    completed: false, // We don't know completion status from absolute amounts
+                    refreshOrders: true
                 };
             } else {
                 return { 
                     success: true, 
                     message: 'Order was cancelled or completed',
-                    cancelled: true
+                    cancelled: true,
+                    refreshOrders: true
                 };
             }
         } catch (error) {
@@ -263,7 +291,8 @@ export const actions: Actions = {
             return { 
                 success: true, 
                 message: `Error reported from ${deviceName}: ${result.message}`,
-                errorReported: true
+                errorReported: true,
+                refreshOrders: true
             };
         } catch (error) {
             return fail(500, { message: `Error: ${error.message}` });

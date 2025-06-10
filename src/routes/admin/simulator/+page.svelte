@@ -48,6 +48,7 @@
                 currentOrderId = form.orderId || null;
                 currentDoseId = form.doseId || null;
                 currentIngredientId = form.ingredientId || null;
+                currentIngredientName = form.ingredientName || null;
                 currentQuantity = form.doseQuantity || 0;
                 currentProgress = form.doseProgress || 0;
             }
@@ -59,9 +60,18 @@
                     currentOrderId = null;
                     currentDoseId = null;
                     currentIngredientId = null;
+                    currentIngredientName = null;
                     currentQuantity = 0;
                     currentProgress = 0;
                 }
+            }
+            
+            // Refresh page data if needed (but delay to allow user to see the result)
+            if (form.refreshOrders) {
+                // Delay the reload to allow user to see the notification
+                setTimeout(() => {
+                    window.location.reload();
+                }, 1000);
             }
         } else {
             showNotification(form.message, 'error');
@@ -86,6 +96,7 @@
     let currentOrderId = null;
     let currentDoseId = null;
     let currentIngredientId = null;
+    let currentIngredientName = null;
     let currentQuantity = 0;
     let currentProgress = 0;
     
@@ -101,6 +112,7 @@
         currentOrderId = null;
         currentDoseId = null;
         currentIngredientId = null;
+        currentIngredientName = null;
         currentQuantity = 0;
         currentProgress = 0;
         // Reset manual overrides
@@ -200,7 +212,7 @@
                 {#if currentAction === 'pour'}
                     <p><strong>Order ID:</strong> {currentOrderId}</p>
                     <p><strong>Dose ID:</strong> {currentDoseId}</p>
-                    <p><strong>Ingredient ID:</strong> {currentIngredientId}</p>
+                    <p><strong>Ingredient:</strong> {currentIngredientName || 'Unknown'} ({currentIngredientId})</p>
                     <p><strong>Total Dose Quantity:</strong> {(currentQuantity / 10).toFixed(1)}cL ({currentQuantity}ml)</p>
                     <p><strong>Current Progress:</strong> {(currentProgress / 10).toFixed(1)}cL ({currentProgress}ml)</p>
                     <p><strong>Remaining to Pour:</strong> {((currentQuantity - currentProgress) / 10).toFixed(1)}cL ({currentQuantity - currentProgress}ml)</p>
@@ -389,14 +401,41 @@
                         role="button"
                         aria-pressed={selectedOrder?.id === order.id}
                     >
-                        <h3 class="font-bold">{order.cocktailName}</h3>
-                        <p>Status: {order.status}</p>
-                        <p>Created: {formatDate(order.createdAt)}</p>
-                        <p>Order ID: {order.id}</p>
-                        {#if order.currentDoseId}
-                            <p>Current Dose: {order.currentDoseId}</p>
-                            <p>Progress: {order.doseProgress}ml</p>
-                        {/if}
+                        <div class="flex justify-between items-start mb-2">
+                            <h3 class="font-bold text-lg">{order.cocktailName}</h3>
+                            <span 
+                                class="px-2 py-1 rounded text-xs font-medium"
+                                class:bg-yellow-600={order.status === 'pending'}
+                                class:bg-blue-600={order.status === 'in_progress'}
+                                class:bg-green-600={order.status === 'completed'}
+                                class:bg-red-600={order.status === 'failed'}
+                                class:bg-gray-600={order.status === 'cancelled'}
+                            >
+                                {order.status.toUpperCase()}
+                            </span>
+                        </div>
+                        
+                        <div class="text-sm text-gray-300 space-y-1">
+                            <p><strong>Customer:</strong> {order.customerArtistName || order.customerUsername}</p>
+                            <p><strong>Order ID:</strong> <span class="font-mono text-xs bg-gray-800 px-1 rounded">{order.id}</span></p>
+                            <p><strong>Created:</strong> {formatDate(order.createdAt)}</p>
+                            {#if order.updatedAt && order.updatedAt !== order.createdAt}
+                                <p><strong>Updated:</strong> {formatDate(order.updatedAt)}</p>
+                            {/if}
+                            
+                            {#if order.currentDoseId}
+                                <div class="mt-2 p-2 bg-gray-600 rounded">
+                                    <p class="font-medium">Current Dose #{order.currentDoseNumber}:</p>
+                                    <p><strong>Dose ID:</strong> <span class="font-mono text-xs bg-gray-800 px-1 rounded">{order.currentDoseId}</span></p>
+                                    <p><strong>Ingredient:</strong> {order.currentIngredientName || 'Unknown'}</p>
+                                    <p><strong>Quantity:</strong> {(order.currentDoseQuantity / 10).toFixed(1)}cL ({order.currentDoseQuantity}ml)</p>
+                                    <p><strong>Progress:</strong> {((order.doseProgress || 0) / 10).toFixed(1)}cL ({order.doseProgress || 0}ml)</p>
+                                    <p><strong>Remaining:</strong> {((order.currentDoseQuantity - (order.doseProgress || 0)) / 10).toFixed(1)}cL</p>
+                                </div>
+                            {:else}
+                                <p class="text-yellow-400 mt-2">No current dose assigned</p>
+                            {/if}
+                        </div>
                     </div>
                 {/each}
             </div>
