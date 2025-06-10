@@ -4,6 +4,15 @@ export const devices = {
       title: 'My Devices',
       registerNew: 'Flash New Device',
       noDevices: 'No devices registered yet',
+      deviceName: 'Device Name',
+      deviceId: 'ID',
+      firmware: 'Firmware',
+      added: 'Added',
+      lastUsed: 'Last used',
+      rename: 'Rename',
+      save: 'Save',
+      cancel: 'Cancel',
+      friendlyName: 'Enter a friendly name',
       instructions: {
         title: 'Instructions',
         step1: 'Connect your ESP32 to your computer via USB',
@@ -37,6 +46,15 @@ export const devices = {
       title: 'Mes Appareils',
       registerNew: 'Flasher un Nouvel Appareil',
       noDevices: 'Aucun appareil enregistré',
+      deviceName: 'Nom de l\'appareil',
+      deviceId: 'ID',
+      firmware: 'Firmware',
+      added: 'Ajouté le',
+      lastUsed: 'Dernière utilisation',
+      rename: 'Renommer',
+      save: 'Enregistrer',
+      cancel: 'Annuler',
+      friendlyName: 'Entrez un nom convivial',
       instructions: {
         title: 'Instructions',
         step1: 'Connectez votre ESP32 à votre ordinateur via USB',
@@ -55,7 +73,13 @@ export const devices = {
         step4: 'Entrez vos identifiants WiFi',
         step5: 'Pour l\'URL du serveur, utilisez soit:\n- Développement: https://192.168.1.x:5173\n- Production: https://robotcocktail.ovh',
         step6: 'Copiez et collez le jeton affiché ci-dessous',
-        step7: 'L\'appareil redémarrera automatiquement et se connectera à votre réseau'
+        step7: 'L\'appareil redémarrera automatiquement et se connectera à votre réseau',
+        token: {
+            title: 'Jeton d\'Appareil',
+            description: 'Copiez ce jeton sur la page de configuration AP:',
+            enroll: 'Enregistrer l\'Appareil',
+            success: 'Appareil enregistré avec succès!'
+        }
       }
     }
   }

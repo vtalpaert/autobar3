@@ -26,6 +26,7 @@ The project consists of two main parts:
    - Cocktail creation and editing with ingredient doses
    - Artist collaboration system for joint cocktail creation
    - Order management system for cocktail preparation
+   - Device simulator for testing order processing without physical hardware
 
 2. **Hardware Implementation**
    - ESP32-based cocktail mixing machine (primary target)
