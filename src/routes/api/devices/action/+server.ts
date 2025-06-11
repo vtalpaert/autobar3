@@ -129,8 +129,9 @@ export async function POST({ request }) {
                 .where(eq(table.order.id, order.id));
 
             return json({
-                action: "standby",
-                message: "Order completed"
+                action: "completed",
+                orderId: order.id,
+                message: "Order completed - drink ready for pickup"
             });
         }
     }
