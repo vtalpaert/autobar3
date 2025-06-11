@@ -24,7 +24,7 @@ The following API endpoints are available for device communication:
   - Reports progress on a dose being poured
   - Request: `{ "token": "device_api_token", "orderId": "id", "doseId": "id", "progress": 25.5 }`
   - Response:
-    - Normal: `{ "message": "Progress updated", "continue": true }`
+    - Normal: `{ "message": "Progress updated", "continue": true }`, though continue will be false if the dose is complete
     - If cancelled: `{ "message": "Order cancelled", "continue": false }`
 
 ## Error Reporting
@@ -40,3 +40,13 @@ The following API endpoints are available for device communication:
   - Cancels an in-progress order
   - Request: `{ "token": "device_api_token", "orderId": "id" }`
   - Response: `{ "success": true, "message": "Order cancelled" }`
+
+## Real-time Order Updates
+
+- `GET /api/my-bar/orders/stream`
+  - Server-Sent Events stream for real-time order progress updates
+  - Requires user authentication
+  - Returns: Stream of JSON data with active orders for the authenticated user
+  - Response format: `data: { "activeOrders": [...] }\n\n`
+  - Updates every 2 seconds while there are active orders
+  - Automatically closes when no active orders remain
