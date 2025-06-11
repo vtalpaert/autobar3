@@ -1,5 +1,7 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
+	import { onMount, onDestroy } from 'svelte';
+	import { browser } from '$app/environment';
 	import type { PageData } from './$types';
 	import { translations } from '$lib/i18n/translations';
 	import { currentLanguage } from '$lib/i18n/store';
@@ -7,6 +9,9 @@
 
 	export let data: PageData;
 	$: t = translations[$currentLanguage];
+
+	let eventSource: EventSource;
+	let isConnected = false;
 
 	// Format date based on language
 	function formatDate(date: Date) {
@@ -42,6 +47,68 @@
 	function calculateProgress(order) {
 		if (!order.currentDose) return 0;
 		return Math.min(100, Math.round((order.doseProgress / order.currentDose.quantity) * 100));
+	}
+
+	// Setup Server-Sent Events for real-time updates
+	onMount(() => {
+		if (browser && data.activeOrders.length > 0) {
+			connectSSE();
+		}
+	});
+
+	onDestroy(() => {
+		if (eventSource) {
+			eventSource.close();
+		}
+	});
+
+	function connectSSE() {
+		if (eventSource) {
+			eventSource.close();
+		}
+
+		eventSource = new EventSource('/api/my-bar/orders/stream');
+		
+		eventSource.onopen = () => {
+			isConnected = true;
+		};
+
+		eventSource.onmessage = (event) => {
+			try {
+				const updatedData = JSON.parse(event.data);
+				if (updatedData.activeOrders) {
+					data.activeOrders = updatedData.activeOrders;
+				}
+			} catch (error) {
+				console.error('Failed to parse SSE data:', error);
+			}
+		};
+		
+		eventSource.onerror = (error) => {
+			console.error('SSE error:', error);
+			isConnected = false;
+			// Attempt to reconnect after 5 seconds
+			setTimeout(() => {
+				if (data.activeOrders.length > 0) {
+					connectSSE();
+				}
+			}, 5000);
+		};
+
+		eventSource.onclose = () => {
+			isConnected = false;
+		};
+	}
+
+	// Reactive statement to manage SSE connection based on active orders
+	$: if (browser) {
+		if (data.activeOrders.length > 0 && !eventSource) {
+			connectSSE();
+		} else if (data.activeOrders.length === 0 && eventSource) {
+			eventSource.close();
+			eventSource = null;
+			isConnected = false;
+		}
 	}
 </script>
 
@@ -93,7 +160,17 @@
 
 		<!-- Active Orders Section -->
 		<section class="mb-12">
-			<h2 class="text-2xl font-semibold mb-4">{t.myBar.orders.current}</h2>
+			<div class="flex items-center justify-between mb-4">
+				<h2 class="text-2xl font-semibold">{t.myBar.orders.current}</h2>
+				{#if data.activeOrders.length > 0}
+					<div class="flex items-center space-x-2">
+						<div class={`w-2 h-2 rounded-full transition-colors duration-300 ${isConnected ? 'bg-green-500' : 'bg-red-500'}`}></div>
+						<span class="text-sm text-gray-400">
+							{isConnected ? 'Live updates' : 'Reconnecting...'}
+						</span>
+					</div>
+				{/if}
+			</div>
 
 			{#if data.activeOrders.length === 0}
 				<div class="bg-gray-800 rounded-lg shadow-lg p-6 text-center">
@@ -161,13 +238,13 @@
 							{#if order.status === 'in_progress' && order.currentDose}
 								<div>
 									<p class="text-sm font-medium mb-1">{t.myBar.orders.progress}</p>
-									<div class="w-full bg-gray-700 rounded-full h-2.5">
+									<div class="w-full bg-gray-700 rounded-full h-2.5 overflow-hidden">
 										<div
-											class="bg-blue-600 h-2.5 rounded-full"
+											class="bg-blue-600 h-2.5 rounded-full transition-all duration-500 ease-out"
 											style="width: {calculateProgress(order)}%"
 										></div>
 									</div>
-									<p class="text-xs text-gray-400 mt-1">
+									<p class="text-xs text-gray-400 mt-1 transition-all duration-300">
 										{order.currentDose.ingredient.name}: {order.doseProgress.toFixed(1)} / {order
 											.currentDose.quantity} ml
 									</p>
