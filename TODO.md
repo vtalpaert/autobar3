@@ -1,67 +1,45 @@
-# RobotCocktail Order System Implementation Plan
+# RobotCocktail Implementation Plan
 
-## Phase 1: Database Schema and Core Functionality
+## Phase 1: Privacy-Friendly Cocktail Images
 
-[DONE]
+### 1. Database Schema Updates
 
-## Phase 2: User Interface - My Bar Page
+- Add `imageUrl` field to the `cocktail` table
+- Update database migration scripts
 
-[DONE]
+### 2. File Storage System
 
-## Phase 3: Admin Testing Interface
+- Create secure `/uploads/cocktails/` directory outside web root
+- Implement file upload handling with UUID-based filenames
+- Add image validation (file types, size limits)
+- Implement server-side image resizing/optimization
 
-[DONE]
+### 3. Access Control for Images
 
-## Phase 4: Order Processing Logic
+- Create protected image serving endpoint: `/api/cocktails/[id]/image`
+- Implement permission checking (creator or accepted collaborator)
+- Ensure images are only accessible through protected endpoint
 
-### 1. Create Order Processing Service
+### 4. Frontend Image Support
 
-- Implement logic to process orders sequentially
-- Fix error when reporting progress on a different order seems to progress the current order
-- Add functionality to track dose progress
-- Implement error handling for failed pours
+- Add image upload UI to cocktail creation/editing forms
+- Update cocktail display components to show images
+- Handle loading states and fallbacks for missing images
+- Add image preview functionality
 
-### 2. Device Communication
+## Phase 2: Enhanced Order Processing and User Experience
+
+### 1. Device Communication
 
 - Create polling mechanism for devices to check for pending orders
 - Implement order status updates from devices
 - Add timeout detection for unresponsive devices
-
-## Phase 5: Enhanced User Experience
-
-### 1. Real-time Updates
-
-- Implement server-sent events or WebSockets for real-time order updates
-- Add animations for order progress
 
 ### 2. Error Recovery
 
 - Create user interface for handling common errors
 - Implement retry mechanisms for failed pours
 - Add notifications for user intervention (e.g., empty ingredient)
-
-## Implementation Order
-
-1. DONE: Database schema changes (Order table, Device updates)
-2. Basic My Bar page with order history
-3. Header updates to include My Bar link
-4. Order button on cocktail pages
-5. Basic order creation and processing
-6. Device simulator admin page
-7. Real-time order status updates
-8. Error handling and recovery
-9. Order queue management
-10. UI polish and animations
-
-## Testing Milestones
-
-1. Create and view orders in database
-2. Display orders on My Bar page
-3. Successfully create order from cocktail page
-4. Simulate complete order process with admin simulator
-5. Test error conditions and recovery
-6. Test multiple queued orders
-7. Verify real-time updates work correctly
 
 ## Later changes (out of scope for now)
 
