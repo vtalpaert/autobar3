@@ -6,10 +6,21 @@ import { selectVerifiedProfile } from '$lib/server/auth.js';
 export async function GET({ locals }) {
     const profile = await selectVerifiedProfile(locals.user);
     
+    let interval: NodeJS.Timeout;
+    let isClosed = false;
+    
+    // Track this controller for cleanup
+    const cleanup = () => {
+        if (!isClosed) {
+            isClosed = true;
+            if (interval) {
+                clearInterval(interval);
+            }
+        }
+    };
+    
     const stream = new ReadableStream({
         start(controller) {
-            let interval: NodeJS.Timeout;
-            let isClosed = false;
 
             const sendUpdate = async () => {
                 // Check if controller is closed before trying to enqueue
@@ -57,8 +68,14 @@ export async function GET({ locals }) {
                         )
                         .orderBy(desc(table.order.createdAt));
 
+                    // Double-check before enqueueing
                     if (!isClosed) {
-                        controller.enqueue(`data: ${JSON.stringify({ activeOrders })}\n\n`);
+                        try {
+                            controller.enqueue(`data: ${JSON.stringify({ activeOrders })}\n\n`);
+                        } catch (enqueueError) {
+                            // Controller was closed between checks
+                            cleanup();
+                        }
                     }
                 } catch (error) {
                     console.error('SSE error:', error);
@@ -67,10 +84,7 @@ export async function GET({ locals }) {
                             controller.enqueue(`data: ${JSON.stringify({ error: 'Failed to fetch orders' })}\n\n`);
                         } catch (enqueueError) {
                             // Controller is already closed, stop the interval
-                            isClosed = true;
-                            if (interval) {
-                                clearInterval(interval);
-                            }
+                            cleanup();
                         }
                     }
                 }
@@ -83,17 +97,9 @@ export async function GET({ locals }) {
             interval = setInterval(sendUpdate, 2000);
             
             // Cleanup on close
-            return () => {
-                isClosed = true;
-                if (interval) {
-                    clearInterval(interval);
-                }
-            };
+            return cleanup;
         },
-        cancel() {
-            // This is called when the stream is cancelled/closed
-            console.log('SSE stream cancelled');
-        }
+        cancel: cleanup
     });
 
     return new Response(stream, {

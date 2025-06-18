@@ -10,8 +10,9 @@
 	export let data: PageData;
 	$: t = translations[$currentLanguage];
 
-	let eventSource: EventSource;
+	let eventSource: EventSource | null = null;
 	let isConnected = false;
+	let shouldConnect = false;
 
 	// Format date based on language
 	function formatDate(date: Date) {
@@ -51,20 +52,21 @@
 
 	// Setup Server-Sent Events for real-time updates
 	onMount(() => {
-		if (browser && data.activeOrders.length > 0) {
+		shouldConnect = data.activeOrders.length > 0;
+		if (browser && shouldConnect) {
 			connectSSE();
 		}
 	});
 
 	onDestroy(() => {
-		if (eventSource) {
-			eventSource.close();
-		}
+		shouldConnect = false;
+		disconnectSSE();
 	});
 
 	function connectSSE() {
+		// Don't create multiple connections
 		if (eventSource) {
-			eventSource.close();
+			return;
 		}
 
 		eventSource = new EventSource('/api/my-bar/orders/stream');
@@ -85,29 +87,43 @@
 		};
 		
 		eventSource.onerror = (error) => {
-			console.error('SSE error:', error);
 			isConnected = false;
-			// Attempt to reconnect after 5 seconds
-			setTimeout(() => {
-				if (data.activeOrders.length > 0) {
-					connectSSE();
-				}
-			}, 5000);
+			
+			// Only reconnect if we should still be connected
+			if (shouldConnect && eventSource?.readyState === EventSource.CLOSED) {
+				eventSource = null;
+				setTimeout(() => {
+					if (shouldConnect && !eventSource) {
+						connectSSE();
+					}
+				}, 5000);
+			}
 		};
 
 		eventSource.onclose = () => {
 			isConnected = false;
+			eventSource = null;
 		};
+	}
+
+	function disconnectSSE() {
+		if (eventSource) {
+			eventSource.close();
+			eventSource = null;
+			isConnected = false;
+		}
 	}
 
 	// Reactive statement to manage SSE connection based on active orders
 	$: if (browser) {
-		if (data.activeOrders.length > 0 && !eventSource) {
+		const hasActiveOrders = data.activeOrders.length > 0;
+		
+		if (hasActiveOrders && !shouldConnect) {
+			shouldConnect = true;
 			connectSSE();
-		} else if (data.activeOrders.length === 0 && eventSource) {
-			eventSource.close();
-			eventSource = null;
-			isConnected = false;
+		} else if (!hasActiveOrders && shouldConnect) {
+			shouldConnect = false;
+			disconnectSSE();
 		}
 	}
 </script>
