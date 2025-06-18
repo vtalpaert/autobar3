@@ -44,7 +44,7 @@ The following API endpoints are available for device communication:
 
 ## Real-time Order Updates
 
-- `GET /api/my-bar/orders/stream`
+- `GET /api/sse/my-bar`
   - Server-Sent Events stream for real-time order progress updates
   - Requires user authentication
   - Returns: Stream of JSON data with active orders for the authenticated user

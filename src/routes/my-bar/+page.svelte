@@ -69,7 +69,7 @@
 			return;
 		}
 
-		eventSource = new EventSource('/api/my-bar/orders/stream');
+		eventSource = new EventSource('/api/sse/my-bar');
 		
 		eventSource.onopen = () => {
 			isConnected = true;
