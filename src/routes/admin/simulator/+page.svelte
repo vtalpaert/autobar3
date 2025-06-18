@@ -225,8 +225,9 @@
             <h3 class="font-semibold mb-2">Manual Override (for testing errors)</h3>
             <div class="grid grid-cols-2 gap-4">
                 <div>
-                    <label class="block text-sm font-medium mb-1">Order ID:</label>
+                    <label for="manualOrderId" class="block text-sm font-medium mb-1">Order ID:</label>
                     <input 
+                        id="manualOrderId"
                         type="text" 
                         bind:value={manualOrderId}
                         placeholder="Enter any order ID"
@@ -234,8 +235,9 @@
                     />
                 </div>
                 <div>
-                    <label class="block text-sm font-medium mb-1">Dose ID:</label>
+                    <label for="manualDoseId" class="block text-sm font-medium mb-1">Dose ID:</label>
                     <input 
+                        id="manualDoseId"
                         type="text" 
                         bind:value={manualDoseId}
                         placeholder="Enter any dose ID"
@@ -243,10 +245,15 @@
                     />
                 </div>
             </div>
-            <label class="flex items-center mt-2">
-                <input type="checkbox" bind:checked={useManualIds} class="mr-2" />
-                Use manual IDs instead of current action
-            </label>
+            <div class="flex items-center mt-2">
+                <input 
+                    type="checkbox" 
+                    id="useManualIds"
+                    bind:checked={useManualIds} 
+                    class="mr-2" 
+                />
+                <label for="useManualIds">Use manual IDs instead of current action</label>
+            </div>
         </div>
         
         <!-- Wrong Device Simulation -->
