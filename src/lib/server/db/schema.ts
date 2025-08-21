@@ -56,6 +56,7 @@ export const cocktail = sqliteTable('cocktail', {
 		.references(() => profile.id),
 	description: text('description'),
 	instructions: text('instructions'),
+	imageUri: text('image_uri'), // Path to cocktail image like /uploads/<user-id>/cocktails/<cocktail-id>.webp
 	createdAt: integer('created_at', { mode: 'timestamp' }).notNull()
 });
 
