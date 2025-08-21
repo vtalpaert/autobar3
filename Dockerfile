@@ -16,7 +16,7 @@ WORKDIR /app
 COPY package*.json .
 RUN npm i -D @sveltejs/adapter-node && npm ci
 COPY --from=certificates-generator /certificates/ certificates/
-COPY static static/ 
+COPY static static/
 COPY --from=firmware-builder /workspace/static/firmware/merged-firmware-esp32.bin static/firmware/merged-firmware-esp32.bin
 COPY .env.example *.config.* LICENSE tsconfig.json ./
 COPY src src/
@@ -25,5 +25,5 @@ RUN cp .env.example .env && npm run build && npm prune --production
 
 FROM node-builder AS node-preview
 WORKDIR /app
-RUN npm i && npm run db:push -- --force && npm run db:load-ingredients:install && npm run db:create-admin
+RUN npm i && npm run db:push -- --force && npm run db:load-ingredients:install && npm run db:create-admin && npm run setup-uploads
 ENTRYPOINT [ "npm", "run", "preview" ]

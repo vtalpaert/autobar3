@@ -9,8 +9,9 @@
 
 ### 2. File Storage System
 
-- Create secure `/uploads/<user-id>/cocktails/<cocktail-id>.webp` directory outside web root
-- Implement file upload handling
+- The .env.example file provides the folder path to `/uploads/` (local dev will most likely use `uploads/`). A script is available to create this folder, which results in the correct folder permissions
+- Add helper functions in `src/lib/server/storage/` to create missing directories when saving to a path `uploads/missingtopfolder/anothermissingfolder/evenanothermissingfolder`
+- Implement file saving function in `src/lib/server/storage/` which takes the cocktail and image as input, and will create the save scheme in the form of `/uploads/<user-id>/cocktails/<cocktail-id>.webp`
 - Add image validation (file types, size limits)
 - Implement server-side image resizing/optimization and saving in WebP
 

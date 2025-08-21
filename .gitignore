@@ -1,5 +1,6 @@
 esp-idf
 node_modules
+uploads
 
 # Output
 .output
