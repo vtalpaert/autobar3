@@ -4,15 +4,15 @@
 
 ### 1. Database Schema Updates
 
-- Add `imageUrl` field to the `cocktail` table
+- Add `imageUri` field to the `cocktail` table
 - Update database migration scripts
 
 ### 2. File Storage System
 
-- Create secure `/uploads/cocktails/` directory outside web root
-- Implement file upload handling with UUID-based filenames
+- Create secure `/uploads/<user-id>/cocktails/<cocktail-id>.webp` directory outside web root
+- Implement file upload handling
 - Add image validation (file types, size limits)
-- Implement server-side image resizing/optimization
+- Implement server-side image resizing/optimization and saving in WebP
 
 ### 3. Access Control for Images
 
@@ -25,7 +25,7 @@
 - Add image upload UI to cocktail creation/editing forms
 - Update cocktail display components to show images
 - Handle loading states and fallbacks for missing images
-- Add image preview functionality
+- Add image preview functionality similar to https://saabi.github.io/svelte-image-input/ demo
 
 ## Phase 2: Enhanced Order Processing and User Experience
 
