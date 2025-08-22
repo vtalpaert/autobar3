@@ -140,7 +140,12 @@
             <form method="POST" enctype="multipart/form-data" use:enhance>
                 <!-- Image Upload -->
                 <ImageUpload
-                    label="Cocktail Image"
+                    label={t.createCocktail.image}
+                    uploadHint={t.createCocktail.imageUploadHint}
+                    uploadText={t.createCocktail.imageUploadText}
+                    targetSize={data.imageConfig.targetSize}
+                    webpQuality={data.imageConfig.webpQuality}
+                    maxSizeMB={data.imageConfig.maxSizeMB}
                     on:fileSelected={handleImageSelected}
                     on:fileRemoved={handleImageRemoved}
                 />

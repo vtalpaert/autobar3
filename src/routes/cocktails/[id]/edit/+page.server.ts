@@ -6,6 +6,7 @@ import * as table from '$lib/server/db/schema';
 import { selectVerifiedProfile } from '$lib/server/auth.js';
 import { checkCocktailEditAccess } from '$lib/server/cocktail-permissions';
 import { saveCocktailImage, deleteCocktailImage } from '$lib/server/storage/images.js';
+import { env } from '$env/dynamic/private';
 
 export const load: PageServerLoad = async ({ params, locals }) => {
     // Get verified profile (reusing existing function)
@@ -46,6 +47,11 @@ export const load: PageServerLoad = async ({ params, locals }) => {
         user: {
             ...locals.user,
             isAdmin: profile.isAdmin
+        },
+        imageConfig: {
+            targetSize: parseInt(env.IMAGE_WIDTH || '600'),
+            webpQuality: parseInt(env.WEBP_QUALITY || '85') / 100,
+            maxSizeMB: parseInt(env.MAX_IMAGE_SIZE || '10485760') / (1024 * 1024)
         }
     };
 };

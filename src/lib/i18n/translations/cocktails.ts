@@ -37,7 +37,10 @@ export const cocktails = {
       create: 'Create Cocktail',
       namePlaceholder: 'Enter cocktail name',
       descriptionPlaceholder: 'Enter a brief description',
-      instructionsPlaceholder: 'Enter preparation instructions'
+      instructionsPlaceholder: 'Enter preparation instructions',
+      image: 'Cocktail Image',
+      imageUploadHint: '(Click, drag & drop, or paste Ctrl+V)',
+      imageUploadText: 'Click to upload, drag & drop, or paste image'
     }
   },
   fr: {
@@ -78,7 +81,10 @@ export const cocktails = {
       create: 'Créer le Cocktail',
       namePlaceholder: 'Entrez le nom du cocktail',
       descriptionPlaceholder: 'Entrez une brève description',
-      instructionsPlaceholder: 'Entrez les instructions de préparation'
+      instructionsPlaceholder: 'Entrez les instructions de préparation',
+      image: 'Image du Cocktail',
+      imageUploadHint: '(Cliquez, glissez-déposez, ou collez Ctrl+V)',
+      imageUploadText: 'Cliquez pour télécharger, glissez-déposez, ou collez une image'
     }
   }
 };

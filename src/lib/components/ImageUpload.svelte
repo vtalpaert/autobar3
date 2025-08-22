@@ -1,20 +1,27 @@
 <script lang="ts">
     import { createEventDispatcher } from 'svelte';
+    import { env } from '$env/dynamic/public';
+    import { translations } from '$lib/i18n/translations';
+    import { currentLanguage } from '$lib/i18n/store';
     
     export let currentImageUri: string | null = null;
     export let label: string = 'Image';
     export let accept: string = 'image/jpeg,image/png,image/webp';
     export let maxSizeMB: number = 10;
     export let disabled: boolean = false;
+    export let uploadHint: string = '(Click, drag & drop, or paste Ctrl+V)';
+    export let uploadText: string = 'Click to upload, drag & drop, or paste image';
+    
+    $: t = translations[$currentLanguage];
     
     const dispatch = createEventDispatcher<{
         fileSelected: { file: File; inputElement: HTMLInputElement };
         fileRemoved: {};
     }>();
     
-    // Image processing constants (matching .env.example values)
-    const TARGET_SIZE = 600; // IMAGE_WIDTH and IMAGE_HEIGHT from env
-    const WEBP_QUALITY = 0.85; // WEBP_QUALITY from env
+    // Image processing constants from environment variables
+    const TARGET_SIZE = parseInt(env.PUBLIC_IMAGE_WIDTH || '600');
+    const WEBP_QUALITY = parseInt(env.PUBLIC_WEBP_QUALITY || '85') / 100;
     
     let fileInput: HTMLInputElement;
     let previewUrl: string | null = currentImageUri;
@@ -199,7 +206,7 @@
         {label}
         {#if !disabled}
             <span class="text-sm text-gray-400 font-normal">
-                (Click, drag & drop, or paste Ctrl+V)
+                {uploadHint === '(Click, drag & drop, or paste Ctrl+V)' ? t.createCocktail.imageUploadHint : uploadHint}
             </span>
         {/if}
     </label>
@@ -281,7 +288,7 @@
                     {#if disabled}
                         Image upload disabled
                     {:else}
-                        Click to upload, drag & drop, or paste image
+                        {uploadText === 'Click to upload, drag & drop, or paste image' ? t.createCocktail.imageUploadText : uploadText}
                     {/if}
                 </p>
                 <p class="text-sm text-gray-400">

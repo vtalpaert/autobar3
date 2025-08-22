@@ -78,7 +78,9 @@
             }}>
                 <!-- Image Upload -->
                 <ImageUpload
-                    label="Cocktail Image"
+                    label={t.createCocktail.image}
+                    uploadHint={t.createCocktail.imageUploadHint}
+                    uploadText={t.createCocktail.imageUploadText}
                     currentImageUri={currentImageUri}
                     on:fileSelected={handleImageSelected}
                     on:fileRemoved={handleImageRemoved}
