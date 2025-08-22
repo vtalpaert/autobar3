@@ -27,6 +27,20 @@
             
             <h1 class="text-4xl font-bold mb-4">{data.cocktail.name}</h1>
             
+            {#if data.cocktail.imageUri}
+                <div class="mb-6">
+                    <img
+                        src="/api/cocktails/{data.cocktail.id}/image"
+                        alt="{data.cocktail.name} image"
+                        class="w-full aspect-square object-cover rounded-lg border-2 border-gray-600 max-w-md mx-auto"
+                        on:error={(e) => {
+                            // Hide image if it fails to load
+                            e.currentTarget.style.display = 'none';
+                        }}
+                    />
+                </div>
+            {/if}
+            
             {#if data.cocktail.description}
                 <p class="text-gray-300 text-lg mb-6">{data.cocktail.description}</p>
             {/if}

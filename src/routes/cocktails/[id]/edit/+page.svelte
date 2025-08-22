@@ -25,8 +25,8 @@
     let imageChanged = false;
     let hiddenImageInput: HTMLInputElement;
     
-    // Get current image URI (will be null until we implement the serving endpoint)
-    $: currentImageUri = data.cocktail.imageUri || null;
+    // Get current image URI - now use the protected endpoint
+    $: currentImageUri = data.cocktail.imageUri ? `/api/cocktails/${data.cocktail.id}/image` : null;
     
     function handleImageSelected(event: CustomEvent<{ file: File; inputElement: HTMLInputElement }>) {
         selectedImageFile = event.detail.file;

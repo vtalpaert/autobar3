@@ -46,6 +46,7 @@ export const load: PageServerLoad = async ({ locals }) => {
             id: table.cocktail.id,
             name: table.cocktail.name,
             description: table.cocktail.description,
+            imageUri: table.cocktail.imageUri,
             creatorId: table.cocktail.creatorId,
             creatorName: table.user.username
         })

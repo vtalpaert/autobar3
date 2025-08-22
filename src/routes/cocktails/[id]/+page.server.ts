@@ -5,31 +5,29 @@ import type { PageServerLoad, Actions } from './$types';
 import { db } from '$lib/server/db';
 import * as table from '$lib/server/db/schema';
 import { selectVerifiedProfile } from '$lib/server/auth.js';
+import { checkCocktailAccess } from '$lib/server/cocktail-permissions';
 
 export const load: PageServerLoad = async ({ params, locals }) => {
-    // Check if user is logged in, profile exists and is verified
+    // Get verified profile (reusing existing function)
     const profile = await selectVerifiedProfile(locals.user);
 
-    const cocktails = await db
-        .select({
-            id: table.cocktail.id,
-            name: table.cocktail.name,
-            description: table.cocktail.description,
-            instructions: table.cocktail.instructions,
-            creatorName: table.user.username,
-            creatorId: table.cocktail.creatorId,
-            createdAt: table.cocktail.createdAt
-        })
-        .from(table.cocktail)
-        .innerJoin(table.profile, eq(table.profile.id, table.cocktail.creatorId))
-        .innerJoin(table.user, eq(table.user.id, table.profile.userId))
-        .where(eq(table.cocktail.id, params.id));
-
-    const cocktail = cocktails[0];
-
-    if (!cocktail) {
+    // Check cocktail access and get cocktail data (reusing permission logic)
+    const { hasAccess, cocktail } = await checkCocktailAccess(profile, params.id);
+    
+    if (!hasAccess || !cocktail) {
         throw error(404, 'Cocktail not found');
     }
+
+    // Get creator name
+    const creator = await db
+        .select({ username: table.user.username })
+        .from(table.user)
+        .innerJoin(table.profile, eq(table.profile.userId, table.user.id))
+        .where(eq(table.profile.id, cocktail.creatorId))
+        .get();
+
+    // Add creator name to cocktail
+    cocktail.creatorName = creator?.username || 'Unknown';
 
     // Get doses with ingredients for this cocktail
     const doses = await db

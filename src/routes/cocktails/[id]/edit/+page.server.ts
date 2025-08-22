@@ -4,34 +4,17 @@ import type { PageServerLoad, Actions } from './$types';
 import { db } from '$lib/server/db';
 import * as table from '$lib/server/db/schema';
 import { selectVerifiedProfile } from '$lib/server/auth.js';
+import { checkCocktailEditAccess } from '$lib/server/cocktail-permissions';
 import { saveCocktailImage, deleteCocktailImage } from '$lib/server/storage/images.js';
 
 export const load: PageServerLoad = async ({ params, locals }) => {
-    // Check if user is logged in, profile exists and is verified
+    // Get verified profile (reusing existing function)
     const profile = await selectVerifiedProfile(locals.user);
 
-    // Get cocktail with creator info
-    const cocktails = await db
-        .select({
-            id: table.cocktail.id,
-            name: table.cocktail.name,
-            description: table.cocktail.description,
-            instructions: table.cocktail.instructions,
-            imageUri: table.cocktail.imageUri,
-            creatorId: table.cocktail.creatorId,
-            createdAt: table.cocktail.createdAt
-        })
-        .from(table.cocktail)
-        .where(eq(table.cocktail.id, params.id));
-
-    const cocktail = cocktails[0];
-
-    if (!cocktail) {
-        throw error(404, 'Cocktail not found');
-    }
-
-    // Check if user is creator or admin
-    if (cocktail.creatorId !== profile.id && !profile.isAdmin) {
+    // Check edit access (reusing permission logic)
+    const { canEdit, cocktail } = await checkCocktailEditAccess(profile, params.id);
+    
+    if (!canEdit || !cocktail) {
         throw error(403, 'Not authorized to edit this cocktail');
     }
 
@@ -226,8 +209,15 @@ export const actions: Actions = {
     },
 
     updateCocktail: async ({ request, params, locals }) => {
-        // Check if user is logged in, profile exists and is verified
+        // Get verified profile (reusing existing function)
         const profile = await selectVerifiedProfile(locals.user);
+
+        // Check edit access (reusing permission logic)
+        const { canEdit, cocktail } = await checkCocktailEditAccess(profile, params.id);
+        
+        if (!canEdit || !cocktail) {
+            throw error(403, 'Not authorized to edit this cocktail');
+        }
 
         const formData = await request.formData();
         const name = formData.get('name')?.toString();
@@ -238,22 +228,6 @@ export const actions: Actions = {
 
         if (!name) {
             return { error: 'Name is required' };
-        }
-
-        // Get cocktail to check permissions
-        const cocktail = await db
-            .select()
-            .from(table.cocktail)
-            .where(eq(table.cocktail.id, params.id))
-            .get();
-
-        if (!cocktail) {
-            throw error(404, 'Cocktail not found');
-        }
-
-        // Check if user is creator or admin
-        if (cocktail.creatorId !== profile.id && !profile.isAdmin) {
-            throw error(403, 'Not authorized to edit this cocktail');
         }
 
         // Handle image changes
