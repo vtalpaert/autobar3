@@ -4,6 +4,7 @@
     import { translations } from '$lib/i18n/translations';
     import { currentLanguage } from '$lib/i18n/store';
     import Header from '$lib/components/Header.svelte';
+    import ImageUpload from '$lib/components/ImageUpload.svelte';
 
     export let data: PageData;
     export let form;
@@ -18,6 +19,34 @@
     
     // For delete confirmation
     let showDeleteConfirmation = false;
+    
+    // For image upload
+    let selectedImageFile: File | null = null;
+    let imageChanged = false;
+    let hiddenImageInput: HTMLInputElement;
+    
+    // Get current image URI (will be null until we implement the serving endpoint)
+    $: currentImageUri = data.cocktail.imageUri || null;
+    
+    function handleImageSelected(event: CustomEvent<{ file: File; inputElement: HTMLInputElement }>) {
+        selectedImageFile = event.detail.file;
+        imageChanged = true;
+        
+        // Set the file on the hidden input using DataTransfer
+        if (hiddenImageInput) {
+            const dataTransfer = new DataTransfer();
+            dataTransfer.items.add(event.detail.file);
+            hiddenImageInput.files = dataTransfer.files;
+        }
+    }
+    
+    function handleImageRemoved() {
+        selectedImageFile = null;
+        imageChanged = true;
+        if (hiddenImageInput) {
+            hiddenImageInput.value = '';
+        }
+    }
 </script>
 
 <Header user={data.user} />
@@ -40,7 +69,27 @@
                 </div>
             {/if}
 
-            <form method="POST" action="?/updateCocktail" use:enhance>
+            <form method="POST" action="?/updateCocktail" enctype="multipart/form-data" use:enhance={({ formData }) => {
+                return async ({ result }) => {
+                    if (result.type === 'failure') {
+                        errorMessage = result.data?.error || 'An error occurred';
+                    }
+                };
+            }}>
+                <!-- Image Upload -->
+                <ImageUpload
+                    label="Cocktail Image"
+                    currentImageUri={currentImageUri}
+                    on:fileSelected={handleImageSelected}
+                    on:fileRemoved={handleImageRemoved}
+                />
+                
+                <!-- Hidden inputs for image handling -->
+                <input bind:this={hiddenImageInput} type="file" name="image" class="hidden" />
+                {#if imageChanged}
+                    <input type="hidden" name="imageChanged" value="true" />
+                {/if}
+
                 <div class="mb-4">
                     <label for="name" class="block text-sm font-medium mb-2">
                         {t.createCocktail.name}

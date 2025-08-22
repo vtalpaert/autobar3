@@ -4,6 +4,7 @@ import type { PageServerLoad, Actions } from './$types';
 import { db } from '$lib/server/db';
 import * as table from '$lib/server/db/schema';
 import { selectVerifiedProfile } from '$lib/server/auth.js';
+import { saveCocktailImage } from '$lib/server/storage/images.js';
 
 export const load: PageServerLoad = async ({ locals }) => {
     // Check if user is logged in, profile exists and is verified
@@ -33,6 +34,7 @@ export const actions: Actions = {
         const name = formData.get('name')?.toString();
         const description = formData.get('description')?.toString();
         const instructions = formData.get('instructions')?.toString();
+        const imageFile = formData.get('image') as File | null;
 
         if (!name) {
             return { error: 'Name is required' };
@@ -40,12 +42,26 @@ export const actions: Actions = {
 
         const cocktailId = crypto.randomUUID();
 
+        // Handle image upload if provided
+        let imageUri: string | null = null;
+        if (imageFile && imageFile.size > 0) {
+            try {
+                imageUri = await saveCocktailImage(
+                    { id: cocktailId, creatorId: profile.id },
+                    imageFile
+                );
+            } catch (error) {
+                return { error: `Image upload failed: ${error instanceof Error ? error.message : 'Unknown error'}` };
+            }
+        }
+
         // Create the cocktail
         await db.insert(table.cocktail).values({
             id: cocktailId,
             name,
             description,
             instructions,
+            imageUri,
             creatorId: profile.id,
             createdAt: new Date()
         });

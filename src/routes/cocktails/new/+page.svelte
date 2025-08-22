@@ -4,6 +4,7 @@
     import { translations } from '$lib/i18n/translations';
     import { currentLanguage } from '$lib/i18n/store';
     import Header from '$lib/components/Header.svelte';
+    import ImageUpload from '$lib/components/ImageUpload.svelte';
 
     export let data;
     export let form;
@@ -15,6 +16,28 @@
     let quantity = 50; // Default quantity in ml
     let pendingDoses = [];
     let showAddDose = false;
+    
+    // For image upload
+    let selectedImageFile: File | null = null;
+    let hiddenImageInput: HTMLInputElement;
+    
+    function handleImageSelected(event: CustomEvent<{ file: File; inputElement: HTMLInputElement }>) {
+        selectedImageFile = event.detail.file;
+        
+        // Set the file on the hidden input using DataTransfer
+        if (hiddenImageInput) {
+            const dataTransfer = new DataTransfer();
+            dataTransfer.items.add(event.detail.file);
+            hiddenImageInput.files = dataTransfer.files;
+        }
+    }
+    
+    function handleImageRemoved() {
+        selectedImageFile = null;
+        if (hiddenImageInput) {
+            hiddenImageInput.value = '';
+        }
+    }
     
     function addLocalDose() {
         if (!selectedIngredientId) return;
@@ -114,7 +137,17 @@
                 </div>
             {/if}
 
-            <form method="POST" use:enhance>
+            <form method="POST" enctype="multipart/form-data" use:enhance>
+                <!-- Image Upload -->
+                <ImageUpload
+                    label="Cocktail Image"
+                    on:fileSelected={handleImageSelected}
+                    on:fileRemoved={handleImageRemoved}
+                />
+                
+                <!-- Hidden input for image file -->
+                <input bind:this={hiddenImageInput} type="file" name="image" class="hidden" />
+
                 <div class="mb-4">
                     <label for="name" class="block text-sm font-medium mb-2">
                         {t.createCocktail.name}

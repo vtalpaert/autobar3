@@ -4,6 +4,7 @@ import type { PageServerLoad, Actions } from './$types';
 import { db } from '$lib/server/db';
 import * as table from '$lib/server/db/schema';
 import { selectVerifiedProfile } from '$lib/server/auth.js';
+import { saveCocktailImage, deleteCocktailImage } from '$lib/server/storage/images.js';
 
 export const load: PageServerLoad = async ({ params, locals }) => {
     // Check if user is logged in, profile exists and is verified
@@ -16,6 +17,7 @@ export const load: PageServerLoad = async ({ params, locals }) => {
             name: table.cocktail.name,
             description: table.cocktail.description,
             instructions: table.cocktail.instructions,
+            imageUri: table.cocktail.imageUri,
             creatorId: table.cocktail.creatorId,
             createdAt: table.cocktail.createdAt
         })
@@ -231,6 +233,8 @@ export const actions: Actions = {
         const name = formData.get('name')?.toString();
         const description = formData.get('description')?.toString();
         const instructions = formData.get('instructions')?.toString();
+        const imageChanged = formData.get('imageChanged') === 'true';
+        const imageFile = formData.get('image') as File | null;
 
         if (!name) {
             return { error: 'Name is required' };
@@ -252,13 +256,43 @@ export const actions: Actions = {
             throw error(403, 'Not authorized to edit this cocktail');
         }
 
+        // Handle image changes
+        let imageUri = cocktail.imageUri;
+        if (imageChanged) {
+            // Delete old image if it exists
+            if (cocktail.imageUri) {
+                try {
+                    await deleteCocktailImage(cocktail.creatorId, cocktail.id);
+                } catch (err) {
+                    // Log error but don't fail the update
+                    console.warn('Failed to delete old cocktail image:', err);
+                }
+            }
+
+            // Save new image if provided
+            if (imageFile && imageFile.size > 0) {
+                try {
+                    imageUri = await saveCocktailImage(
+                        { id: cocktail.id, creatorId: cocktail.creatorId },
+                        imageFile
+                    );
+                } catch (error) {
+                    return { error: `Image upload failed: ${error instanceof Error ? error.message : 'Unknown error'}` };
+                }
+            } else {
+                // Image was removed
+                imageUri = null;
+            }
+        }
+
         // Update cocktail
         await db
             .update(table.cocktail)
             .set({
                 name,
                 description,
-                instructions
+                instructions,
+                imageUri
             })
             .where(eq(table.cocktail.id, params.id));
 
@@ -338,6 +372,16 @@ export const actions: Actions = {
         // Check if user is creator or admin
         if (cocktail.creatorId !== profile.id && !profile.isAdmin) {
             throw error(403, 'Not authorized to delete this cocktail');
+        }
+
+        // Delete cocktail image if it exists
+        if (cocktail.imageUri) {
+            try {
+                await deleteCocktailImage(cocktail.creatorId, cocktail.id);
+            } catch (err) {
+                // Log error but don't fail the deletion
+                console.warn('Failed to delete cocktail image:', err);
+            }
         }
 
         // Delete the cocktail (doses will be cascade deleted due to foreign key constraint)

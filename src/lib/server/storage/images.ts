@@ -1,6 +1,7 @@
 import sharp from 'sharp';
 import { writeFile } from 'fs/promises';
 import { lookup } from 'mime-types';
+import { env } from '$env/dynamic/private';
 import type { Cocktail } from '../db/schema';
 import { 
 	getCocktailImagePath, 
@@ -8,12 +9,12 @@ import {
 	ensureFileDirectoryExists 
 } from './index';
 
-// Configuration constants
-const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
+// Configuration from environment variables
+const MAX_FILE_SIZE = parseInt(env.MAX_IMAGE_SIZE || '10485760');
 const ALLOWED_MIME_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
-const IMAGE_WIDTH = 800;
-const IMAGE_HEIGHT = 600;
-const WEBP_QUALITY = 85;
+const IMAGE_WIDTH = parseInt(env.IMAGE_WIDTH || '600');
+const IMAGE_HEIGHT = parseInt(env.IMAGE_HEIGHT || '600');
+const WEBP_QUALITY = parseInt(env.WEBP_QUALITY || '85');
 
 /**
  * Validate image file

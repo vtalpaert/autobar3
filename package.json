@@ -48,6 +48,7 @@
 		"@sveltejs/package": "^2.0.0",
 		"@sveltejs/vite-plugin-svelte": "^5.0.3",
 		"@types/mime-types": "^3.0.1",
+		"@types/sharp": "^0.31.1",
 		"autoprefixer": "^10.4.20",
 		"dotenv": "^16.4.7",
 		"drizzle-kit": "^0.30.6",
