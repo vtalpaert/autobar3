@@ -24,6 +24,15 @@ add_custom_target(generate_binary
     COMMENT "Generating binary image from built executable"
 )
 
+# Copy application binary for OTA updates
+add_custom_command(
+    OUTPUT ${out_path}/${PROJECT_NAME}.bin
+    DEPENDS generate_binary
+    COMMAND ${CMAKE_COMMAND} -E echo "Copying application binary for OTA..."
+    COMMAND ${CMAKE_COMMAND} -E copy ${build_dir}/${PROJECT_NAME}.bin ${out_path}/${PROJECT_NAME}.bin
+    COMMENT "Copying application binary for OTA updates"
+)
+
 # Create merged binary using esptool.py
 add_custom_command(
     OUTPUT ${out_path}/merged-firmware-esp32.bin
@@ -41,4 +50,4 @@ add_custom_command(
     COMMENT "Creating merged firmware binary"
 )
 
-add_custom_target(merged_binary ALL DEPENDS ${out_path}/merged-firmware-esp32.bin)
+add_custom_target(merged_binary ALL DEPENDS ${out_path}/merged-firmware-esp32.bin ${out_path}/${PROJECT_NAME}.bin)
