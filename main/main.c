@@ -32,7 +32,7 @@ void app_main(void)
         ESP_LOGI(TAG, "Server URL: %s", server_url);
         ESP_LOGI(TAG, "API Token length: %d", strlen(api_token));
 
-        if (start_wifi())
+        if (!start_wifi())
         {
             need_config = false;
             ESP_LOGI(TAG, "Successfully connected to WiFi");

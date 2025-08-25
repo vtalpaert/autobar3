@@ -53,7 +53,6 @@ bool start_wifi(void)
     // Configuration variables
     char ssid[MAX_SSID_LEN] = {0};
     char password[MAX_PASS_LEN] = {0};
-    bool need_config = true;
 
     // Initialize TCP/IP and WiFi components first
     ESP_ERROR_CHECK(esp_netif_init());
@@ -64,28 +63,25 @@ bool start_wifi(void)
     ESP_ERROR_CHECK(esp_wifi_init(&cfg));
 
     // Check if we have all required configuration
-    if (get_stored_wifi_credentials(ssid, password))
+    if (!get_stored_wifi_credentials(ssid, password))
     {
+        ESP_LOGI(TAG, "Missing WiFi credentials - need setup");
+        return true; // need config
+    }
 
-        ESP_LOGI(TAG, "Found stored configuration");
-        ESP_LOGI(TAG, "SSID: %s", ssid);
+    ESP_LOGI(TAG, "Found stored WiFi credentials");
+    ESP_LOGI(TAG, "SSID: %s", ssid);
 
-        // Try to connect with stored credentials
-        ESP_LOGI(TAG, "Trying stored WiFi credentials for SSID: %s", ssid);
-        if (try_wifi_connect(ssid, password))
-        {
-            need_config = false;
-            ESP_LOGI(TAG, "Successfully connected to WiFi");
-        }
-        else
-        {
-            ESP_LOGI(TAG, "Failed to connect with stored credentials");
-        }
+    // Try to connect with stored credentials
+    ESP_LOGI(TAG, "Trying stored WiFi credentials for SSID: %s", ssid);
+    if (try_wifi_connect(ssid, password))
+    {
+        ESP_LOGI(TAG, "Successfully connected to WiFi");
+        return false; // no config needed
     }
     else
     {
-        ESP_LOGI(TAG, "Missing configuration - need setup");
+        ESP_LOGI(TAG, "Failed to connect with stored credentials");
+        return true; // need config
     }
-
-    return need_config;
 }
