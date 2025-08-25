@@ -10,66 +10,9 @@
 #include "wifi_config.h"
 #include "ap_server.h"
 #include "api.h"
+#include "version.h"
 
 static const char *TAG = "autobar3";
-#define DEFAULT_SERVER_URL "https://192.168.1.4:5173"
-#define MANIFEST_PATH "/firmware/manifest.json"
-
-extern const uint8_t server_cert_pem_start[] asm("_binary_server_cert_pem_start");
-extern const uint8_t server_cert_pem_end[] asm("_binary_server_cert_pem_end");
-
-static esp_err_t http_event_handler(esp_http_client_event_t *evt)
-{
-    switch (evt->event_id)
-    {
-    case HTTP_EVENT_ERROR:
-        ESP_LOGI(TAG, "HTTP_EVENT_ERROR");
-        break;
-    case HTTP_EVENT_ON_DATA:
-        if (evt->data_len)
-        {
-            ESP_LOGI(TAG, "HTTP_EVENT_ON_DATA, len=%d", evt->data_len);
-        }
-        break;
-    default:
-        break;
-    }
-    return ESP_OK;
-}
-
-static void fetch_manifest(void)
-{
-    char server_url[MAX_URL_LEN] = {0};
-    char manifest_url[MAX_URL_LEN + 64] = {0};
-
-    if (!get_stored_server_url(server_url))
-    {
-        strcpy(server_url, DEFAULT_SERVER_URL);
-    }
-
-    snprintf(manifest_url, sizeof(manifest_url), "%s%s", server_url, MANIFEST_PATH);
-
-    esp_http_client_config_t config = {
-        .url = manifest_url,
-        .event_handler = http_event_handler,
-        .cert_pem = (char *)server_cert_pem_start,
-        .transport_type = HTTP_TRANSPORT_OVER_SSL,
-    };
-
-    esp_http_client_handle_t client = esp_http_client_init(&config);
-
-    esp_err_t err = esp_http_client_perform(client);
-    if (err == ESP_OK)
-    {
-        ESP_LOGI(TAG, "HTTP GET Status = %d", esp_http_client_get_status_code(client));
-    }
-    else
-    {
-        ESP_LOGE(TAG, "HTTP GET failed: %s", esp_err_to_name(err));
-    }
-
-    esp_http_client_cleanup(client);
-}
 
 void app_main(void)
 {
@@ -125,7 +68,28 @@ void app_main(void)
     {
         ESP_LOGI(TAG, "Device verified successfully");
         ESP_LOGI(TAG, "Fetching manifest...");
-        fetch_manifest();
+        
+        char *manifest_version = fetch_manifest();
+        if (manifest_version)
+        {
+            ESP_LOGI(TAG, "Current firmware version: %s", FIRMWARE_VERSION);
+            ESP_LOGI(TAG, "Available firmware version: %s", manifest_version);
+            
+            if (strcmp(FIRMWARE_VERSION, manifest_version) == 0)
+            {
+                ESP_LOGI(TAG, "Firmware is up to date");
+            }
+            else
+            {
+                ESP_LOGI(TAG, "Firmware update available");
+            }
+            
+            free(manifest_version);
+        }
+        else
+        {
+            ESP_LOGE(TAG, "Failed to fetch manifest version");
+        }
     }
     else
     {

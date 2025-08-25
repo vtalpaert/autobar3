@@ -9,6 +9,8 @@
 static const char *TAG = "api";
 #define MAX_RETRIES 4
 #define RETRY_DELAY_MS 30000
+#define DEFAULT_SERVER_URL "https://192.168.1.4:5173"
+#define MANIFEST_PATH "/firmware/manifest.json"
 
 extern const uint8_t server_cert_pem_start[] asm("_binary_server_cert_pem_start");
 extern const uint8_t server_cert_pem_end[] asm("_binary_server_cert_pem_end");
@@ -232,4 +234,120 @@ bool verify_device(void)
     cJSON_Delete(response);
 
     return verification_success;
+}
+
+static esp_err_t manifest_http_event_handler(esp_http_client_event_t *evt)
+{
+    response_buffer_t *resp = (response_buffer_t *)evt->user_data;
+
+    switch (evt->event_id)
+    {
+    case HTTP_EVENT_ERROR:
+        ESP_LOGI(TAG, "HTTP_EVENT_ERROR");
+        break;
+    case HTTP_EVENT_ON_DATA:
+        if (evt->data_len)
+        {
+            // Reallocate buffer to fit new data
+            char *new_buffer = realloc(resp->buffer, resp->size + evt->data_len + 1);
+            if (new_buffer == NULL)
+            {
+                ESP_LOGE(TAG, "Failed to allocate memory for manifest response buffer");
+                return ESP_FAIL;
+            }
+            resp->buffer = new_buffer;
+
+            // Copy new data into buffer
+            memcpy(resp->buffer + resp->size, evt->data, evt->data_len);
+            resp->size += evt->data_len;
+            resp->buffer[resp->size] = '\0';
+        }
+        break;
+    default:
+        break;
+    }
+    return ESP_OK;
+}
+
+char* fetch_manifest(void)
+{
+    char server_url[MAX_URL_LEN] = {0};
+    char manifest_url[MAX_URL_LEN + 64] = {0};
+
+    if (!get_stored_server_url(server_url))
+    {
+        strcpy(server_url, DEFAULT_SERVER_URL);
+    }
+
+    snprintf(manifest_url, sizeof(manifest_url), "%s%s", server_url, MANIFEST_PATH);
+
+    // Initialize response buffer
+    response_buffer_t resp = {
+        .buffer = NULL,
+        .size = 0
+    };
+
+    esp_http_client_config_t config = {
+        .url = manifest_url,
+        .event_handler = manifest_http_event_handler,
+        .cert_pem = (char *)server_cert_pem_start,
+        .transport_type = HTTP_TRANSPORT_OVER_SSL,
+        .user_data = &resp
+    };
+
+    esp_http_client_handle_t client = esp_http_client_init(&config);
+
+    char *version = NULL;
+    esp_err_t err = esp_http_client_perform(client);
+    
+    if (err == ESP_OK)
+    {
+        int status_code = esp_http_client_get_status_code(client);
+        ESP_LOGI(TAG, "HTTP GET Status = %d", status_code);
+        
+        if (status_code == 200 && resp.buffer && resp.size > 0)
+        {
+            cJSON *manifest = cJSON_Parse(resp.buffer);
+            if (manifest)
+            {
+                cJSON *version_item = cJSON_GetObjectItem(manifest, "version");
+                if (version_item && cJSON_IsString(version_item))
+                {
+                    // Allocate memory for version string and copy it
+                    version = malloc(strlen(version_item->valuestring) + 1);
+                    if (version)
+                    {
+                        strcpy(version, version_item->valuestring);
+                        ESP_LOGI(TAG, "Manifest version: %s", version);
+                    }
+                }
+                else
+                {
+                    ESP_LOGE(TAG, "No version field found in manifest");
+                }
+                cJSON_Delete(manifest);
+            }
+            else
+            {
+                ESP_LOGE(TAG, "Failed to parse manifest JSON");
+            }
+        }
+        else
+        {
+            ESP_LOGE(TAG, "Invalid manifest response (status: %d, size: %d)", status_code, resp.size);
+        }
+    }
+    else
+    {
+        ESP_LOGE(TAG, "HTTP GET failed: %s", esp_err_to_name(err));
+    }
+
+    // Clean up
+    if (resp.buffer)
+    {
+        free(resp.buffer);
+    }
+    esp_http_client_cleanup(client);
+
+    return version;
 }
