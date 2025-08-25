@@ -53,7 +53,7 @@ static esp_err_t http_event_handler(esp_http_client_event_t *evt)
     return ESP_OK;
 }
 
-bool api_contact_server(char *api_path, cJSON *payload, cJSON *response)
+cJSON* api_contact_server(char *api_path, cJSON *payload)
 {
     char server_url[MAX_URL_LEN] = {0};
     char api_token[MAX_TOKEN_LEN] = {0};
@@ -93,14 +93,14 @@ bool api_contact_server(char *api_path, cJSON *payload, cJSON *response)
     esp_http_client_handle_t client = esp_http_client_init(&config);
     esp_http_client_set_header(client, "Content-Type", "application/json");
 
-    bool verification_success = false;
+    cJSON *parsed_response = NULL;
     int retry_count = 0;
 
-    while (retry_count < MAX_RETRIES && !verification_success)
+    while (retry_count < MAX_RETRIES && !parsed_response)
     {
         if (retry_count > 0)
         {
-            ESP_LOGI(TAG, "Retrying verification (attempt %d/%d)", retry_count + 1, MAX_RETRIES);
+            ESP_LOGI(TAG, "Retrying API call (attempt %d/%d)", retry_count + 1, MAX_RETRIES);
             vTaskDelay(pdMS_TO_TICKS(RETRY_DELAY_MS));
         }
 
@@ -116,7 +116,11 @@ bool api_contact_server(char *api_path, cJSON *payload, cJSON *response)
             {
                 if (resp.buffer && resp.size > 0)
                 {
-                    response = cJSON_Parse(resp.buffer);
+                    parsed_response = cJSON_Parse(resp.buffer);
+                    if (!parsed_response)
+                    {
+                        ESP_LOGE(TAG, "Failed to parse JSON response");
+                    }
                 }
                 else
                 {
@@ -171,14 +175,17 @@ bool api_contact_server(char *api_path, cJSON *payload, cJSON *response)
     esp_http_client_cleanup(client);
     cJSON_free(post_data);
 
-    if (!verification_success)
+    if (!parsed_response)
     {
-        ESP_LOGE(TAG, "Device verification failed after %d attempts", MAX_RETRIES);
-        // Clear stored token
-        store_api_token("");
+        ESP_LOGE(TAG, "API call failed after %d attempts", MAX_RETRIES);
+        // Clear stored token for verification failures
+        if (strstr(api_path, "/verify"))
+        {
+            store_api_token("");
+        }
     }
 
-    return verification_success;
+    return parsed_response;
 }
 
 bool verify_device(void)
@@ -190,11 +197,9 @@ bool verify_device(void)
     cJSON *payload = cJSON_CreateObject();
     cJSON_AddStringToObject(payload, "firmwareVersion", FIRMWARE_VERSION);
 
-    cJSON *response = cJSON_CreateObject();;
+    cJSON *response = api_contact_server(api_path, payload);
 
-    bool api_call_success = api_contact_server(api_path, payload, response);
-
-    if (api_call_success && response)
+    if (response)
     {
         cJSON *token_valid = cJSON_GetObjectItem(response, "tokenValid");
         cJSON *message = cJSON_GetObjectItem(response, "message");

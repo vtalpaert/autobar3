@@ -1,4 +1,4 @@
-idf_component_register(SRCS "main.c" "storage.c" "ap_server.c" "api.c"
-                    INCLUDE_DIRS "."
-                    REQUIRES nvs_flash esp_wifi esp_http_client esp_event json esp_http_server json
-                    EMBED_TXTFILES server_cert.pem)
+idf_component_register(SRCS "wifi_config.c" "ota.c" "main.c" "storage.c" "ap_server.c" "api.c"
+    INCLUDE_DIRS "."
+    REQUIRES esp_event esp_http_client esp_http_server esp_https_ota esp_wifi json nvs_flash
+    EMBED_TXTFILES server_cert.pem)

@@ -12,7 +12,6 @@
 void initialize_nvs(void);
 bool get_stored_wifi_credentials(char *ssid, char *password);
 void store_wifi_credentials(const char *ssid, const char *password);
-bool try_wifi_connect(const char *ssid, const char *password);
 
 // Server URL functions
 bool get_stored_server_url(char *url);
