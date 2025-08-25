@@ -15,11 +15,24 @@ ORGANIZATION="Development"
 ORGANIZATIONAL_UNIT="IT"
 COMMON_NAME="localhost"
 
-# Get local IP address
-LOCAL_IP=$(hostname -i | cut -d' ' -f1)
+# Get all local IP addresses (excluding loopback)
+LOCAL_IPS=$(ip addr show | grep -oP '(?<=inet\s)\d+(\.\d+){3}' | grep -v '127.0.0.1')
 
 # Create certificates directory if it doesn't exist
 mkdir -p "$CERT_DIR"
+
+# Start building the alt_names section
+ALT_NAMES="DNS.1 = localhost
+DNS.2 = $COMMON_NAME
+IP.1 = 127.0.0.1"
+
+# Add all local IPs to the certificate
+IP_COUNT=2
+for ip in $LOCAL_IPS; do
+    ALT_NAMES="$ALT_NAMES
+IP.$IP_COUNT = $ip"
+    ((IP_COUNT++))
+done
 
 # Create OpenSSL config file with SAN
 cat > "$CERT_DIR/openssl.cnf" << EOF
@@ -42,10 +55,7 @@ CN = $COMMON_NAME
 subjectAltName = @alt_names
 
 [alt_names]
-DNS.1 = localhost
-DNS.2 = $COMMON_NAME
-IP.1 = 127.0.0.1
-IP.2 = $LOCAL_IP
+$ALT_NAMES
 EOF
 
 # Generate private key
@@ -76,3 +86,9 @@ echo "SSL certificates generated successfully in $CERT_DIR/"
 echo "  - Private key: $CERT_DIR/private.key"
 echo "  - Certificate: $CERT_DIR/certificate.crt"
 echo "  - ESP32 PEM: main/server_cert.pem"
+echo ""
+echo "Certificate includes the following IP addresses:"
+echo "  - 127.0.0.1 (localhost)"
+for ip in $LOCAL_IPS; do
+    echo "  - $ip"
+done
