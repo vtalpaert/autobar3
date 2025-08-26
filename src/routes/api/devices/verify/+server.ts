@@ -5,7 +5,7 @@ import { eq } from 'drizzle-orm';
 
 export async function POST({ request }) {
     const data = await request.json();
-    const { token, firmwareVersion } = data;
+    const { token, firmwareVersion, needsCalibration } = data;
 
     if (!token || !firmwareVersion) {
         return json({
@@ -27,17 +27,25 @@ export async function POST({ request }) {
         }, { status: 401 });
     }
 
-    // Update the firmware version and ping time
+    // Update the firmware version, ping time, and calibration status if provided
+    const updateData: any = {
+        firmwareVersion,
+        lastPingAt: new Date()
+    };
+
+    // If device reports it needs calibration, update the database
+    if (needsCalibration === true) {
+        updateData.needCalibration = true;
+    }
+
     await db
         .update(table.device)
-        .set({
-            firmwareVersion,
-            lastPingAt: new Date()
-        })
+        .set(updateData)
         .where(eq(table.device.id, device.id));
 
     return json({
         tokenValid: true,
-        message: "Hello from the server"
+        message: "Hello from the server",
+        needCalibration: device.needCalibration
     });
 }

@@ -200,14 +200,24 @@ cJSON* api_contact_server(char *api_path, cJSON *payload)
     return response;
 }
 
-bool verify_device(void)
+bool verify_device(bool device_needs_calibration, bool *server_needs_calibration)
 {
     const char *api_path = "/api/devices/verify";
     bool verification_success = false;
 
+    // Initialize output parameter
+    if (server_needs_calibration) {
+        *server_needs_calibration = false;
+    }
+
     // Prepare JSON payload
     cJSON *payload = cJSON_CreateObject();
     cJSON_AddStringToObject(payload, "firmwareVersion", FIRMWARE_VERSION);
+    
+    // Add device calibration status if needed
+    if (device_needs_calibration) {
+        cJSON_AddBoolToObject(payload, "needsCalibration", true);
+    }
 
     cJSON *response = api_contact_server((char*)api_path, payload);
 
@@ -215,6 +225,7 @@ bool verify_device(void)
     {
         cJSON *token_valid = cJSON_GetObjectItem(response, "tokenValid");
         cJSON *message = cJSON_GetObjectItem(response, "message");
+        cJSON *need_cal = cJSON_GetObjectItem(response, "needCalibration");
 
         if (message)
         {
@@ -229,6 +240,13 @@ bool verify_device(void)
         {
             verification_success = true;
             ESP_LOGI(TAG, "Token verification successful");
+
+            // Extract server calibration status if provided
+            if (server_needs_calibration && need_cal && cJSON_IsBool(need_cal))
+            {
+                *server_needs_calibration = cJSON_IsTrue(need_cal);
+                ESP_LOGI(TAG, "Server says calibration needed: %s", *server_needs_calibration ? "true" : "false");
+            }
         }
         else
         {
@@ -246,34 +264,42 @@ bool verify_device(void)
     return verification_success;
 }
 
-char* fetch_manifest(void)
+bool fetch_manifest(char *version_buffer, size_t buffer_size)
 {
     const char *manifest_path = "/firmware/manifest.json";
     char server_url[MAX_URL_LEN] = {0};
     char manifest_url[MAX_URL_LEN + 64] = {0};
+    bool success = false;
+
+    // Initialize output buffer
+    if (version_buffer && buffer_size > 0) {
+        version_buffer[0] = '\0';
+    }
 
     if (!get_stored_server_url(server_url))
     {
         ESP_LOGE(TAG, "No server URL configured");
-        return NULL;
+        return false;
     }
 
     snprintf(manifest_url, sizeof(manifest_url), "%s%s", server_url, manifest_path);
 
     cJSON *manifest = make_http_request(manifest_url, NULL, false);
-    char *version = NULL;
 
     if (manifest)
     {
         cJSON *version_item = cJSON_GetObjectItem(manifest, "version");
         if (version_item && cJSON_IsString(version_item))
         {
-            // Allocate memory for version string and copy it
-            version = malloc(strlen(version_item->valuestring) + 1);
-            if (version)
+            if (version_buffer && buffer_size > strlen(version_item->valuestring))
             {
-                strcpy(version, version_item->valuestring);
-                ESP_LOGI(TAG, "Manifest version: %s", version);
+                strcpy(version_buffer, version_item->valuestring);
+                ESP_LOGI(TAG, "Manifest version: %s", version_buffer);
+                success = true;
+            }
+            else
+            {
+                ESP_LOGE(TAG, "Version buffer too small for manifest version");
             }
         }
         else
@@ -287,5 +313,5 @@ char* fetch_manifest(void)
         ESP_LOGE(TAG, "Failed to fetch or parse manifest");
     }
 
-    return version;
+    return success;
 }

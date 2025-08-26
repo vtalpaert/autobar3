@@ -1,4 +1,5 @@
 esp-idf
+managed_components/
 node_modules
 uploads
 

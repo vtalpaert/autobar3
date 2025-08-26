@@ -1,3 +1,4 @@
+// base and ESP-IDF
 #include <stdio.h>
 #include "esp_log.h"
 #include "esp_system.h"
@@ -6,6 +7,11 @@
 #include "esp_netif.h"
 #include "esp_http_client.h"
 #include "lwip/ip4_addr.h"
+
+// components
+#include <hx711.h>
+
+// local files
 #include "storage.h"
 #include "wifi_config.h"
 #include "ap_server.h"
@@ -27,7 +33,7 @@ void app_main(void)
     // Check if we have all required configuration
     bool has_config = (get_stored_server_url(server_url) && get_stored_api_token(api_token));
     bool wifi_connected = false;
-    
+
     if (has_config)
     {
         ESP_LOGI(TAG, "Found stored configuration");
@@ -64,13 +70,14 @@ void app_main(void)
 
     // If we're here, we're connected to WiFi
     ESP_LOGI(TAG, "Verifying device...");
-    if (verify_device())
+    bool server_needs_calibration = false;
+    if (verify_device(false, &server_needs_calibration))
     {
         ESP_LOGI(TAG, "Device verified successfully");
         ESP_LOGI(TAG, "Fetching manifest...");
 
-        char *manifest_version = fetch_manifest();
-        if (manifest_version)
+        char manifest_version[64] = {0};
+        if (fetch_manifest(manifest_version, sizeof(manifest_version)))
         {
             ESP_LOGI(TAG, "Current firmware version: %s", FIRMWARE_VERSION);
             ESP_LOGI(TAG, "Available firmware version: %s", manifest_version);
@@ -84,8 +91,6 @@ void app_main(void)
                 ESP_LOGI(TAG, "Firmware update available");
                 do_firmware_upgrade();
             }
-
-            free(manifest_version);
         }
         else
         {
@@ -100,5 +105,36 @@ void app_main(void)
         {
             vTaskDelay(pdMS_TO_TICKS(1000));
         }
+    }
+
+    // https://esp-idf-lib.github.io/hx711/
+    hx711_t weight_scale;
+    weight_scale.dout = GPIO_NUM_26;
+    weight_scale.pd_sck = GPIO_NUM_25;
+    weight_scale.gain = HX711_GAIN_A_128;
+    hx711_init(&weight_scale);
+
+    int32_t raw_measure = 0;
+    while (1)
+    {
+        esp_err_t timeout = hx711_wait(&weight_scale, 1000);
+        if (timeout != ESP_OK)
+        {
+            ESP_LOGE(TAG, "Timeout to wait for data");
+        }
+        else
+        {
+            esp_err_t err = hx711_read_data(&weight_scale, &raw_measure);
+            if (err != ESP_OK)
+            {
+                ESP_LOGE(TAG, "Failed to read weight");
+            }
+            else
+            {
+                ESP_LOGI(TAG, "Weight measure (raw): %ld", raw_measure);
+            }
+        }
+
+        vTaskDelay(pdMS_TO_TICKS(1000));
     }
 }

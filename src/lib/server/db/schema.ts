@@ -34,10 +34,15 @@ export const device = sqliteTable('device', {
 	name: text('name'), // Human friendly name
 	firmwareVersion: text('firmware_version').notNull().default('unknown'),
 	isDefault: integer('is_default', { mode: 'boolean' }).notNull().default(false),
+	needCalibration: integer('need_calibration', { mode: 'boolean' }).notNull().default(true),
 	addedAt: integer('added_at', { mode: 'timestamp' }).notNull(),
 	lastUsedAt: integer('last_used_at', { mode: 'timestamp' }),
 	lastPingAt: integer('last_ping_at', { mode: 'timestamp' }), // Track when device was last online
-	apiToken: text('api_token').unique()
+	apiToken: text('api_token').unique(),
+	hx711Dt: integer('hx711_dt'), // GPIO pin for HX711 DT (data)
+	hx711Sck: integer('hx711_sck'), // GPIO pin for HX711 SCK (clock)
+	hx711Offset: integer('hx711_offset'), // HX711 calibration offset (signed int)
+	hx711Scale: real('hx711_scale') // HX711 calibration scale (float)
 });
 
 export const ingredient = sqliteTable('ingredient', {

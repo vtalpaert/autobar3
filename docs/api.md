@@ -6,8 +6,9 @@ The following API endpoints are available for device communication:
 
 - `POST /api/devices/verify`
   - Verifies device token and updates firmware version
-  - Request: `{ "token": "device_api_token", "firmwareVersion": "1.0.0" }`
-  - Response: `{ "tokenValid": true, "message": "Hello from the server" }`
+  - Request: `{ "token": "device_api_token", "firmwareVersion": "1.0.0", "needsCalibration": true }`
+  - Response: `{ "tokenValid": true, "message": "Hello from the server", "needCalibration": true }`
+  - Note: `needsCalibration` is optional in request. If set to `true`, the device reports it needs calibration and the database will be updated. Response always includes server's calibration requirement status.
 
 ## Device Action
 
@@ -41,6 +42,15 @@ The following API endpoints are available for device communication:
   - Cancels an in-progress order
   - Request: `{ "token": "device_api_token", "orderId": "id" }`
   - Response: `{ "success": true, "message": "Order cancelled" }`
+
+## Weight Reporting
+
+- `POST /api/devices/weight`
+  - Reports current weight measurement and retrieves HX711 calibration data
+  - Request: `{ "token": "device_api_token", "weightGrams": 125.5 }`
+  - Response: `{ "needCalibration": true, "hx711Dt": 4, "hx711Sck": 5, "hx711Offset": -123456, "hx711Scale": 432.1 }`
+  - Used by devices to get GPIO pins and calibration values for HX711 weight sensor
+  - Device should use formula: `weight = scale * (raw - offset)` to convert raw readings to grams
 
 ## Real-time Order Updates
 
