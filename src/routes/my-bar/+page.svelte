@@ -153,9 +153,18 @@
 					{#each data.devices as device}
 						<div class="bg-gray-800 rounded-lg shadow-lg p-6">
 							<div class="flex justify-between items-start mb-4">
-								<h3 class="text-xl font-medium text-white">
-									{device.name || device.id.substring(0, 8)}
-								</h3>
+								<div class="flex flex-col">
+									<div class="flex items-center gap-2">
+										<h3 class="text-xl font-medium text-white">
+											{device.name || device.id.substring(0, 8)}
+										</h3>
+										{#if device.isDefault}
+											<span class="bg-blue-600 text-white text-xs px-2 py-1 rounded">
+												{t.devices.default}
+											</span>
+										{/if}
+									</div>
+								</div>
 								<span
 									class={`px-2 py-1 rounded-full text-xs font-medium ${getDeviceStatus(device) === 'online' ? 'bg-green-600 text-white' : 'bg-gray-600 text-white'}`}
 								>
@@ -247,7 +256,7 @@
 								</p>
 								<p class="text-sm text-gray-400">
 									{t.myBar.orders.device}
-									{order.device.name || order.device.id.substring(0, 8)}
+									{order.device ? (order.device.name || order.device.id.substring(0, 8)) : 'Deleted Device'}
 								</p>
 							</div>
 
@@ -342,7 +351,7 @@
 										</span>
 									</td>
 									<td class="px-6 py-4 whitespace-nowrap">
-										{order.device.name || order.device.id.substring(0, 8)}
+										{order.device ? (order.device.name || order.device.id.substring(0, 8)) : 'Deleted Device'}
 									</td>
 									<td class="px-6 py-4 whitespace-nowrap">
 										{formatDate(order.createdAt)}

@@ -35,20 +35,36 @@
                                 </p>
                                 <p class="text-sm text-gray-400">Created: {new Date(profile.createdAt).toLocaleDateString()}</p>
                             </div>
-                            <form 
-                                method="POST" 
-                                action="?/verifyProfile" 
-                                use:enhance
-                                class="flex gap-2"
-                            >
-                                <input type="hidden" name="profileId" value={profile.id} />
-                                <button 
-                                    type="submit"
-                                    class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded"
+                            <div class="flex gap-2">
+                                <form 
+                                    method="POST" 
+                                    action="?/verifyProfile" 
+                                    use:enhance
                                 >
-                                    Verify
-                                </button>
-                            </form>
+                                    <input type="hidden" name="profileId" value={profile.id} />
+                                    <button 
+                                        type="submit"
+                                        class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded"
+                                    >
+                                        Verify
+                                    </button>
+                                </form>
+                                {#if !profile.isAdmin}
+                                    <form 
+                                        method="POST" 
+                                        action="?/promoteToAdmin" 
+                                        use:enhance
+                                    >
+                                        <input type="hidden" name="profileId" value={profile.id} />
+                                        <button 
+                                            type="submit"
+                                            class="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded"
+                                        >
+                                            Make Admin
+                                        </button>
+                                    </form>
+                                {/if}
+                            </div>
                         </div>
                     {/each}
                 </div>
@@ -75,25 +91,60 @@
                                 {/if}
                             </p>
                         </div>
-                        <form 
-                            method="POST" 
-                            action="?/deleteUser" 
-                            use:enhance
-                            class="flex gap-2"
-                            on:submit|preventDefault={(e) => {
-                                if (confirm('Are you sure you want to delete this user? This action cannot be undone.')) {
-                                    e.target.submit();
-                                }
-                            }}
-                        >
-                            <input type="hidden" name="userId" value={profile.userId} />
-                            <button 
-                                type="submit"
-                                class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded"
+                        <div class="flex gap-2">
+                            {#if !profile.isAdmin}
+                                <form 
+                                    method="POST" 
+                                    action="?/promoteToAdmin" 
+                                    use:enhance
+                                >
+                                    <input type="hidden" name="profileId" value={profile.id} />
+                                    <button 
+                                        type="submit"
+                                        class="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded"
+                                    >
+                                        Make Admin
+                                    </button>
+                                </form>
+                            {:else if profile.userId !== data.user.id}
+                                <form 
+                                    method="POST" 
+                                    action="?/removeAdmin" 
+                                    use:enhance
+                                    on:submit|preventDefault={(e) => {
+                                        if (confirm('Are you sure you want to remove admin status from this user?')) {
+                                            e.target.submit();
+                                        }
+                                    }}
+                                >
+                                    <input type="hidden" name="profileId" value={profile.id} />
+                                    <button 
+                                        type="submit"
+                                        class="bg-orange-600 hover:bg-orange-700 text-white px-4 py-2 rounded"
+                                    >
+                                        Remove Admin
+                                    </button>
+                                </form>
+                            {/if}
+                            <form 
+                                method="POST" 
+                                action="?/deleteUser" 
+                                use:enhance
+                                on:submit|preventDefault={(e) => {
+                                    if (confirm('Are you sure you want to delete this user? This action cannot be undone.')) {
+                                        e.target.submit();
+                                    }
+                                }}
                             >
-                                Delete
-                            </button>
-                        </form>
+                                <input type="hidden" name="userId" value={profile.userId} />
+                                <button 
+                                    type="submit"
+                                    class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded"
+                                >
+                                    Delete
+                                </button>
+                            </form>
+                        </div>
                     </div>
                 {/each}
             </div>

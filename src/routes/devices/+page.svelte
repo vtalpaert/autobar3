@@ -19,6 +19,9 @@
     let editingDeviceId: string | null = null;
     let deviceNameInput: string = '';
 
+    // Track which device is being deleted
+    let deletingDeviceId: string | null = null;
+
     function startEditing(device: any) {
         editingDeviceId = device.id;
         deviceNameInput = device.name || '';
@@ -27,6 +30,14 @@
     function cancelEditing() {
         editingDeviceId = null;
         deviceNameInput = '';
+    }
+    
+    function confirmDelete(deviceId: string) {
+        deletingDeviceId = deviceId;
+    }
+    
+    function cancelDelete() {
+        deletingDeviceId = null;
     }
 
     // Handle form submission with enhance
@@ -38,6 +49,16 @@
                 deviceNameInput = '';
                 
                 // Update the page data to reflect the new device name
+                await update();
+            }
+        };
+    }
+    
+    // Handle delete form submission
+    function handleDeleteEnhance() {
+        return async ({ result, update }) => {
+            if (result.type === 'success') {
+                deletingDeviceId = null;
                 await update();
             }
         };
@@ -66,9 +87,9 @@
             </div>
         </div>
         
-        <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div class="space-y-6">
             {#if data.devices.length === 0}
-                <p class="text-gray-400 col-span-full text-center py-8">
+                <p class="text-gray-400 text-center py-8">
                     {t.devices.noDevices}
                 </p>
             {/if}
@@ -107,30 +128,88 @@
                             </div>
                         </form>
                     {:else}
-                        <div class="flex justify-between items-start">
-                            <h2 class="text-2xl font-bold mb-2">
-                                {device.name ? device.name : `Device ${device.id.slice(0, 8)}`}
-                            </h2>
-                            <button 
-                                class="text-blue-400 hover:text-blue-300 text-sm"
-                                on:click={() => startEditing(device)}
-                            >
-                                {t.devices.rename}
-                            </button>
+                        <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+                            <div class="flex-1 min-w-0">
+                                <div class="flex flex-wrap items-center gap-2 mb-2">
+                                    <h2 class="text-2xl font-bold break-words">
+                                        {device.name ? device.name : `Device ${device.id.slice(0, 8)}`}
+                                    </h2>
+                                    {#if device.isDefault}
+                                        <span class="bg-green-600 text-white text-xs px-2 py-1 rounded whitespace-nowrap">
+                                            {t.devices.default}
+                                        </span>
+                                    {/if}
+                                </div>
+                                <div class="space-y-1 text-sm">
+                                    <p class="text-gray-400">{t.devices.deviceId}: {device.id.slice(0, 8)}</p>
+                                    <p class="text-gray-300">{t.devices.firmware}: {device.firmwareVersion}</p>
+                                    <p class="text-gray-400">
+                                        {t.devices.added}: {formatDate(device.addedAt)}
+                                    </p>
+                                    {#if device.lastUsedAt}
+                                        <p class="text-gray-400">
+                                            {t.devices.lastUsed}: {formatDate(device.lastUsedAt)}
+                                        </p>
+                                    {/if}
+                                </div>
+                            </div>
+                            <div class="flex flex-wrap gap-2 lg:flex-shrink-0">
+                                {#if !device.isDefault}
+                                    <form method="POST" action="?/setDefaultDevice" use:enhance>
+                                        <input type="hidden" name="deviceId" value={device.id} />
+                                        <button 
+                                            type="submit"
+                                            class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded transition-colors whitespace-nowrap"
+                                        >
+                                            {t.devices.setDefault}
+                                        </button>
+                                    </form>
+                                {/if}
+                                <button 
+                                    class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded transition-colors whitespace-nowrap"
+                                    on:click={() => startEditing(device)}
+                                >
+                                    {t.devices.rename}
+                                </button>
+                                <button 
+                                    class="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded transition-colors whitespace-nowrap"
+                                    on:click={() => confirmDelete(device.id)}
+                                >
+                                    {t.devices.delete}
+                                </button>
+                            </div>
                         </div>
-                        <p class="text-sm text-gray-400 mb-2">{t.devices.deviceId}: {device.id.slice(0, 8)}</p>
-                        <p class="text-gray-300 mb-2">{t.devices.firmware}: {device.firmwareVersion}</p>
-                        <p class="text-sm text-gray-400">
-                            {t.devices.added}: {formatDate(device.addedAt)}
-                        </p>
-                        {#if device.lastUsedAt}
-                            <p class="text-sm text-gray-400">
-                                {t.devices.lastUsed}: {formatDate(device.lastUsedAt)}
-                            </p>
-                        {/if}
                     {/if}
                 </div>
             {/each}
         </div>
     </div>
 </div>
+
+<!-- Confirmation dialog for device deletion -->
+{#if deletingDeviceId}
+    <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div class="bg-gray-800 rounded-lg p-6 max-w-md mx-4">
+            <h3 class="text-xl font-bold mb-4">{t.devices.confirmDelete}</h3>
+            <p class="text-gray-300 mb-6">{t.devices.deleteWarning}</p>
+            <div class="flex space-x-4">
+                <form method="POST" action="?/deleteDevice" use:enhance={handleDeleteEnhance}>
+                    <input type="hidden" name="deviceId" value={deletingDeviceId} />
+                    <button 
+                        type="submit" 
+                        class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded"
+                    >
+                        {t.devices.confirmDeleteButton}
+                    </button>
+                </form>
+                <button 
+                    type="button" 
+                    class="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded"
+                    on:click={cancelDelete}
+                >
+                    {t.devices.cancel}
+                </button>
+            </div>
+        </div>
+    </div>
+{/if}

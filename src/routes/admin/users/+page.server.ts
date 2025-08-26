@@ -100,5 +100,70 @@ export const actions: Actions = {
             .where(eq(table.user.id, userId));
 
         return { success: true };
+    },
+
+    promoteToAdmin: async ({ request, locals }) => {
+        if (!locals.user) {
+            throw redirect(302, '/auth/login');
+        }
+
+        const adminProfile = await db
+            .select()
+            .from(table.profile)
+            .where(eq(table.profile.userId, locals.user.id))
+            .get();
+
+        if (!adminProfile?.isAdmin) {
+            throw redirect(302, '/');
+        }
+
+        const formData = await request.formData();
+        const profileId = formData.get('profileId')?.toString();
+
+        if (!profileId) {
+            return { error: 'Profile ID is required' };
+        }
+
+        await db
+            .update(table.profile)
+            .set({ isAdmin: true })
+            .where(eq(table.profile.id, profileId));
+
+        return { success: true };
+    },
+
+    removeAdmin: async ({ request, locals }) => {
+        if (!locals.user) {
+            throw redirect(302, '/auth/login');
+        }
+
+        const adminProfile = await db
+            .select()
+            .from(table.profile)
+            .where(eq(table.profile.userId, locals.user.id))
+            .get();
+
+        if (!adminProfile?.isAdmin) {
+            throw redirect(302, '/');
+        }
+
+        const formData = await request.formData();
+        const profileId = formData.get('profileId')?.toString();
+
+        if (!profileId) {
+            return { error: 'Profile ID is required' };
+        }
+
+        // Prevent removing admin status from yourself
+        if (profileId === adminProfile.id) {
+            return { error: 'Cannot remove admin status from yourself' };
+        }
+
+        await db
+            .update(table.profile)
+            .set({ isAdmin: false })
+            .where(eq(table.profile.id, profileId));
+
+        return { success: true };
     }
 };

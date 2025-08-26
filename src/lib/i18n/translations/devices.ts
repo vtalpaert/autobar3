@@ -10,9 +10,17 @@ export const devices = {
       added: 'Added',
       lastUsed: 'Last used',
       rename: 'Rename',
+      delete: 'Delete',
       save: 'Save',
       cancel: 'Cancel',
       friendlyName: 'Enter a friendly name',
+      default: 'Default',
+      setDefault: 'Set as Default',
+      
+      // Delete device translations
+      confirmDelete: 'Delete Device',
+      deleteWarning: 'Are you sure you want to delete this device? Order history will be preserved, but the device will be permanently removed.',
+      confirmDeleteButton: 'Delete Device',
       instructions: {
         title: 'Instructions',
         step1: 'Connect your ESP32 to your computer via USB',
@@ -52,9 +60,17 @@ export const devices = {
       added: 'Ajouté le',
       lastUsed: 'Dernière utilisation',
       rename: 'Renommer',
+      delete: 'Supprimer',
       save: 'Enregistrer',
       cancel: 'Annuler',
       friendlyName: 'Entrez un nom convivial',
+      default: 'Par défaut',
+      setDefault: 'Définir par défaut',
+      
+      // Delete device translations
+      confirmDelete: 'Supprimer l\'Appareil',
+      deleteWarning: 'Êtes-vous sûr de vouloir supprimer cet appareil ? L\'historique des commandes sera préservé, mais l\'appareil sera définitivement supprimé.',
+      confirmDeleteButton: 'Supprimer l\'Appareil',
       instructions: {
         title: 'Instructions',
         step1: 'Connectez votre ESP32 à votre ordinateur via USB',

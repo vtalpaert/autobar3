@@ -1,5 +1,5 @@
 import { redirect } from '@sveltejs/kit';
-import { eq } from 'drizzle-orm';
+import { eq, and, or, not, sql } from 'drizzle-orm';
 import type { PageServerLoad, Actions } from './$types';
 import { db } from '$lib/server/db';
 import * as table from '$lib/server/db/schema';
@@ -62,10 +62,32 @@ export const actions: Actions = {
             return { error: 'Device ID is required' };
         }
 
-        await db
-            .delete(table.device)
-            .where(eq(table.device.id, deviceId));
+        try {
+            // Update ALL orders for this device in a single query
+            // Cancel pending/in-progress orders and set deviceId to null for all
+            await db
+                .update(table.order)
+                .set({
+                    status: sql`CASE 
+                        WHEN status IN ('pending', 'in_progress') THEN 'cancelled'
+                        ELSE status
+                    END`,
+                    deviceId: null,
+                    updatedAt: new Date()
+                })
+                .where(eq(table.order.deviceId, deviceId));
 
-        return { success: true };
+            // Now delete the device
+            await db
+                .delete(table.device)
+                .where(eq(table.device.id, deviceId));
+
+            return { success: true };
+        } catch (error) {
+            console.error('Error deleting device:', error);
+            return { 
+                error: 'Failed to delete device. Please try again.' 
+            };
+        }
     }
 };

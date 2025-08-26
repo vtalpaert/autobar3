@@ -52,7 +52,7 @@ export const load: PageServerLoad = async ({ locals }) => {
         })
         .from(table.order)
         .innerJoin(table.cocktail, eq(table.order.cocktailId, table.cocktail.id))
-        .innerJoin(table.device, eq(table.order.deviceId, table.device.id))
+        .leftJoin(table.device, eq(table.order.deviceId, table.device.id))
         .leftJoin(table.dose, eq(table.order.currentDoseId, table.dose.id))
         .leftJoin(table.ingredient, eq(table.dose.ingredientId, table.ingredient.id))
         .where(
@@ -82,7 +82,7 @@ export const load: PageServerLoad = async ({ locals }) => {
         })
         .from(table.order)
         .innerJoin(table.cocktail, eq(table.order.cocktailId, table.cocktail.id))
-        .innerJoin(table.device, eq(table.order.deviceId, table.device.id))
+        .leftJoin(table.device, eq(table.order.deviceId, table.device.id))
         .where(
             and(
                 eq(table.order.customerId, profile.id),

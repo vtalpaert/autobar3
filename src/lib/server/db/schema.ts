@@ -96,7 +96,6 @@ export const order = sqliteTable('order', {
 		.notNull()
 		.references(() => profile.id),
 	deviceId: text('device_id')
-		.notNull()
 		.references(() => device.id),
 	cocktailId: text('cocktail_id')
 		.notNull()
@@ -132,7 +131,7 @@ export type CollaborationRequestWithProfiles = CollaborationRequest & {
 // Extended types for orders
 export type OrderWithDetails = Order & {
     customer: { username: string, artistName: string | null };
-    device: { id: string };
+    device: { id: string } | null;
     cocktail: { name: string };
     currentDose?: { id: string, ingredientId: string, quantity: number, number: number };
 };
