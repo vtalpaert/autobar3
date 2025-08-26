@@ -12,6 +12,7 @@ uploads
 /dist
 *.bin
 old/
+static/firmware
 
 # OS
 .DS_Store

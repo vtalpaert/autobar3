@@ -1,6 +1,6 @@
 {
     "name": "RobotCocktail",
-    "version": "1.0.2",
+    "version": "@FIRMWARE_VERSION@",
     "builds": [
         {
             "chipFamily": "ESP32",

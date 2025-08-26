@@ -7,6 +7,18 @@ cmake_minimum_required(VERSION 3.16)
 include($ENV{IDF_PATH}/tools/cmake/project.cmake)
 project(autobar3)
 
+# Read version from version.h
+file(READ "${CMAKE_SOURCE_DIR}/main/version.h" VERSION_FILE_CONTENT)
+string(REGEX MATCH "#define FIRMWARE_VERSION \"([^\"]+)\"" _ ${VERSION_FILE_CONTENT})
+set(FIRMWARE_VERSION ${CMAKE_MATCH_1})
+
+# Generate manifest.json from template
+configure_file(
+    "${CMAKE_SOURCE_DIR}/main/manifest.json.in"
+    "${CMAKE_SOURCE_DIR}/static/firmware/manifest.json"
+    @ONLY
+)
+
 idf_build_set_property(MINIMAL_BUILD ON)
 
 # Create merged firmware binary in static/firmware/
