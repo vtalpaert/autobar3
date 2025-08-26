@@ -27,7 +27,7 @@ add_custom_target(generate_binary
 # Copy application binary for OTA updates
 add_custom_command(
     OUTPUT ${out_path}/${PROJECT_NAME}.bin
-    DEPENDS generate_binary
+    DEPENDS ${build_dir}/${PROJECT_NAME}.bin
     COMMAND ${CMAKE_COMMAND} -E echo "Copying application binary for OTA..."
     COMMAND ${CMAKE_COMMAND} -E copy ${build_dir}/${PROJECT_NAME}.bin ${out_path}/${PROJECT_NAME}.bin
     COMMENT "Copying application binary for OTA updates"
