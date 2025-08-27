@@ -16,6 +16,13 @@ export const devices = {
       friendlyName: 'Enter a friendly name',
       default: 'Default',
       setDefault: 'Set as Default',
+      online: 'Online',
+      offline: 'Offline',
+      neverConnected: 'Never Connected',
+      needsCalibration: 'Needs Calibration',
+      lastSeen: 'Last seen',
+      neverSeen: 'Never seen',
+      neverUsed: 'Never used',
       
       // Delete device translations
       confirmDelete: 'Delete Device',
@@ -66,6 +73,13 @@ export const devices = {
       friendlyName: 'Entrez un nom convivial',
       default: 'Par défaut',
       setDefault: 'Définir par défaut',
+      online: 'En ligne',
+      offline: 'Hors ligne',
+      neverConnected: 'Jamais connecté',
+      needsCalibration: 'Calibrage requis',
+      lastSeen: 'Vu pour la dernière fois',
+      neverSeen: 'Jamais vu',
+      neverUsed: 'Jamais utilisé',
       
       // Delete device translations
       confirmDelete: 'Supprimer l\'Appareil',

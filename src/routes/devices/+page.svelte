@@ -15,6 +15,43 @@
             : new Date(dateString).toLocaleDateString();
     }
 
+    // Format datetime with time
+    function formatDateTime(dateString: string): string {
+        const options: Intl.DateTimeFormatOptions = {
+            day: '2-digit',
+            month: '2-digit', 
+            year: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit'
+        };
+        return $currentLanguage === 'fr' 
+            ? new Date(dateString).toLocaleDateString('fr-FR', options)
+            : new Date(dateString).toLocaleDateString('en-US', options);
+    }
+
+    // Check if device is online (pinged within last 5 minutes)
+    function isDeviceOnline(lastPingAt: string | null): boolean {
+        if (!lastPingAt) return false;
+        const fiveMinutesAgo = Date.now() - (5 * 60 * 1000);
+        return new Date(lastPingAt).getTime() > fiveMinutesAgo;
+    }
+
+    // Get relative time string
+    function getRelativeTime(dateString: string): string {
+        const now = Date.now();
+        const date = new Date(dateString).getTime();
+        const diffMs = now - date;
+        const diffMins = Math.floor(diffMs / (1000 * 60));
+        const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+        const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+
+        if (diffMins < 1) return $currentLanguage === 'fr' ? 'À l\'instant' : 'Just now';
+        if (diffMins < 60) return $currentLanguage === 'fr' ? `Il y a ${diffMins}min` : `${diffMins}min ago`;
+        if (diffHours < 24) return $currentLanguage === 'fr' ? `Il y a ${diffHours}h` : `${diffHours}h ago`;
+        if (diffDays < 7) return $currentLanguage === 'fr' ? `Il y a ${diffDays}j` : `${diffDays}d ago`;
+        return formatDateTime(dateString);
+    }
+
     // Track which device is being edited
     let editingDeviceId: string | null = null;
     let deviceNameInput: string = '';
@@ -139,6 +176,25 @@
                                             {t.devices.default}
                                         </span>
                                     {/if}
+                                    {#if device.lastPingAt && isDeviceOnline(device.lastPingAt)}
+                                        <span class="bg-green-500 text-white text-xs px-2 py-1 rounded whitespace-nowrap flex items-center gap-1">
+                                            <div class="w-2 h-2 bg-white rounded-full animate-pulse"></div>
+                                            {t.devices.online}
+                                        </span>
+                                    {:else if device.lastPingAt}
+                                        <span class="bg-gray-500 text-white text-xs px-2 py-1 rounded whitespace-nowrap">
+                                            {t.devices.offline}
+                                        </span>
+                                    {:else}
+                                        <span class="bg-red-500 text-white text-xs px-2 py-1 rounded whitespace-nowrap">
+                                            {t.devices.neverConnected}
+                                        </span>
+                                    {/if}
+                                    {#if device.needCalibration}
+                                        <span class="bg-yellow-600 text-white text-xs px-2 py-1 rounded whitespace-nowrap">
+                                            {t.devices.needsCalibration}
+                                        </span>
+                                    {/if}
                                 </div>
                                 <div class="space-y-1 text-sm">
                                     <p class="text-gray-400">{t.devices.deviceId}: {device.id.slice(0, 8)}</p>
@@ -148,7 +204,20 @@
                                     </p>
                                     {#if device.lastUsedAt}
                                         <p class="text-gray-400">
-                                            {t.devices.lastUsed}: {formatDate(device.lastUsedAt)}
+                                            {t.devices.lastUsed}: {getRelativeTime(device.lastUsedAt)}
+                                        </p>
+                                    {:else}
+                                        <p class="text-gray-500">
+                                            {t.devices.neverUsed}
+                                        </p>
+                                    {/if}
+                                    {#if device.lastPingAt}
+                                        <p class="text-gray-400">
+                                            {t.devices.lastSeen}: {getRelativeTime(device.lastPingAt)}
+                                        </p>
+                                    {:else}
+                                        <p class="text-gray-500">
+                                            {t.devices.neverSeen}
                                         </p>
                                     {/if}
                                 </div>
