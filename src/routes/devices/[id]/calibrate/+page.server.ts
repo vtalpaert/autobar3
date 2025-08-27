@@ -39,6 +39,49 @@ export const load: PageServerLoad = async ({ locals, params }) => {
 };
 
 export const actions: Actions = {
+    enableCalibrationMode: async ({ locals, params }) => {
+        const profile = await selectVerifiedProfile(locals.user);
+        const deviceId = params.id;
+
+        if (!deviceId) {
+            return fail(400, { success: false, message: 'Device ID is required' });
+        }
+
+        // Verify device ownership
+        const device = await db
+            .select()
+            .from(table.device)
+            .where(
+                and(
+                    eq(table.device.id, deviceId),
+                    eq(table.device.profileId, profile.id)
+                )
+            )
+            .get();
+
+        if (!device) {
+            return fail(404, { success: false, message: 'Device not found' });
+        }
+
+        try {
+            // Set needCalibration to true
+            await db
+                .update(table.device)
+                .set({
+                    needCalibration: true
+                })
+                .where(eq(table.device.id, deviceId));
+
+            return { success: true, message: 'Calibration mode enabled successfully' };
+        } catch (error) {
+            console.error('Error enabling calibration mode:', error);
+            return fail(500, {
+                success: false,
+                message: 'Failed to enable calibration mode. Please try again.'
+            });
+        }
+    },
+
     savePins: async ({ request, locals, params }) => {
         const profile = await selectVerifiedProfile(locals.user);
         const deviceId = params.id;

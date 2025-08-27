@@ -4,8 +4,12 @@
     import { browser } from '$app/environment';
     import type { PageData } from './$types';
     import Header from '$lib/components/Header.svelte';
+    import { currentLanguage } from '$lib/i18n/store';
+    import { devices } from '$lib/i18n/translations/devices';
 
     export let data: PageData;
+
+    $: t = devices[$currentLanguage].devices.calibration;
 
     let eventSource: EventSource | null = null;
     let isConnected = false;
@@ -21,6 +25,7 @@
     let sckPin = data.device.hx711Sck || 5;
     let pinsFormMessage = '';
     let calibrationFormMessage = '';
+    let calibrationModeMessage = '';
 
     // Setup Server-Sent Events for real-time weight updates
     onMount(() => {
@@ -125,9 +130,20 @@
         };
     }
 
+    function handleCalibrationModeEnhance() {
+        return async ({ result, update }) => {
+            if (result.type === 'success') {
+                calibrationModeMessage = result.data?.message || t.calibrationModeEnabled;
+                await update();
+            } else if (result.type === 'failure') {
+                calibrationModeMessage = result.data?.message || 'Failed to enable calibration mode';
+            }
+        };
+    }
+
     // Format weight display
     function formatWeight(weight: number | null): string {
-        if (weight === null) return 'No signal';
+        if (weight === null) return t.noSignal;
         return `${weight.toFixed(1)}g`;
     }
 
@@ -144,7 +160,7 @@
     // Format calibrated weight display
     function formatCalibratedWeight(): string {
         const calibratedWeight = getCalibratedWeight();
-        if (calibratedWeight === null) return 'Not calibrated';
+        if (calibratedWeight === null) return t.notCalibrated;
         return `${calibratedWeight.toFixed(1)}g`;
     }
 
@@ -155,7 +171,7 @@
 </script>
 
 <svelte:head>
-    <title>Calibrate {data.device.name || data.device.id.substring(0, 8)} - Weight Scale</title>
+    <title>{t.title} {data.device.name || data.device.id.substring(0, 8)} - Weight Scale</title>
 </svelte:head>
 
 <Header user={data.user} />
@@ -167,24 +183,41 @@
                 href="/devices" 
                 class="text-blue-400 hover:text-blue-300 mb-6 inline-block"
             >
-                ← Back to devices
+                {t.backToDevices}
             </a>
-            <h1 class="text-3xl font-bold mb-2">
-                Calibrate Weight Scale
-            </h1>
-            <p class="text-gray-400">
-                Device: {data.device.name || data.device.id.substring(0, 8)}
-            </p>
+            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4">
+                <div>
+                    <h1 class="text-3xl font-bold mb-2">
+                        {t.title}
+                    </h1>
+                    <p class="text-gray-400">
+                        {t.device}: {data.device.name || data.device.id.substring(0, 8)}
+                    </p>
+                </div>
+                <form method="POST" action="?/enableCalibrationMode" use:enhance={handleCalibrationModeEnhance}>
+                    <button
+                        type="submit"
+                        class="bg-yellow-600 hover:bg-yellow-700 text-white font-bold py-2 px-4 rounded transition-colors whitespace-nowrap"
+                    >
+                        {t.enableCalibrationMode}
+                    </button>
+                </form>
+            </div>
+            {#if calibrationModeMessage}
+                <p class="text-sm {calibrationModeMessage.includes('success') || calibrationModeMessage === t.calibrationModeEnabled ? 'text-green-400' : 'text-red-400'}">
+                    {calibrationModeMessage}
+                </p>
+            {/if}
         </div>
 
         <!-- Current Weight Display -->
         <div class="bg-gray-800 rounded-lg shadow-lg p-6 mb-8">
             <div class="flex items-center justify-between mb-4">
-                <h2 class="text-xl font-semibold">Weight Readings</h2>
+                <h2 class="text-xl font-semibold">{t.weightReadings}</h2>
                 <div class="flex items-center space-x-2">
                     <div class={`w-2 h-2 rounded-full transition-colors duration-300 ${isConnected && hasRecentReading() ? 'bg-green-500' : 'bg-red-500'}`}></div>
                     <span class="text-sm text-gray-400">
-                        {isConnected ? (hasRecentReading() ? 'Live' : 'Stale') : 'Disconnected'}
+                        {isConnected ? (hasRecentReading() ? t.live : t.stale) : t.disconnected}
                     </span>
                 </div>
             </div>
@@ -192,48 +225,48 @@
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <!-- Raw Weight -->
                 <div class="text-center">
-                    <h3 class="text-lg font-medium text-gray-300 mb-2">Raw Reading</h3>
+                    <h3 class="text-lg font-medium text-gray-300 mb-2">{t.rawReading}</h3>
                     <div class="text-3xl font-mono py-4">
                         {formatWeight(currentWeight)}
                     </div>
-                    <p class="text-sm text-gray-400">Direct sensor value</p>
+                    <p class="text-sm text-gray-400">{t.directSensorValue}</p>
                 </div>
                 
                 <!-- Calibrated Weight -->
                 <div class="text-center">
-                    <h3 class="text-lg font-medium text-gray-300 mb-2">Calibrated Weight</h3>
+                    <h3 class="text-lg font-medium text-gray-300 mb-2">{t.calibratedWeight}</h3>
                     <div class="text-3xl font-mono py-4 {getCalibratedWeight() !== null ? 'text-green-400' : 'text-gray-500'}">
                         {formatCalibratedWeight()}
                     </div>
                     <p class="text-sm text-gray-400">
-                        {tareOffset !== null && calculatedScale !== null ? 'With current calibration' : 'Needs calibration'}
+                        {tareOffset !== null && calculatedScale !== null ? t.withCurrentCalibration : t.needsCalibration}
                     </p>
                 </div>
             </div>
             
             {#if !isConnected}
                 <p class="text-yellow-400 text-center mt-4">
-                    Make sure your device is powered on and connected to the internet.
+                    {t.deviceConnectionWarning}
                 </p>
             {:else if !hasRecentReading()}
                 <p class="text-yellow-400 text-center mt-4">
-                    Weight reading is stale. Check device connection.
+                    {t.staleReadingWarning}
                 </p>
             {/if}
         </div>
 
         <!-- GPIO Configuration Form -->
         <div class="bg-gray-800 rounded-lg shadow-lg p-6 mb-8">
-            <h2 class="text-xl font-semibold mb-4">Step 1: Hardware Configuration</h2>
+            <h2 class="text-xl font-semibold mb-4">{t.step1}</h2>
             <p class="text-gray-400 mb-6">
-                Configure the GPIO pins for your HX711 weight sensor. After saving, the device will reinitialize its hardware.
+                {t.hardwareConfigDescription}
             </p>
             
             <form method="POST" action="?/savePins" use:enhance={handlePinsEnhance}>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                     <div>
                         <label for="dtPin" class="block text-sm font-medium text-gray-300 mb-2">
-                            DT Pin (Data)
+                            {t.dtPin}
                         </label>
                         <input
                             type="number"
@@ -248,7 +281,7 @@
                     </div>
                     <div>
                         <label for="sckPin" class="block text-sm font-medium text-gray-300 mb-2">
-                            SCK Pin (Clock)
+                            {t.sckPin}
                         </label>
                         <input
                             type="number"
@@ -267,7 +300,7 @@
                     type="submit"
                     class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-6 rounded transition-colors"
                 >
-                    Save Pins
+                    {t.savePins}
                 </button>
                 
                 {#if pinsFormMessage}
@@ -280,22 +313,22 @@
 
         <!-- Calibration Process -->
         <div class="bg-gray-800 rounded-lg shadow-lg p-6">
-            <h2 class="text-xl font-semibold mb-4">Step 2: Weight Calibration</h2>
+            <h2 class="text-xl font-semibold mb-4">{t.step2}</h2>
             <p class="text-gray-400 mb-6">
-                Calibrate the weight sensor by first taring (zeroing) the scale, then using a known weight to calculate the scale factor.
+                {t.calibrationDescription}
             </p>
 
             {#if !isConnected || !hasRecentReading()}
                 <div class="bg-yellow-900/20 border border-yellow-800/30 text-yellow-400 px-4 py-3 rounded mb-6">
-                    <p>Please ensure the device is connected and sending recent weight readings before calibrating.</p>
+                    <p>{t.connectionRequiredWarning}</p>
                 </div>
             {/if}
 
             <!-- Tare Step -->
             <div class="mb-6">
-                <h3 class="text-lg font-medium mb-2">Step 2a: Tare (Zero the Scale)</h3>
+                <h3 class="text-lg font-medium mb-2">{t.step2a}</h3>
                 <p class="text-gray-400 mb-4">
-                    Remove all weight from the scale and click "Tare" to set the zero point.
+                    {t.tareDescription}
                 </p>
                 <button
                     type="button"
@@ -303,25 +336,25 @@
                     disabled={!isConnected || !hasRecentReading()}
                     class="bg-green-600 hover:bg-green-700 disabled:bg-gray-600 disabled:cursor-not-allowed text-white font-bold py-2 px-6 rounded transition-colors"
                 >
-                    Tare
+                    {t.tare}
                 </button>
                 {#if tareOffset !== null}
                     <p class="mt-2 text-sm text-green-400">
-                        ✓ Tare completed. Offset: {tareOffset}
+                        {t.tareCompleted} {tareOffset}
                     </p>
                 {/if}
             </div>
 
             <!-- Known Weight Step -->
             <div class="mb-6">
-                <h3 class="text-lg font-medium mb-2">Step 2b: Calculate Scale</h3>
+                <h3 class="text-lg font-medium mb-2">{t.step2b}</h3>
                 <p class="text-gray-400 mb-4">
-                    Place a known weight on the scale and enter its value below, then click "Calculate Scale".
+                    {t.scaleDescription}
                 </p>
                 <div class="flex items-center space-x-4 mb-4">
                     <div>
                         <label for="knownWeight" class="block text-sm font-medium text-gray-300 mb-2">
-                            Known Weight (grams)
+                            {t.knownWeight}
                         </label>
                         <input
                             type="number"
@@ -340,13 +373,13 @@
                             disabled={!isConnected || !hasRecentReading() || tareOffset === null}
                             class="bg-orange-600 hover:bg-orange-700 disabled:bg-gray-600 disabled:cursor-not-allowed text-white font-bold py-2 px-6 rounded transition-colors"
                         >
-                            Calculate Scale
+                            {t.calculateScale}
                         </button>
                     </div>
                 </div>
                 {#if calculatedScale !== null}
                     <p class="text-sm text-green-400">
-                        ✓ Scale calculated: {calculatedScale.toFixed(6)}
+                        {t.scaleCalculated} {calculatedScale.toFixed(6)}
                     </p>
                 {/if}
             </div>
@@ -362,7 +395,7 @@
                         disabled={tareOffset === null || calculatedScale === null}
                         class="bg-green-600 hover:bg-green-700 disabled:bg-gray-600 disabled:cursor-not-allowed text-white font-bold py-3 px-8 rounded transition-colors"
                     >
-                        Save Calibration
+                        {t.saveCalibration}
                     </button>
                     
                     {#if calibrationFormMessage}
@@ -380,7 +413,7 @@
                 href="/devices"
                 class="bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-6 rounded transition-colors"
             >
-                Back to Devices
+                {t.backToDevicesButton}
             </a>
         </div>
     </div>
