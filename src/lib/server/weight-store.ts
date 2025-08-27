@@ -27,10 +27,5 @@ export function storeWeight(deviceId: string, weight: number): void {
 export function getCurrentWeight(deviceId: string): number | null {
     cleanupStaleWeights();
     const measurement = weightMeasurements.get(deviceId);
-    if (measurement) {
-        const age = Date.now() - measurement.timestamp;
-        return measurement.weight;
-    } else {
-        return null;
-    }
+    return measurement ? measurement.weight : null;
 }

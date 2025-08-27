@@ -106,8 +106,8 @@ export const actions: Actions = {
             return fail(400, { success: false, message: 'Device ID is required' });
         }
 
-        if (!offset || !scale) {
-            return fail(400, { success: false, message: 'Both offset and scale are required' });
+        if (isNaN(offset) || isNaN(scale) || scale === 0) {
+            return fail(400, { success: false, message: 'Valid offset and scale values are required' });
         }
 
         // Verify device ownership

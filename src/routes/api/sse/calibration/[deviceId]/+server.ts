@@ -48,8 +48,7 @@ export async function GET({ locals, params }) {
                     if (!isClosed) {
                         try {
                             controller.enqueue(`data: ${JSON.stringify({ 
-                                weight: currentWeight,
-                                timestamp: Date.now()
+                                weight: currentWeight
                             })}\n\n`);
                         } catch (enqueueError) {
                             cleanup();

@@ -10,7 +10,6 @@
     let eventSource: EventSource | null = null;
     let isConnected = false;
     let currentWeight: number | null = null;
-    let lastUpdate: number | null = null;
 
     // Calibration state
     let tareOffset: number | null = null;
@@ -50,7 +49,6 @@
                 const weightData = JSON.parse(event.data);
                 if (weightData.weight !== undefined) {
                     currentWeight = weightData.weight;
-                    lastUpdate = Date.now(); // Use client timestamp when message is received
                 }
             } catch (error) {
                 console.error('Failed to parse weight data:', error);
@@ -94,7 +92,9 @@
     function handleCalculateScale() {
         if (currentWeight !== null && tareOffset !== null && knownWeight > 0) {
             const rawReading = currentWeight - tareOffset;
-            if (rawReading > 0) {
+            // Scale can be negative depending on hardware wiring
+            // We just need a non-zero reading to calculate scale
+            if (rawReading !== 0) {
                 calculatedScale = knownWeight / rawReading;
             }
         }
@@ -131,18 +131,26 @@
         return `${weight.toFixed(1)}g`;
     }
 
-    // Check if we have a stable weight reading
-    function isWeightStable(): boolean {
-        if (!lastUpdate) return false;
-        const timeSinceUpdate = Date.now() - lastUpdate;
-        return timeSinceUpdate < 5000; // Consider stable if updated within 5 seconds
+    // Calculate calibrated weight based on current calibration values
+    function getCalibratedWeight(): number | null {
+        if (currentWeight === null || tareOffset === null) return null;
+        
+        const rawReading = currentWeight - tareOffset;
+        if (calculatedScale === null) return rawReading;
+        
+        return rawReading * calculatedScale;
     }
 
-    // Check if we have a recent weight reading (even if 0g)
+    // Format calibrated weight display
+    function formatCalibratedWeight(): string {
+        const calibratedWeight = getCalibratedWeight();
+        if (calibratedWeight === null) return 'Not calibrated';
+        return `${calibratedWeight.toFixed(1)}g`;
+    }
+
+    // Check if we have a recent weight reading (server handles staleness)
     function hasRecentReading(): boolean {
-        if (!lastUpdate) return false;
-        const timeSinceUpdate = Date.now() - lastUpdate;
-        return timeSinceUpdate < 10000; // Consider recent if updated within 10 seconds
+        return currentWeight !== null;
     }
 </script>
 
@@ -155,6 +163,12 @@
 <div class="min-h-screen bg-gradient-to-b from-gray-900 to-gray-800 text-white">
     <div class="container mx-auto px-4 py-16">
         <div class="mb-8">
+            <a 
+                href="/devices" 
+                class="text-blue-400 hover:text-blue-300 mb-6 inline-block"
+            >
+                ← Back to devices
+            </a>
             <h1 class="text-3xl font-bold mb-2">
                 Calibrate Weight Scale
             </h1>
@@ -166,7 +180,7 @@
         <!-- Current Weight Display -->
         <div class="bg-gray-800 rounded-lg shadow-lg p-6 mb-8">
             <div class="flex items-center justify-between mb-4">
-                <h2 class="text-xl font-semibold">Current Weight Reading</h2>
+                <h2 class="text-xl font-semibold">Weight Readings</h2>
                 <div class="flex items-center space-x-2">
                     <div class={`w-2 h-2 rounded-full transition-colors duration-300 ${isConnected && hasRecentReading() ? 'bg-green-500' : 'bg-red-500'}`}></div>
                     <span class="text-sm text-gray-400">
@@ -174,15 +188,35 @@
                     </span>
                 </div>
             </div>
-            <div class="text-4xl font-mono text-center py-8">
-                {formatWeight(currentWeight)}
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <!-- Raw Weight -->
+                <div class="text-center">
+                    <h3 class="text-lg font-medium text-gray-300 mb-2">Raw Reading</h3>
+                    <div class="text-3xl font-mono py-4">
+                        {formatWeight(currentWeight)}
+                    </div>
+                    <p class="text-sm text-gray-400">Direct sensor value</p>
+                </div>
+                
+                <!-- Calibrated Weight -->
+                <div class="text-center">
+                    <h3 class="text-lg font-medium text-gray-300 mb-2">Calibrated Weight</h3>
+                    <div class="text-3xl font-mono py-4 {getCalibratedWeight() !== null ? 'text-green-400' : 'text-gray-500'}">
+                        {formatCalibratedWeight()}
+                    </div>
+                    <p class="text-sm text-gray-400">
+                        {tareOffset !== null && calculatedScale !== null ? 'With current calibration' : 'Needs calibration'}
+                    </p>
+                </div>
             </div>
+            
             {#if !isConnected}
-                <p class="text-yellow-400 text-center">
+                <p class="text-yellow-400 text-center mt-4">
                     Make sure your device is powered on and connected to the internet.
                 </p>
             {:else if !hasRecentReading()}
-                <p class="text-yellow-400 text-center">
+                <p class="text-yellow-400 text-center mt-4">
                     Weight reading is stale. Check device connection.
                 </p>
             {/if}
