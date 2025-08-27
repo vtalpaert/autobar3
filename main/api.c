@@ -315,3 +315,68 @@ bool fetch_manifest(char *version_buffer, size_t buffer_size)
 
     return success;
 }
+
+bool send_weight_measurement(float weight, bool *need_calibration, unsigned int *dt_pin, unsigned int *sck_pin, int *offset, float *scale)
+{
+    const char *api_path = "/api/devices/weight";
+    bool success = false;
+
+    // Initialize output parameters
+    if (need_calibration) *need_calibration = false;
+    if (dt_pin) *dt_pin = 0;
+    if (sck_pin) *sck_pin = 0;
+    if (offset) *offset = 0;
+    if (scale) *scale = 0.0;
+
+    // Prepare JSON payload
+    cJSON *payload = cJSON_CreateObject();
+    cJSON_AddNumberToObject(payload, "weightGrams", weight);
+
+    cJSON *response = api_contact_server((char*)api_path, payload);
+
+    if (response)
+    {
+        cJSON *need_cal = cJSON_GetObjectItem(response, "needCalibration");
+        cJSON *dt = cJSON_GetObjectItem(response, "hx711Dt");
+        cJSON *sck = cJSON_GetObjectItem(response, "hx711Sck");
+        cJSON *offs = cJSON_GetObjectItem(response, "hx711Offset");
+        cJSON *sc = cJSON_GetObjectItem(response, "hx711Scale");
+
+        if (need_cal && cJSON_IsBool(need_cal))
+        {
+            if (need_calibration) *need_calibration = cJSON_IsTrue(need_cal);
+            success = true;
+        }
+
+        if (dt && cJSON_IsNumber(dt) && dt_pin)
+        {
+            *dt_pin = (unsigned int)dt->valueint;
+        }
+
+        if (sck && cJSON_IsNumber(sck) && sck_pin)
+        {
+            *sck_pin = (unsigned int)sck->valueint;
+        }
+
+        if (offs && cJSON_IsNumber(offs) && offset)
+        {
+            *offset = offs->valueint;
+        }
+
+        if (sc && cJSON_IsNumber(sc) && scale)
+        {
+            *scale = (float)sc->valuedouble;
+        }
+
+        ESP_LOGI(TAG, "Weight measurement sent successfully");
+    }
+    else
+    {
+        ESP_LOGE(TAG, "Failed to send weight measurement to server");
+    }
+
+    cJSON_Delete(payload);
+    cJSON_Delete(response);
+
+    return success;
+}

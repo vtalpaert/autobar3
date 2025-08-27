@@ -8,16 +8,13 @@
 #include "esp_http_client.h"
 #include "lwip/ip4_addr.h"
 
-// components
-#include <hx711.h>
-
-// local files
 #include "storage.h"
 #include "wifi_config.h"
 #include "ap_server.h"
 #include "api.h"
 #include "version.h"
 #include "ota.h"
+#include "weight_scale.h"
 
 static const char *TAG = "autobar3";
 
@@ -31,10 +28,10 @@ void app_main(void)
     initialize_nvs();
 
     // Check if we have all required configuration
-    bool has_config = (get_stored_server_url(server_url) && get_stored_api_token(api_token));
+    bool has_api_config = (get_stored_server_url(server_url) && get_stored_api_token(api_token));
     bool wifi_connected = false;
 
-    if (has_config)
+    if (has_api_config)
     {
         ESP_LOGI(TAG, "Found stored configuration");
         ESP_LOGI(TAG, "Server URL: %s", server_url);
@@ -52,11 +49,11 @@ void app_main(void)
     }
     else
     {
-        ESP_LOGI(TAG, "Missing configuration");
+        ESP_LOGI(TAG, "Missing server and token parameters");
     }
 
     // Start configuration portal if we don't have config or WiFi failed
-    if (!has_config || !wifi_connected)
+    if (!has_api_config || !wifi_connected)
     {
         ESP_LOGI(TAG, "Starting configuration portal...");
         start_config_portal();
@@ -67,15 +64,20 @@ void app_main(void)
             vTaskDelay(pdMS_TO_TICKS(1000));
         }
     }
-
     // If we're here, we're connected to WiFi
-    ESP_LOGI(TAG, "Verifying device...");
+
+    // This boolean holds if weight scale init went well, we share this value
+    // to the server in verify_device
+    bool success_weight_scale_init = weight_interface_init();
     bool server_needs_calibration = false;
-    if (verify_device(false, &server_needs_calibration))
+
+    ESP_LOGI(TAG, "Verifying device and reporting firmware version...");
+    if (verify_device(!success_weight_scale_init, &server_needs_calibration))
     {
         ESP_LOGI(TAG, "Device verified successfully");
-        ESP_LOGI(TAG, "Fetching manifest...");
 
+        // Verify if the firmware version matches with the server
+        ESP_LOGI(TAG, "Fetching manifest...");
         char manifest_version[64] = {0};
         if (fetch_manifest(manifest_version, sizeof(manifest_version)))
         {
@@ -90,11 +92,23 @@ void app_main(void)
             {
                 ESP_LOGI(TAG, "Firmware update available");
                 do_firmware_upgrade();
+                // Here the device will reboot
             }
         }
         else
         {
             ESP_LOGE(TAG, "Failed to fetch manifest version");
+        }
+
+        // Handle calibration if required
+        if (server_needs_calibration)
+        {
+            ESP_LOGI(TAG, "Entering calibration loop");
+            while (weight_interface_need_calibration())
+            {
+                vTaskDelay(pdMS_TO_TICKS(500));
+            }
+            ESP_LOGI(TAG, "Weight scale is calibrated");
         }
     }
     else
@@ -105,36 +119,5 @@ void app_main(void)
         {
             vTaskDelay(pdMS_TO_TICKS(1000));
         }
-    }
-
-    // https://esp-idf-lib.github.io/hx711/
-    hx711_t weight_scale;
-    weight_scale.dout = GPIO_NUM_26;
-    weight_scale.pd_sck = GPIO_NUM_25;
-    weight_scale.gain = HX711_GAIN_A_128;
-    hx711_init(&weight_scale);
-
-    int32_t raw_measure = 0;
-    while (1)
-    {
-        esp_err_t timeout = hx711_wait(&weight_scale, 1000);
-        if (timeout != ESP_OK)
-        {
-            ESP_LOGE(TAG, "Timeout to wait for data");
-        }
-        else
-        {
-            esp_err_t err = hx711_read_data(&weight_scale, &raw_measure);
-            if (err != ESP_OK)
-            {
-                ESP_LOGE(TAG, "Failed to read weight");
-            }
-            else
-            {
-                ESP_LOGI(TAG, "Weight measure (raw): %ld", raw_measure);
-            }
-        }
-
-        vTaskDelay(pdMS_TO_TICKS(1000));
     }
 }

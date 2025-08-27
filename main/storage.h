@@ -21,4 +21,8 @@ void store_server_url(const char *url);
 bool get_stored_api_token(char *token);
 void store_api_token(const char *token);
 
+// HX711 configuration functions
+bool get_stored_hx711_config(unsigned int *dt_pin, unsigned int *sck_pin, int *offset, float *scale);
+void store_hx711_config(unsigned int dt_pin, unsigned int sck_pin, int offset, float scale);
+
 #endif // STORAGE_H

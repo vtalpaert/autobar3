@@ -115,3 +115,56 @@ void store_api_token(const char *token)
     ESP_ERROR_CHECK(nvs_commit(nvs_handle));
     nvs_close(nvs_handle);
 }
+
+bool get_stored_hx711_config(unsigned int *dt_pin, unsigned int *sck_pin, int *offset, float *scale)
+{
+    nvs_handle_t nvs_handle;
+    esp_err_t err = nvs_open("storage", NVS_READONLY, &nvs_handle);
+    if (err != ESP_OK)
+        return false;
+
+    size_t required_size = sizeof(unsigned int);
+    err = nvs_get_blob(nvs_handle, "hx711_dt_pin", dt_pin, &required_size);
+    if (err != ESP_OK) {
+        nvs_close(nvs_handle);
+        return false;
+    }
+
+    required_size = sizeof(unsigned int);
+    err = nvs_get_blob(nvs_handle, "hx711_sck_pin", sck_pin, &required_size);
+    if (err != ESP_OK) {
+        nvs_close(nvs_handle);
+        return false;
+    }
+
+    required_size = sizeof(int);
+    err = nvs_get_blob(nvs_handle, "hx711_offset", offset, &required_size);
+    if (err != ESP_OK) {
+        nvs_close(nvs_handle);
+        return false;
+    }
+
+    required_size = sizeof(float);
+    err = nvs_get_blob(nvs_handle, "hx711_scale", scale, &required_size);
+    if (err != ESP_OK) {
+        nvs_close(nvs_handle);
+        return false;
+    }
+
+    nvs_close(nvs_handle);
+    return true;
+}
+
+void store_hx711_config(unsigned int dt_pin, unsigned int sck_pin, int offset, float scale)
+{
+    nvs_handle_t nvs_handle;
+    ESP_ERROR_CHECK(nvs_open("storage", NVS_READWRITE, &nvs_handle));
+
+    ESP_ERROR_CHECK(nvs_set_blob(nvs_handle, "hx711_dt_pin", &dt_pin, sizeof(unsigned int)));
+    ESP_ERROR_CHECK(nvs_set_blob(nvs_handle, "hx711_sck_pin", &sck_pin, sizeof(unsigned int)));
+    ESP_ERROR_CHECK(nvs_set_blob(nvs_handle, "hx711_offset", &offset, sizeof(int)));
+    ESP_ERROR_CHECK(nvs_set_blob(nvs_handle, "hx711_scale", &scale, sizeof(float)));
+
+    ESP_ERROR_CHECK(nvs_commit(nvs_handle));
+    nvs_close(nvs_handle);
+}
