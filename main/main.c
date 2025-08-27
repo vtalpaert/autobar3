@@ -106,7 +106,7 @@ void app_main(void)
             ESP_LOGI(TAG, "Entering calibration loop");
             while (weight_interface_need_calibration())
             {
-                vTaskDelay(pdMS_TO_TICKS(500));
+                vTaskDelay(pdMS_TO_TICKS(100));
             }
             ESP_LOGI(TAG, "Weight scale is calibrated");
         }

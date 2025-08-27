@@ -39,8 +39,9 @@ bool _measure(float *measure)
         }
         else
         {
-            ESP_LOGI(TAG, "Weight measure (raw): %ld", raw_measure);
+            ESP_LOGI(TAG, "Values offset=%i, scale=%lf", weight_scale.offset, weight_scale.scale);
             *measure = weight_scale.scale * (raw_measure - weight_scale.offset);
+            ESP_LOGI(TAG, "Weight measure raw=%ld, clean=%lf", raw_measure, *measure);
             return true;
         }
     }
@@ -75,7 +76,7 @@ bool weight_interface_need_calibration()
 {
     float measure = 0.;
     bool measurement_failed = false;
-    
+
     if (!_measure(&measure))
     {
         ESP_LOGE(TAG, "Failed to measure weight");
@@ -87,7 +88,7 @@ bool weight_interface_need_calibration()
     unsigned int server_dt_pin = 0;
     unsigned int server_sck_pin = 0;
     int server_offset = 0;
-    float server_scale = 0.0;
+    float server_scale = 1.0;
 
     // Call API to send the measure and get calibration parameters back
     if (!send_weight_measurement(measure, &server_need_calibration, &server_dt_pin, &server_sck_pin, &server_offset, &server_scale))
