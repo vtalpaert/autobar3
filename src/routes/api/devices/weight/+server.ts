@@ -2,29 +2,7 @@ import { json } from '@sveltejs/kit';
 import { db } from '$lib/server/db';
 import * as table from '$lib/server/db/schema';
 import { eq } from 'drizzle-orm';
-
-// In-memory store for current weight measurements
-// Map<deviceId, { weight: number, timestamp: number }>
-const weightMeasurements = new Map<string, { weight: number; timestamp: number }>();
-
-// Cleanup stale measurements (older than 30 seconds)
-function cleanupStaleWeights() {
-    const now = Date.now();
-    const staleThreshold = 30 * 1000; // 30 seconds
-    
-    for (const [deviceId, measurement] of weightMeasurements.entries()) {
-        if (now - measurement.timestamp > staleThreshold) {
-            weightMeasurements.delete(deviceId);
-        }
-    }
-}
-
-// Export function to get current weight for SSE
-export function getCurrentWeight(deviceId: string): number | null {
-    cleanupStaleWeights();
-    const measurement = weightMeasurements.get(deviceId);
-    return measurement ? measurement.weight : null;
-}
+import { storeWeight } from '$lib/server/weight-store.js';
 
 export async function POST({ request }) {
     const data = await request.json();
@@ -50,10 +28,7 @@ export async function POST({ request }) {
     }
 
     // Store current weight measurement in memory
-    weightMeasurements.set(device.id, {
-        weight: weightGrams,
-        timestamp: Date.now()
-    });
+    storeWeight(device.id, weightGrams);
 
     // Update last ping time
     await db

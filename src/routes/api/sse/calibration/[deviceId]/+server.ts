@@ -2,7 +2,7 @@ import { eq } from 'drizzle-orm';
 import { db } from '$lib/server/db';
 import * as table from '$lib/server/db/schema';
 import { selectVerifiedProfile } from '$lib/server/auth.js';
-import { getCurrentWeight } from '../../../devices/weight/+server.js';
+import { getCurrentWeight } from '$lib/server/weight-store.js';
 
 export async function GET({ locals, params }) {
     const profile = await selectVerifiedProfile(locals.user);
