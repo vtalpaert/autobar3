@@ -72,12 +72,14 @@ export const actions: Actions = {
         }
 
         try {
-            // Update GPIO pins, keep needCalibration = true
+            // Update GPIO pins and reset calibration values, keep needCalibration = true
             await db
                 .update(table.device)
                 .set({
                     hx711Dt: dtPin,
                     hx711Sck: sckPin,
+                    hx711Offset: 0,     // Reset offset to 0
+                    hx711Scale: 1.0,    // Reset scale to 1 (so raw readings pass through)
                     needCalibration: true // Keep true until full calibration is complete
                 })
                 .where(eq(table.device.id, deviceId));

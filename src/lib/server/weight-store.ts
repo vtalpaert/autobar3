@@ -2,10 +2,10 @@
 // Map<deviceId, { weight: number, timestamp: number }>
 const weightMeasurements = new Map<string, { weight: number; timestamp: number }>();
 
-// Cleanup stale measurements (older than 30 seconds)
+// Cleanup stale measurements (older than 10 seconds)
 function cleanupStaleWeights() {
     const now = Date.now();
-    const staleThreshold = 30 * 1000; // 30 seconds
+    const staleThreshold = 10 * 1000; // 10 seconds
     
     for (const [deviceId, measurement] of weightMeasurements.entries()) {
         if (now - measurement.timestamp > staleThreshold) {
@@ -16,9 +16,10 @@ function cleanupStaleWeights() {
 
 // Store weight measurement for a device
 export function storeWeight(deviceId: string, weight: number): void {
+    const timestamp = Date.now();
     weightMeasurements.set(deviceId, {
         weight,
-        timestamp: Date.now()
+        timestamp
     });
 }
 
@@ -26,5 +27,10 @@ export function storeWeight(deviceId: string, weight: number): void {
 export function getCurrentWeight(deviceId: string): number | null {
     cleanupStaleWeights();
     const measurement = weightMeasurements.get(deviceId);
-    return measurement ? measurement.weight : null;
+    if (measurement) {
+        const age = Date.now() - measurement.timestamp;
+        return measurement.weight;
+    } else {
+        return null;
+    }
 }

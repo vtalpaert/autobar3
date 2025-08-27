@@ -37,11 +37,13 @@ export async function POST({ request }) {
         .where(eq(table.device.id, device.id));
 
     // Return device calibration configuration
-    return json({
+    const response = {
         needCalibration: device.needCalibration,
         hx711Dt: device.hx711Dt,
         hx711Sck: device.hx711Sck,
         hx711Offset: device.hx711Offset,
         hx711Scale: device.hx711Scale
-    });
+    };
+    
+    return json(response);
 }

@@ -50,7 +50,7 @@
                 const weightData = JSON.parse(event.data);
                 if (weightData.weight !== undefined) {
                     currentWeight = weightData.weight;
-                    lastUpdate = weightData.timestamp;
+                    lastUpdate = Date.now(); // Use client timestamp when message is received
                 }
             } catch (error) {
                 console.error('Failed to parse weight data:', error);
@@ -137,6 +137,13 @@
         const timeSinceUpdate = Date.now() - lastUpdate;
         return timeSinceUpdate < 5000; // Consider stable if updated within 5 seconds
     }
+
+    // Check if we have a recent weight reading (even if 0g)
+    function hasRecentReading(): boolean {
+        if (!lastUpdate) return false;
+        const timeSinceUpdate = Date.now() - lastUpdate;
+        return timeSinceUpdate < 10000; // Consider recent if updated within 10 seconds
+    }
 </script>
 
 <svelte:head>
@@ -161,9 +168,9 @@
             <div class="flex items-center justify-between mb-4">
                 <h2 class="text-xl font-semibold">Current Weight Reading</h2>
                 <div class="flex items-center space-x-2">
-                    <div class={`w-2 h-2 rounded-full transition-colors duration-300 ${isConnected && isWeightStable() ? 'bg-green-500' : 'bg-red-500'}`}></div>
+                    <div class={`w-2 h-2 rounded-full transition-colors duration-300 ${isConnected && hasRecentReading() ? 'bg-green-500' : 'bg-red-500'}`}></div>
                     <span class="text-sm text-gray-400">
-                        {isConnected ? (isWeightStable() ? 'Live' : 'Stale') : 'Disconnected'}
+                        {isConnected ? (hasRecentReading() ? 'Live' : 'Stale') : 'Disconnected'}
                     </span>
                 </div>
             </div>
@@ -174,7 +181,7 @@
                 <p class="text-yellow-400 text-center">
                     Make sure your device is powered on and connected to the internet.
                 </p>
-            {:else if !isWeightStable()}
+            {:else if !hasRecentReading()}
                 <p class="text-yellow-400 text-center">
                     Weight reading is stale. Check device connection.
                 </p>
@@ -244,9 +251,9 @@
                 Calibrate the weight sensor by first taring (zeroing) the scale, then using a known weight to calculate the scale factor.
             </p>
 
-            {#if !isConnected || !isWeightStable()}
+            {#if !isConnected || !hasRecentReading()}
                 <div class="bg-yellow-900/20 border border-yellow-800/30 text-yellow-400 px-4 py-3 rounded mb-6">
-                    <p>Please ensure the device is connected and sending stable weight readings before calibrating.</p>
+                    <p>Please ensure the device is connected and sending recent weight readings before calibrating.</p>
                 </div>
             {/if}
 
@@ -259,7 +266,7 @@
                 <button
                     type="button"
                     on:click={handleTare}
-                    disabled={!isConnected || !isWeightStable()}
+                    disabled={!isConnected || !hasRecentReading()}
                     class="bg-green-600 hover:bg-green-700 disabled:bg-gray-600 disabled:cursor-not-allowed text-white font-bold py-2 px-6 rounded transition-colors"
                 >
                     Tare
@@ -296,7 +303,7 @@
                         <button
                             type="button"
                             on:click={handleCalculateScale}
-                            disabled={!isConnected || !isWeightStable() || tareOffset === null}
+                            disabled={!isConnected || !hasRecentReading() || tareOffset === null}
                             class="bg-orange-600 hover:bg-orange-700 disabled:bg-gray-600 disabled:cursor-not-allowed text-white font-bold py-2 px-6 rounded transition-colors"
                         >
                             Calculate Scale
