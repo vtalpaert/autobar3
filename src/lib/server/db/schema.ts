@@ -45,6 +45,18 @@ export const device = sqliteTable('device', {
 	hx711Scale: real('hx711_scale') // HX711 calibration scale (float)
 });
 
+export const pump = sqliteTable('pump', {
+	id: text('id').primaryKey(),
+	deviceId: text('device_id')
+		.notNull()
+		.references(() => device.id, { onDelete: 'cascade' }),
+	gpio: integer('gpio'), // GPIO pin number (nullable, no default to avoid 0)
+	isEmpty: integer('is_empty', { mode: 'boolean' }).notNull().default(true),
+	updatedAt: integer('updated_at', { mode: 'timestamp' }).notNull(),
+	ingredientId: text('ingredient_id')
+		.references(() => ingredient.id)
+});
+
 export const ingredient = sqliteTable('ingredient', {
 	id: text('id').primaryKey(),
 	name: text('name').notNull().unique(),
@@ -117,6 +129,7 @@ export type User = typeof user.$inferSelect;
 export type Profile = typeof profile.$inferSelect;
 export type Cocktail = typeof cocktail.$inferSelect;
 export type Device = typeof device.$inferSelect;
+export type Pump = typeof pump.$inferSelect;
 export type Ingredient = typeof ingredient.$inferSelect;
 export type Dose = typeof dose.$inferSelect;
 export type CollaborationRequest = typeof collaborationRequest.$inferSelect;

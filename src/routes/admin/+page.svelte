@@ -69,6 +69,15 @@
                 </div>
             </a>
             
+            <!-- Pumps Card -->
+            <a href="/admin/pumps" class="block bg-gray-800 p-6 rounded-lg hover:bg-gray-700 transition">
+                <h2 class="text-2xl font-bold mb-2">Pumps</h2>
+                <p class="text-gray-400 mb-4">Manage device pumps and configurations</p>
+                <div class="flex justify-between items-center">
+                    <span class="text-3xl font-bold">{data.counts.pumps || 0}</span>
+                </div>
+            </a>
+            
             <!-- Device Simulator Card -->
             <a href="/admin/simulator" class="block bg-gray-800 p-6 rounded-lg hover:bg-gray-700 transition">
                 <h2 class="text-2xl font-bold mb-2">Device Simulator</h2>
