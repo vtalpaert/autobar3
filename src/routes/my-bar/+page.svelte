@@ -166,8 +166,11 @@
 									</div>
 								</div>
 								<span
-									class={`px-2 py-1 rounded-full text-xs font-medium ${getDeviceStatus(device) === 'online' ? 'bg-green-600 text-white' : 'bg-gray-600 text-white'}`}
+									class={`px-2 py-1 rounded-full text-xs font-medium whitespace-nowrap ${getDeviceStatus(device) === 'online' ? 'bg-green-500 text-white flex items-center gap-1' : 'bg-gray-600 text-white'}`}
 								>
+									{#if getDeviceStatus(device) === 'online'}
+										<div class="w-2 h-2 bg-white rounded-full animate-pulse"></div>
+									{/if}
 									{getDeviceStatus(device) === 'online'
 										? t.myBar.devices.online
 										: t.myBar.devices.offline}

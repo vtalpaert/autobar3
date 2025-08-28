@@ -224,7 +224,8 @@
                 <form method="POST" action="?/enableCalibrationMode" use:enhance={handleCalibrationModeEnhance}>
                     <button
                         type="submit"
-                        class="bg-yellow-600 hover:bg-yellow-700 text-white font-bold py-2 px-4 rounded transition-colors whitespace-nowrap"
+                        disabled={isConnected && hasRecentReading()}
+                        class="bg-yellow-600 hover:bg-yellow-700 disabled:bg-gray-600 disabled:cursor-not-allowed text-white font-bold py-2 px-4 rounded transition-colors whitespace-nowrap"
                     >
                         {t.enableCalibrationMode}
                     </button>

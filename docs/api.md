@@ -59,7 +59,7 @@ The following API endpoints are available for device communication:
   - Server-Sent Events stream for real-time weight readings during calibration
   - Requires user authentication and device ownership
   - Returns: Stream of JSON data with current weight measurements
-  - Response format: `data: { "weight": 125.5, "rawMeasure": -123456 }\n\n`
+  - Response format: `data: { "weight": 125.5, "rawMeasure": -123456 }`
   - Updates every 1 second during calibration process
   - Used by calibration interface for live weight display
 
@@ -69,6 +69,6 @@ The following API endpoints are available for device communication:
   - Server-Sent Events stream for real-time order progress updates
   - Requires user authentication
   - Returns: Stream of JSON data with active orders for the authenticated user
-  - Response format: `data: { "activeOrders": [...] }\n\n`
+  - Response format: `data: { "activeOrders": [...] }`
   - Updates every 2 seconds while there are active orders
   - Automatically closes when no active orders remain
