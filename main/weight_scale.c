@@ -20,9 +20,8 @@ typedef struct
 
 WeightScale weight_scale;
 
-bool _measure(float *measure)
+bool _measure(float *measure, int32_t *raw_measure)
 {
-    int32_t raw_measure = 0;
     esp_err_t timeout = hx711_wait(&weight_scale.hx711, 500);
     if (timeout != ESP_OK)
     {
@@ -31,7 +30,7 @@ bool _measure(float *measure)
     }
     else
     {
-        esp_err_t err = hx711_read_data(&weight_scale.hx711, &raw_measure);
+        esp_err_t err = hx711_read_data(&weight_scale.hx711, raw_measure);
         if (err != ESP_OK)
         {
             ESP_LOGE(TAG, "Failed to read weight");
@@ -40,8 +39,8 @@ bool _measure(float *measure)
         else
         {
             ESP_LOGI(TAG, "Values offset=%i, scale=%lf", weight_scale.offset, weight_scale.scale);
-            *measure = weight_scale.scale * (raw_measure - weight_scale.offset);
-            ESP_LOGI(TAG, "Weight measure raw=%ld, clean=%lf", raw_measure, *measure);
+            *measure = weight_scale.scale * (*raw_measure - weight_scale.offset);
+            ESP_LOGI(TAG, "Weight measure raw=%ld, clean=%lf", *raw_measure, *measure);
             return true;
         }
     }
@@ -75,13 +74,15 @@ bool weight_interface_init()
 bool weight_interface_need_calibration()
 {
     float measure = 0.;
+    int32_t raw_measure = 0;
     bool measurement_failed = false;
 
-    if (!_measure(&measure))
+    if (!_measure(&measure, &raw_measure))
     {
         ESP_LOGE(TAG, "Failed to measure weight");
         measurement_failed = true;
         measure = 0.0; // Use 0 as fallback value for API call
+        raw_measure = 0; // Use 0 as fallback value for API call
     }
 
     bool server_need_calibration = false;
@@ -91,7 +92,7 @@ bool weight_interface_need_calibration()
     float server_scale = 1.0;
 
     // Call API to send the measure and get calibration parameters back
-    if (!send_weight_measurement(measure, &server_need_calibration, &server_dt_pin, &server_sck_pin, &server_offset, &server_scale))
+    if (!send_weight_measurement(measure, (int)raw_measure, &server_need_calibration, &server_dt_pin, &server_sck_pin, &server_offset, &server_scale))
     {
         ESP_LOGE(TAG, "Failed to send weight measurement to server");
         return true; // Assume calibration needed if API call fails

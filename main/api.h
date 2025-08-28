@@ -11,6 +11,6 @@ bool verify_device(bool device_needs_calibration, bool *server_needs_calibration
 bool fetch_manifest(char *version_buffer, size_t buffer_size);
 
 // Function to send weight measurement and get calibration parameters
-bool send_weight_measurement(float weight, bool *need_calibration, unsigned int *dt_pin, unsigned int *sck_pin, int *offset, float *scale);
+bool send_weight_measurement(float weight, int raw_measure, bool *need_calibration, unsigned int *dt_pin, unsigned int *sck_pin, int *offset, float *scale);
 
 #endif // API_H

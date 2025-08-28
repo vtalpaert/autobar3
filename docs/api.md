@@ -47,7 +47,7 @@ The following API endpoints are available for device communication:
 
 - `POST /api/devices/weight`
   - Reports current weight measurement and retrieves HX711 calibration data
-  - Request: `{ "token": "device_api_token", "weightGrams": 125.5 }`
+  - Request: `{ "token": "device_api_token", "weight": 125.5, "rawMeasure": -123456 }`
   - Response: `{ "needCalibration": true, "hx711Dt": 4, "hx711Sck": 5, "hx711Offset": -123456, "hx711Scale": 432.1 }`
   - Used by devices to get GPIO pins and calibration values for HX711 weight sensor
   - Device should use formula: `weight = scale * (raw - offset)` to convert raw readings to grams
@@ -59,7 +59,7 @@ The following API endpoints are available for device communication:
   - Server-Sent Events stream for real-time weight readings during calibration
   - Requires user authentication and device ownership
   - Returns: Stream of JSON data with current weight measurements
-  - Response format: `data: { "weight": 125.5, "timestamp": 1640995200000 }\n\n`
+  - Response format: `data: { "weight": 125.5, "rawMeasure": -123456 }\n\n`
   - Updates every 1 second during calibration process
   - Used by calibration interface for live weight display
 

@@ -316,7 +316,7 @@ bool fetch_manifest(char *version_buffer, size_t buffer_size)
     return success;
 }
 
-bool send_weight_measurement(float weight, bool *need_calibration, unsigned int *dt_pin, unsigned int *sck_pin, int *offset, float *scale)
+bool send_weight_measurement(float weight, int raw_measure, bool *need_calibration, unsigned int *dt_pin, unsigned int *sck_pin, int *offset, float *scale)
 {
     const char *api_path = "/api/devices/weight";
     bool success = false;
@@ -330,7 +330,8 @@ bool send_weight_measurement(float weight, bool *need_calibration, unsigned int 
 
     // Prepare JSON payload
     cJSON *payload = cJSON_CreateObject();
-    cJSON_AddNumberToObject(payload, "weightGrams", weight);
+    cJSON_AddNumberToObject(payload, "weight", weight);
+    cJSON_AddNumberToObject(payload, "rawMeasure", raw_measure);
 
     cJSON *response = api_contact_server((char*)api_path, payload);
 

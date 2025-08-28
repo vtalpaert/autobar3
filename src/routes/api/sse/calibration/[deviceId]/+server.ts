@@ -2,7 +2,7 @@ import { eq } from 'drizzle-orm';
 import { db } from '$lib/server/db';
 import * as table from '$lib/server/db/schema';
 import { selectVerifiedProfile } from '$lib/server/auth.js';
-import { getCurrentWeight } from '$lib/server/weight-store.js';
+import { getCurrentWeightMeasurement } from '$lib/server/weight-store.js';
 
 export async function GET({ locals, params }) {
     const profile = await selectVerifiedProfile(locals.user);
@@ -43,12 +43,13 @@ export async function GET({ locals, params }) {
                 }
 
                 try {
-                    const currentWeight = getCurrentWeight(deviceId);
+                    const currentMeasurement = getCurrentWeightMeasurement(deviceId);
                     
                     if (!isClosed) {
                         try {
                             controller.enqueue(`data: ${JSON.stringify({ 
-                                weight: currentWeight
+                                weight: currentMeasurement?.weight || null,
+                                rawMeasure: currentMeasurement?.rawMeasure || null
                             })}\n\n`);
                         } catch (enqueueError) {
                             cleanup();

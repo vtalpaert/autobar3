@@ -115,16 +115,22 @@ export const actions: Actions = {
         }
 
         try {
-            // Update GPIO pins and reset calibration values, keep needCalibration = true
+            // Update GPIO pins but preserve existing calibration values if they exist
+            const updateData: any = {
+                hx711Dt: dtPin,
+                hx711Sck: sckPin,
+                needCalibration: true // Keep true until full calibration is complete
+            };
+
+            // Only reset calibration if no existing values or scale is 0
+            if (!device.hx711Offset && (!device.hx711Scale || device.hx711Scale === 0)) {
+                updateData.hx711Offset = 0;
+                updateData.hx711Scale = 1.0;
+            }
+
             await db
                 .update(table.device)
-                .set({
-                    hx711Dt: dtPin,
-                    hx711Sck: sckPin,
-                    hx711Offset: 0,     // Reset offset to 0
-                    hx711Scale: 1.0,    // Reset scale to 1 (so raw readings pass through)
-                    needCalibration: true // Keep true until full calibration is complete
-                })
+                .set(updateData)
                 .where(eq(table.device.id, deviceId));
 
             return { success: true, message: 'GPIO pins saved. Device will reinitialize hardware.' };

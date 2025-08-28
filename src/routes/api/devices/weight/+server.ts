@@ -6,11 +6,11 @@ import { storeWeight } from '$lib/server/weight-store.js';
 
 export async function POST({ request }) {
     const data = await request.json();
-    const { token, weightGrams } = data;
+    const { token, weight, rawMeasure } = data;
 
-    if (!token || weightGrams === undefined) {
+    if (!token || weight === undefined || rawMeasure === undefined) {
         return json({
-            error: "Missing token or weight measurement"
+            error: "Missing token, weight, or rawMeasure"
         }, { status: 400 });
     }
 
@@ -28,7 +28,7 @@ export async function POST({ request }) {
     }
 
     // Store current weight measurement in memory
-    storeWeight(device.id, weightGrams);
+    storeWeight(device.id, weight, rawMeasure);
 
     // Update last ping time
     await db

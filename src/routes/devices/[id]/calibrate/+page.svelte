@@ -14,6 +14,7 @@
     let eventSource: EventSource | null = null;
     let isConnected = false;
     let currentWeight: number | null = null;
+    let currentRawMeasure: number | null = null;
 
     // Calibration state
     let tareOffset: number | null = null;
@@ -55,6 +56,9 @@
                 if (weightData.weight !== undefined) {
                     currentWeight = weightData.weight;
                 }
+                if (weightData.rawMeasure !== undefined) {
+                    currentRawMeasure = weightData.rawMeasure;
+                }
             } catch (error) {
                 console.error('Failed to parse weight data:', error);
             }
@@ -88,15 +92,15 @@
     }
 
     function handleTare() {
-        if (currentWeight !== null) {
-            tareOffset = Math.round(currentWeight);
+        if (currentRawMeasure !== null) {
+            tareOffset = currentRawMeasure;
             calculatedScale = null; // Reset scale when taring
         }
     }
 
     function handleCalculateScale() {
-        if (currentWeight !== null && tareOffset !== null && knownWeight > 0) {
-            const rawReading = currentWeight - tareOffset;
+        if (currentRawMeasure !== null && tareOffset !== null && knownWeight > 0) {
+            const rawReading = currentRawMeasure - tareOffset;
             // Scale can be negative depending on hardware wiring
             // We just need a non-zero reading to calculate scale
             if (rawReading !== 0) {
@@ -147,26 +151,49 @@
         return `${weight.toFixed(1)}g`;
     }
 
-    // Calculate calibrated weight based on current calibration values
-    function getCalibratedWeight(): number | null {
-        if (currentWeight === null || tareOffset === null) return null;
+    // Calculate server-side weight based on current calibration values
+    function getServerCalculatedWeight(): number | null {
+        if (currentRawMeasure === null || tareOffset === null) return null;
         
-        const rawReading = currentWeight - tareOffset;
+        const rawReading = currentRawMeasure - tareOffset;
         if (calculatedScale === null) return rawReading;
         
         return rawReading * calculatedScale;
     }
 
-    // Format calibrated weight display
-    function formatCalibratedWeight(): string {
-        const calibratedWeight = getCalibratedWeight();
-        if (calibratedWeight === null) return t.notCalibrated;
-        return `${calibratedWeight.toFixed(1)}g`;
+    // Check if device weight matches server calculation (within tolerance)
+    function getWeightValidation(): { isValid: boolean; message: string } | null {
+        if (currentWeight === null || currentRawMeasure === null) return null;
+        
+        const storedOffset = data.device.hx711Offset || 0;
+        const storedScale = data.device.hx711Scale || 1.0;
+        
+        if (storedOffset === 0 && storedScale === 1.0) return null; // No calibration stored
+        
+        const serverCalculated = storedScale * (currentRawMeasure - storedOffset);
+        const tolerance = Math.max(1.0, Math.abs(serverCalculated) * 0.05); // 5% tolerance, minimum 1g
+        const difference = Math.abs(currentWeight - serverCalculated);
+        
+        if (difference > tolerance) {
+            return {
+                isValid: false,
+                message: `Device weight (${currentWeight.toFixed(1)}g) doesn't match server calculation (${serverCalculated.toFixed(1)}g). Calibration may be out of sync.`
+            };
+        }
+        
+        return { isValid: true, message: '' };
+    }
+
+    // Format server calculated weight display
+    function formatServerCalculatedWeight(): string {
+        const serverWeight = getServerCalculatedWeight();
+        if (serverWeight === null) return t.notCalibrated;
+        return `${serverWeight.toFixed(1)}g`;
     }
 
     // Check if we have a recent weight reading (server handles staleness)
     function hasRecentReading(): boolean {
-        return currentWeight !== null;
+        return currentWeight !== null && currentRawMeasure !== null;
     }
 </script>
 
@@ -222,27 +249,43 @@
                 </div>
             </div>
             
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <!-- Raw Weight -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <!-- Raw Measure -->
                 <div class="text-center">
-                    <h3 class="text-lg font-medium text-gray-300 mb-2">{t.rawReading}</h3>
+                    <h3 class="text-lg font-medium text-gray-300 mb-2">{t.rawMeasure}</h3>
+                    <div class="text-3xl font-mono py-4">
+                        {currentRawMeasure !== null ? currentRawMeasure.toString() : t.noSignal}
+                    </div>
+                    <p class="text-sm text-gray-400">{t.directSensorReading}</p>
+                </div>
+                
+                <!-- Device Weight -->
+                <div class="text-center">
+                    <h3 class="text-lg font-medium text-gray-300 mb-2">{t.deviceWeight}</h3>
                     <div class="text-3xl font-mono py-4">
                         {formatWeight(currentWeight)}
                     </div>
-                    <p class="text-sm text-gray-400">{t.directSensorValue}</p>
+                    <p class="text-sm text-gray-400">{t.calculatedByDevice}</p>
                 </div>
                 
-                <!-- Calibrated Weight -->
+                <!-- Server Calculated Weight -->
                 <div class="text-center">
-                    <h3 class="text-lg font-medium text-gray-300 mb-2">{t.calibratedWeight}</h3>
-                    <div class="text-3xl font-mono py-4 {getCalibratedWeight() !== null ? 'text-green-400' : 'text-gray-500'}">
-                        {formatCalibratedWeight()}
+                    <h3 class="text-lg font-medium text-gray-300 mb-2">{t.serverWeight}</h3>
+                    <div class="text-3xl font-mono py-4 {getServerCalculatedWeight() !== null ? 'text-green-400' : 'text-gray-500'}">
+                        {formatServerCalculatedWeight()}
                     </div>
                     <p class="text-sm text-gray-400">
-                        {tareOffset !== null && calculatedScale !== null ? t.withCurrentCalibration : t.needsCalibration}
+                        {tareOffset !== null && calculatedScale !== null ? t.withCurrentCalibrationShort : t.needsCalibrationShort}
                     </p>
                 </div>
             </div>
+            
+            <!-- Weight Validation Warning -->
+            {#if getWeightValidation()?.isValid === false}
+                <div class="bg-yellow-900/20 border border-yellow-800/30 text-yellow-400 px-4 py-3 rounded mt-4">
+                    <p class="text-sm">{getWeightValidation()?.message}</p>
+                </div>
+            {/if}
             
             {#if !isConnected}
                 <p class="text-yellow-400 text-center mt-4">
