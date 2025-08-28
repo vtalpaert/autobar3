@@ -18,10 +18,14 @@
     let pendingPumps = [];
     let showAddPump = false;
     
+    // Track form submission state
+    let isSubmitting = false;
+    
     // Clear pending pumps after successful submission
     $: if (form?.success) {
         pendingPumps = [];
         showAddPump = false;
+        isSubmitting = false;
     }
     
     // Track deleted pumps
@@ -30,10 +34,10 @@
     // For existing pumps editing
     let existingPumps = data.pumps.map(pump => ({
         id: pump.id,
-        gpio: pump.gpio === null ? '' : pump.gpio,
+        gpio: pump.gpio === null || pump.gpio === undefined ? '' : pump.gpio,
         isEmpty: pump.isEmpty,
         ingredientId: pump.ingredient?.id || '',
-        ingredientName: pump.ingredient?.name || (t?.devices?.configure?.noIngredient || 'No ingredient')
+        ingredientName: pump.ingredient?.name || 'No ingredient'
     }));
     
     // Format date helper
@@ -231,7 +235,22 @@
                 </div>
             {/if}
 
-            <form method="POST" use:enhance>
+            <form method="POST" use:enhance={() => {
+                isSubmitting = true;
+                // Clear pending pumps immediately when form is submitted
+                pendingPumps = [];
+                showAddPump = false;
+                
+                return async ({ result, update }) => {
+                    if (result.type === 'redirect') {
+                        // Force a full page reload instead of client-side navigation
+                        window.location.href = result.location;
+                    } else {
+                        await update();
+                        isSubmitting = false;
+                    }
+                };
+            }}>
                 <!-- Existing Pumps Section -->
                 {#if existingPumps.length > 0}
                     <div class="mb-8 border-t border-gray-700 pt-6">
@@ -271,7 +290,12 @@
                                                 placeholder="GPIO"
                                                 on:input={(e) => {
                                                     const value = e.target.value;
-                                                    pump.gpio = value === '' ? '' : parseInt(value);
+                                                    if (value === '') {
+                                                        pump.gpio = '';
+                                                    } else {
+                                                        const parsed = parseInt(value);
+                                                        pump.gpio = isNaN(parsed) ? '' : parsed;
+                                                    }
                                                 }}
                                             />
                                         </div>
@@ -381,7 +405,12 @@
                                         placeholder={t.devices.configure.gpioNumber}
                                         on:input={(e) => {
                                             const value = e.target.value;
-                                            gpioNumber = value === '' ? null : parseInt(value);
+                                            if (value === '') {
+                                                gpioNumber = null;
+                                            } else {
+                                                const parsed = parseInt(value);
+                                                gpioNumber = isNaN(parsed) ? null : parsed;
+                                            }
                                         }}
                                     />
                                 </div>
@@ -424,10 +453,10 @@
 
                 <button
                     type="submit"
-                    class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg transition-colors"
-                    disabled={!!gpioError}
+                    class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    disabled={!!gpioError || isSubmitting}
                 >
-                    {t.devices.configure.savePumpConfiguration}
+                    {isSubmitting ? t.devices.configure.saving || 'Saving...' : t.devices.configure.savePumpConfiguration}
                 </button>
             </form>
         </div>

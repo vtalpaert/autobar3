@@ -190,10 +190,31 @@ export const actions: Actions = {
             return fail(500, { error: 'Failed to save pump configuration' });
         }
 
-        // Add a small delay to ensure database transaction is committed
-        await new Promise(resolve => setTimeout(resolve, 100));
-
-        // Redirect to reload the page and show updated data
+        // console.log('All pump operations completed successfully');
+        
+        // Add a small delay to ensure database transaction is fully committed
+        // await new Promise(resolve => setTimeout(resolve, 200));
+        
+        // Debug: Read the pumps immediately after creation to verify they exist
+        /*const debugPumps = await db
+            .select({
+                id: table.pump.id,
+                gpio: table.pump.gpio,
+                isEmpty: table.pump.isEmpty,
+                updatedAt: table.pump.updatedAt,
+                ingredient: {
+                    id: table.ingredient.id,
+                    name: table.ingredient.name
+                }
+            })
+            .from(table.pump)
+            .leftJoin(table.ingredient, eq(table.pump.ingredientId, table.ingredient.id))
+            .where(eq(table.pump.deviceId, deviceId));
+            
+        console.log('Debug: Pumps immediately after creation:', debugPumps);
+        console.log('Debug: Total pump count:', debugPumps.length);
+        */
+        
         throw redirect(303, `/devices/${deviceId}/configure`);
     }
 };
