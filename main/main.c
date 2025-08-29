@@ -111,6 +111,8 @@ void app_main(void)
                 vTaskDelay(pdMS_TO_TICKS(100));
             }
             ESP_LOGI(TAG, "Weight scale is calibrated");
+        } else {
+            weight_interface_init();
         }
 
         init_gpio(13);

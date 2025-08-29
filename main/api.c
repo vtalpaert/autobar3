@@ -317,15 +317,19 @@ bool fetch_manifest(char *version_buffer, size_t buffer_size)
     return success;
 }
 
-bool report_progress(const char *order_id, const char *dose_id, float weight_progress, bool *should_continue)
+bool report_progress(const char *order_id, const char *dose_id, float weight_progress, bool *should_continue, char *message, size_t message_size)
 {
     const char *api_path = "/api/devices/progress";
     bool success = false;
 
-    // Initialize output parameter
+    // Initialize output parameters
     if (should_continue)
     {
         *should_continue = false;
+    }
+    if (message && message_size > 0)
+    {
+        message[0] = '\0';
     }
 
     if (!order_id || !dose_id)
@@ -344,13 +348,20 @@ bool report_progress(const char *order_id, const char *dose_id, float weight_pro
 
     if (response)
     {
-        cJSON *message = cJSON_GetObjectItem(response, "message");
+        cJSON *message_item = cJSON_GetObjectItem(response, "message");
         cJSON *continue_item = cJSON_GetObjectItem(response, "continue");
 
-        if (message && cJSON_IsString(message))
+        if (message_item && cJSON_IsString(message_item))
         {
-            ESP_LOGI(TAG, "Progress report response: %s", message->valuestring);
+            ESP_LOGI(TAG, "Progress report response: %s", message_item->valuestring);
             success = true;
+
+            // Copy message to output buffer if provided
+            if (message && message_size > 0)
+            {
+                strncpy(message, message_item->valuestring, message_size - 1);
+                message[message_size - 1] = '\0';
+            }
 
             // Check if we should continue
             if (should_continue && continue_item && cJSON_IsBool(continue_item))

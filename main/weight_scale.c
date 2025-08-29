@@ -20,29 +20,21 @@ typedef struct
 
 WeightScale weight_scale;
 
-bool _measure(float *measure, int32_t *raw_measure)
+bool measure_weight(float *measure, int32_t *raw_measure, unsigned int times)
 {
-    esp_err_t timeout = hx711_wait(&weight_scale.hx711, 500);
-    if (timeout != ESP_OK)
+
+    esp_err_t err = hx711_read_average(&weight_scale.hx711, times, raw_measure);
+    if (err != ESP_OK)
     {
-        ESP_LOGE(TAG, "Timeout to wait for data");
+        ESP_LOGE(TAG, "Failed to read weight");
         return false;
     }
     else
     {
-        esp_err_t err = hx711_read_data(&weight_scale.hx711, raw_measure);
-        if (err != ESP_OK)
-        {
-            ESP_LOGE(TAG, "Failed to read weight");
-            return false;
-        }
-        else
-        {
-            ESP_LOGI(TAG, "Values offset=%i, scale=%lf", weight_scale.offset, weight_scale.scale);
-            *measure = weight_scale.scale * (*raw_measure - weight_scale.offset);
-            ESP_LOGI(TAG, "Weight measure raw=%ld, clean=%lf", *raw_measure, *measure);
-            return true;
-        }
+        // ESP_LOGI(TAG, "Values offset=%i, scale=%lf", weight_scale.offset, weight_scale.scale);
+        *measure = weight_scale.scale * (*raw_measure - weight_scale.offset);
+        ESP_LOGI(TAG, "Weight measure raw=%ld, clean=%lf. Averaged over %i times", *raw_measure, *measure, times);
+        return true;
     }
 }
 
@@ -77,11 +69,11 @@ bool weight_interface_need_calibration()
     int32_t raw_measure = 0;
     bool measurement_failed = false;
 
-    if (!_measure(&measure, &raw_measure))
+    if (!measure_weight(&measure, &raw_measure, 10))
     {
         ESP_LOGE(TAG, "Failed to measure weight");
         measurement_failed = true;
-        measure = 0.0; // Use 0 as fallback value for API call
+        measure = 0.0;   // Use 0 as fallback value for API call
         raw_measure = 0; // Use 0 as fallback value for API call
     }
 

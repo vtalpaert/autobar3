@@ -14,27 +14,33 @@ bool fetch_manifest(char *version_buffer, size_t buffer_size);
 bool send_weight_measurement(float weight, int raw_measure, bool *need_calibration, unsigned int *dt_pin, unsigned int *sck_pin, int *offset, float *scale);
 
 // Calls the `POST /api/devices/action` API
-typedef enum {
+typedef enum
+{
     ACTION_STANDBY,
     ACTION_PUMP,
     ACTION_COMPLETED,
     ACTION_ERROR
 } action_type_t;
 
-typedef struct {
+typedef struct
+{
     action_type_t type;
-    union {
-        struct {
+    union
+    {
+        struct
+        {
             int idle_ms;
         } standby;
-        struct {
+        struct
+        {
             char order_id[64];
             char dose_id[64];
             int pump_gpio;
             float dose_weight;
             float dose_weight_progress;
         } pump;
-        struct {
+        struct
+        {
             char order_id[64];
             char message[256];
         } completed;
@@ -44,6 +50,6 @@ typedef struct {
 bool ask_server_for_action(device_action_t *action);
 
 // Function to report progress on a dose being poured at `POST /api/devices/progress`
-bool report_progress(const char *order_id, const char *dose_id, float weight_progress, bool *should_continue);
+bool report_progress(const char *order_id, const char *dose_id, float weight_progress, bool *should_continue, char *message, size_t message_size);
 
 #endif // API_H
