@@ -19,8 +19,8 @@
   - Handle edge cases: no pumps configured, all pumps empty for required ingredient
 
 #### 1.3 Available Cocktails Filtering
-- **Function**: `getAvailableCocktailsForDevice(deviceId: string)`
-  - Get all cocktails from database
+- **Function**: `getAvailableCocktailsForProfileAndDevice(profileId: string, deviceId: string)` ✅
+  - Get cocktails that the profile has access to (collaboration logic)
   - Filter out cocktails that cannot be made by the device
   - Preserve cocktails that only miss addedSeparately ingredients
   - Return filtered list with feasibility metadata
@@ -54,11 +54,12 @@
 - Return specific GPIO pin and duration for pump actions
 - Handle cases where assigned pump became unavailable since order creation
 
-#### 3.3 UI Cocktail Display
+#### 3.3 UI Cocktail Display ✅
 - Filter cocktail lists to show only makeable cocktails by default
 - Add toggle to show all cocktails with feasibility indicators
 - Display missing ingredients and manual addition requirements
 - Show cocktail instructions prominently for addedSeparately ingredients
+- Handle case where user has no default device configured
 
 ### 4. Database Optimization
 

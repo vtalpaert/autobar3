@@ -2,7 +2,7 @@
 // Map<deviceId, { ingredients: Ingredient[], timestamp: number }>
 import { db } from '$lib/server/db';
 import * as table from '$lib/server/db/schema';
-import { eq, and, isNotNull } from 'drizzle-orm';
+import { eq, and, isNotNull, inArray } from 'drizzle-orm';
 
 // Cache structure for device ingredients
 interface DeviceIngredientsCache {
@@ -161,12 +161,40 @@ export async function canDeviceMakeCocktail(deviceId: string, cocktailId: string
 }
 
 /**
- * Get all cocktails that can be made by a specific device
- * Filters out cocktails with missing required ingredients
+ * Get all cocktails that a specific profile can access (regardless of device capabilities)
+ * Respects collaboration permissions only
  */
-export async function getAvailableCocktailsForDevice(deviceId: string): Promise<table.CocktailWithDoses[]> {
-    // Get all cocktails with their doses
-    const cocktailsWithDoses = await db
+export async function getAllAccessibleCocktailsForProfile(profileId: string): Promise<table.CocktailWithDoses[]> {
+    // Step 1: Get cocktails the profile has access to (collaboration logic)
+    const collaborations = await db
+        .select({
+            collaboratorProfileId: table.collaborationRequest.receiverId,
+        })
+        .from(table.collaborationRequest)
+        .where(
+            and(
+                eq(table.collaborationRequest.senderId, profileId),
+                eq(table.collaborationRequest.status, 'accepted')
+            )
+        )
+        .union(
+            db.select({
+                collaboratorProfileId: table.collaborationRequest.senderId,
+            })
+                .from(table.collaborationRequest)
+                .where(
+                    and(
+                        eq(table.collaborationRequest.receiverId, profileId),
+                        eq(table.collaborationRequest.status, 'accepted')
+                    )
+                )
+        );
+
+    const collaboratorProfileIds = collaborations.map(c => c.collaboratorProfileId);
+    const allowedProfileIds = [profileId, ...collaboratorProfileIds];
+
+    // Step 2: Get accessible cocktails with their doses
+    const accessibleCocktailsData = await db
         .select({
             cocktail: table.cocktail,
             dose: table.dose,
@@ -175,12 +203,13 @@ export async function getAvailableCocktailsForDevice(deviceId: string): Promise<
         .from(table.cocktail)
         .leftJoin(table.dose, eq(table.cocktail.id, table.dose.cocktailId))
         .leftJoin(table.ingredient, eq(table.dose.ingredientId, table.ingredient.id))
+        .where(inArray(table.cocktail.creatorId, allowedProfileIds))
         .orderBy(table.cocktail.name, table.dose.number);
 
-    // Group by cocktail
+    // Step 3: Group by cocktail
     const cocktailMap = new Map<string, table.CocktailWithDoses>();
     
-    for (const row of cocktailsWithDoses) {
+    for (const row of accessibleCocktailsData) {
         const cocktailId = row.cocktail.id;
         
         if (!cocktailMap.has(cocktailId)) {
@@ -190,7 +219,6 @@ export async function getAvailableCocktailsForDevice(deviceId: string): Promise<
             });
         }
         
-        // Add dose if it exists (leftJoin might return null)
         if (row.dose && row.ingredient) {
             cocktailMap.get(cocktailId)!.doses.push({
                 ...row.dose,
@@ -199,21 +227,188 @@ export async function getAvailableCocktailsForDevice(deviceId: string): Promise<
         }
     }
 
-    const allCocktails = Array.from(cocktailMap.values());
+    return Array.from(cocktailMap.values());
+}
+
+/**
+ * Get device capabilities summary
+ */
+export async function getDeviceCapabilities(deviceId: string): Promise<{
+    availableIngredients: table.Ingredient[];
+    isConfigured: boolean;
+    needsCalibration: boolean;
+}> {
+    const device = await db
+        .select()
+        .from(table.device)
+        .where(eq(table.device.id, deviceId))
+        .get();
+
+    if (!device) {
+        return {
+            availableIngredients: [],
+            isConfigured: false,
+            needsCalibration: false
+        };
+    }
+
+    const availableIngredientsWithPumps = await getDeviceAvailableIngredients(deviceId);
     
-    // Get device available ingredients once
+    return {
+        availableIngredients: availableIngredientsWithPumps.map(ing => ({
+            id: ing.id,
+            name: ing.name,
+            alcoholPercentage: ing.alcoholPercentage,
+            density: ing.density,
+            addedSeparately: ing.addedSeparately
+        })),
+        isConfigured: true,
+        needsCalibration: device.needCalibration
+    };
+}
+
+/**
+ * Enhance cocktails with availability information based on device capabilities
+ */
+export function enhanceCocktailsWithAvailability(
+    cocktails: table.CocktailWithDoses[],
+    deviceCapabilities: { availableIngredients: table.Ingredient[] } | null
+): (table.CocktailWithDoses & {
+    availability: 'available' | 'partial' | 'unavailable' | 'no-device';
+    missingIngredients: string[];
+    availableIngredients: string[];
+    manualIngredients: string[];
+})[] {
+    if (!deviceCapabilities) {
+        return cocktails.map(cocktail => ({
+            ...cocktail,
+            availability: 'no-device' as const,
+            missingIngredients: [],
+            availableIngredients: [],
+            manualIngredients: cocktail.doses
+                .filter(dose => dose.ingredient.addedSeparately)
+                .map(dose => dose.ingredient.name)
+        }));
+    }
+
+    const availableIngredientIds = new Set(deviceCapabilities.availableIngredients.map(ing => ing.id));
+
+    return cocktails.map(cocktail => {
+        const missingIngredients: string[] = [];
+        const availableIngredients: string[] = [];
+        const manualIngredients: string[] = [];
+
+        for (const dose of cocktail.doses) {
+            if (dose.ingredient.addedSeparately) {
+                manualIngredients.push(dose.ingredient.name);
+            } else if (availableIngredientIds.has(dose.ingredient.id)) {
+                availableIngredients.push(dose.ingredient.name);
+            } else {
+                missingIngredients.push(dose.ingredient.name);
+            }
+        }
+
+        let availability: 'available' | 'partial' | 'unavailable';
+        if (missingIngredients.length === 0) {
+            availability = 'available';
+        } else if (availableIngredients.length > 0) {
+            availability = 'partial';
+        } else {
+            availability = 'unavailable';
+        }
+
+        return {
+            ...cocktail,
+            availability,
+            missingIngredients,
+            availableIngredients,
+            manualIngredients
+        };
+    });
+}
+
+/**
+ * Get cocktails that a specific profile can access and make with a specific device
+ * Respects collaboration permissions and device capabilities
+ */
+export async function getAvailableCocktailsForProfileAndDevice(
+    profileId: string, 
+    deviceId: string
+): Promise<table.CocktailWithDoses[]> {
+    // Step 1: Get cocktails the profile has access to (collaboration logic)
+    const collaborations = await db
+        .select({
+            collaboratorProfileId: table.collaborationRequest.receiverId,
+        })
+        .from(table.collaborationRequest)
+        .where(
+            and(
+                eq(table.collaborationRequest.senderId, profileId),
+                eq(table.collaborationRequest.status, 'accepted')
+            )
+        )
+        .union(
+            db.select({
+                collaboratorProfileId: table.collaborationRequest.senderId,
+            })
+                .from(table.collaborationRequest)
+                .where(
+                    and(
+                        eq(table.collaborationRequest.receiverId, profileId),
+                        eq(table.collaborationRequest.status, 'accepted')
+                    )
+                )
+        );
+
+    const collaboratorProfileIds = collaborations.map(c => c.collaboratorProfileId);
+    const allowedProfileIds = [profileId, ...collaboratorProfileIds];
+
+    // Step 2: Get accessible cocktails with their doses
+    const accessibleCocktailsData = await db
+        .select({
+            cocktail: table.cocktail,
+            dose: table.dose,
+            ingredient: table.ingredient
+        })
+        .from(table.cocktail)
+        .leftJoin(table.dose, eq(table.cocktail.id, table.dose.cocktailId))
+        .leftJoin(table.ingredient, eq(table.dose.ingredientId, table.ingredient.id))
+        .where(inArray(table.cocktail.creatorId, allowedProfileIds))
+        .orderBy(table.cocktail.name, table.dose.number);
+
+    // Step 3: Group by cocktail
+    const cocktailMap = new Map<string, table.CocktailWithDoses>();
+    
+    for (const row of accessibleCocktailsData) {
+        const cocktailId = row.cocktail.id;
+        
+        if (!cocktailMap.has(cocktailId)) {
+            cocktailMap.set(cocktailId, {
+                ...row.cocktail,
+                doses: []
+            });
+        }
+        
+        if (row.dose && row.ingredient) {
+            cocktailMap.get(cocktailId)!.doses.push({
+                ...row.dose,
+                ingredient: row.ingredient
+            });
+        }
+    }
+
+    const accessibleCocktails = Array.from(cocktailMap.values());
+
+    // Step 4: Filter by device capabilities
     const deviceIngredients = await getDeviceAvailableIngredients(deviceId);
     const availableIngredientIds = new Set(deviceIngredients.map(ing => ing.id));
 
-    // Filter cocktails that can be made
-    const availableCocktails: table.CocktailWithDoses[] = [];
+    const makeableCocktails: table.CocktailWithDoses[] = [];
 
-    for (const cocktail of allCocktails) {
+    for (const cocktail of accessibleCocktails) {
         let canMake = true;
         
-        // Check if all required ingredients are available
         for (const dose of cocktail.doses) {
-            // Skip ingredients that are added separately
             if (!dose.ingredient.addedSeparately) {
                 if (!availableIngredientIds.has(dose.ingredient.id)) {
                     canMake = false;
@@ -223,9 +418,9 @@ export async function getAvailableCocktailsForDevice(deviceId: string): Promise<
         }
         
         if (canMake) {
-            availableCocktails.push(cocktail);
+            makeableCocktails.push(cocktail);
         }
     }
 
-    return availableCocktails;
+    return makeableCocktails;
 }
