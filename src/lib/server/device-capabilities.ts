@@ -424,3 +424,47 @@ export async function getAvailableCocktailsForProfileAndDevice(
 
     return makeableCocktails;
 }
+
+/**
+ * Find an available pump for a specific order and dose
+ * Returns the pump that should be used to dispense the given dose
+ */
+export async function findPumpForOrderAndDose(orderId: string, doseId: string): Promise<table.Pump | null> {
+    // Get the order to find the device
+    const order = await db
+        .select()
+        .from(table.order)
+        .where(eq(table.order.id, orderId))
+        .get();
+
+    if (!order || !order.deviceId) {
+        return null;
+    }
+
+    // Get the dose to find the required ingredient
+    const dose = await db
+        .select()
+        .from(table.dose)
+        .where(eq(table.dose.id, doseId))
+        .get();
+
+    if (!dose) {
+        return null;
+    }
+
+    // Find available pumps for this device and ingredient
+    const availablePumps = await db
+        .select()
+        .from(table.pump)
+        .where(
+            and(
+                eq(table.pump.deviceId, order.deviceId),
+                eq(table.pump.ingredientId, dose.ingredientId),
+                eq(table.pump.isEmpty, false), // Pump is not empty
+                isNotNull(table.pump.gpio) // Has valid GPIO pin
+            )
+        );
+
+    // Return the first available pump (TODO: implement priority logic later)
+    return availablePumps.length > 0 ? availablePumps[0] : null;
+}

@@ -28,19 +28,14 @@
 
 ### 2. Pump Assignment Logic
 
-#### 2.1 Dose-to-Pump Mapping
-- **Function**: `findPumpForDose(deviceId: string, doseId: string)`
-  - Given a specific dose, find the appropriate pump
-  - Selection criteria: not empty + valid GPIO + correct ingredient
+#### 2.1 Order-to-Pump Mapping
+- **Function**: `findPumpForOrderAndDose(orderId: string, doseId: string)`
+  - Given an order and specific dose, find the appropriate pump
+  - Get deviceId from the order, ingredientId from the dose
+  - Selection criteria: not empty + valid GPIO + correct ingredient + matches device
   - Priority system: use first available pump (TODO: improve priority logic later)
   - Handle case where no pump is available (ingredient went empty during order)
-
-#### 2.2 Complete Order Mapping
-- **Function**: `getPumpMappingForCocktail(deviceId: string, cocktailId: string)`
-  - Create complete mapping of all doses to their assigned pumps
-  - Validate that all required doses can be fulfilled
-  - Return mapping or error if any dose cannot be assigned
-  - Use this during order creation and execution
+  - Real-time execution: check pump availability at execution time, not pre-planning
 
 ### 3. Integration Points
 
@@ -50,9 +45,10 @@
 - Show warnings for addedSeparately ingredients with instructions
 
 #### 3.2 API Action Endpoint Enhancement
-- When device asks for next action, use pump assignment logic
+- When device asks for next action, use `findPumpForOrderAndDose` logic
 - Return specific GPIO pin and duration for pump actions
-- Handle cases where assigned pump became unavailable since order creation
+- Handle cases where pump became unavailable during order execution
+- Dynamic pump selection ensures real-time availability checking
 
 #### 3.3 UI Cocktail Display ✅
 - Filter cocktail lists to show only makeable cocktails by default
