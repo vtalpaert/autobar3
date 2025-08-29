@@ -73,58 +73,94 @@ void app_main(void)
     bool success_weight_scale_init = weight_interface_init();
     bool server_needs_calibration = false;
 
-    ESP_LOGI(TAG, "Verifying device and reporting firmware version...");
-    if (verify_device(!success_weight_scale_init, &server_needs_calibration))
+    // Main loop - start from device verification
+    TickType_t last_verify_time = 0;
+    const TickType_t verify_interval = pdMS_TO_TICKS(5 * 60 * 1000); // 5 minutes
+
+    while (1)
     {
-        ESP_LOGI(TAG, "Device verified successfully");
-
-        // Verify if the firmware version matches with the server
-        ESP_LOGI(TAG, "Fetching manifest...");
-        char manifest_version[64] = {0};
-        if (fetch_manifest(manifest_version, sizeof(manifest_version)))
+        ESP_LOGI(TAG, "Verifying device and reporting firmware version...");
+        if (verify_device(!success_weight_scale_init, &server_needs_calibration))
         {
-            ESP_LOGI(TAG, "Current firmware version: %s", FIRMWARE_VERSION);
-            ESP_LOGI(TAG, "Available firmware version: %s", manifest_version);
+            ESP_LOGI(TAG, "Device verified successfully");
+            last_verify_time = xTaskGetTickCount();
 
-            if (strcmp(FIRMWARE_VERSION, manifest_version) == 0)
+            // Verify if the firmware version matches with the server
+            ESP_LOGI(TAG, "Fetching manifest...");
+            char manifest_version[64] = {0};
+            if (fetch_manifest(manifest_version, sizeof(manifest_version)))
             {
-                ESP_LOGI(TAG, "Firmware is up to date");
+                ESP_LOGI(TAG, "Current firmware version: %s", FIRMWARE_VERSION);
+                ESP_LOGI(TAG, "Available firmware version: %s", manifest_version);
+
+                if (strcmp(FIRMWARE_VERSION, manifest_version) == 0)
+                {
+                    ESP_LOGI(TAG, "Firmware is up to date");
+                }
+                else
+                {
+                    ESP_LOGI(TAG, "Firmware update available");
+                    do_firmware_upgrade();
+                    // Here the device will reboot
+                }
             }
             else
             {
-                ESP_LOGI(TAG, "Firmware update available");
-                do_firmware_upgrade();
-                // Here the device will reboot
+                ESP_LOGE(TAG, "Failed to fetch manifest version");
+            }
+
+            // Handle calibration if required
+            if (server_needs_calibration)
+            {
+                ESP_LOGI(TAG, "Entering calibration loop");
+                while (weight_interface_need_calibration())
+                {
+                    vTaskDelay(pdMS_TO_TICKS(100));
+                }
+                ESP_LOGI(TAG, "Weight scale is calibrated");
+            } else {
+                weight_interface_init();
+            }
+
+            // Action handling loop
+            while (1)
+            {
+                device_action_t action;
+                
+                if (ask_server_for_action(&action))
+                {
+                    // Check if we need to re-verify instead of handling standby
+                    if (action.type == ACTION_STANDBY)
+                    {
+                        TickType_t current_time = xTaskGetTickCount();
+                        if ((current_time - last_verify_time) >= verify_interval)
+                        {
+                            ESP_LOGI(TAG, "5 minutes elapsed, re-verifying device...");
+                            break; // Break out of action loop to restart from verify_device
+                        }
+                    }
+                    
+                    // Handle the action normally
+                    if (!handle_action(&action))
+                    {
+                        ESP_LOGE(TAG, "Failed to handle action");
+                    }
+                }
+                else
+                {
+                    ESP_LOGE(TAG, "Failed to get action from server");
+                    vTaskDelay(pdMS_TO_TICKS(5000)); // Wait 5 seconds before retrying
+                }
             }
         }
         else
         {
-            ESP_LOGE(TAG, "Failed to fetch manifest version");
-        }
-
-        // Handle calibration if required
-        if (server_needs_calibration)
-        {
-            ESP_LOGI(TAG, "Entering calibration loop");
-            while (weight_interface_need_calibration())
+            ESP_LOGE(TAG, "Device verification failed - needs re-enrollment");
+            start_config_portal();
+            while (1)
             {
-                vTaskDelay(pdMS_TO_TICKS(100));
+                vTaskDelay(pdMS_TO_TICKS(1000));
             }
-            ESP_LOGI(TAG, "Weight scale is calibrated");
-        } else {
-            weight_interface_init();
-        }
-
-        init_gpio(13);
-        blink(13);
-    }
-    else
-    {
-        ESP_LOGE(TAG, "Device verification failed - needs re-enrollment");
-        start_config_portal();
-        while (1)
-        {
-            vTaskDelay(pdMS_TO_TICKS(1000));
         }
     }
 }

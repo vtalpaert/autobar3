@@ -1,7 +1,10 @@
 // base and ESP-IDF
 #include <stdio.h>
+#include <math.h>
+#include <string.h>
 #include "esp_log.h"
 #include "esp_system.h"
+#include "esp_timer.h"
 #include "driver/gpio.h"
 #include "freertos/FreeRTOS.h"
 
@@ -160,7 +163,7 @@ bool handle_pump(device_action_t *action)
             ESP_LOGE(TAG, "Weight decreased below initial weight (margin 10g): %.2fg < %.2fg",
                      current_weight, initial_weight - 10.0f);
             char error_msg[128];
-            snprintf(error_msg, sizeof(error_msg), "Weight decreased below initial weight: %.2fg < %.2fg", 
+            snprintf(error_msg, sizeof(error_msg), "Weight decreased below initial weight: %.2fg < %.2fg",
                      current_weight, initial_weight - 10.0f);
             report_error(action->data.pump.order_id, ERROR_CODE_NEGATIVE_WEIGHT_CHANGE, error_msg);
             success = false;
