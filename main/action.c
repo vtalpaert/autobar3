@@ -95,6 +95,7 @@ bool handle_pump(device_action_t *action)
     if (!measure_weight(&initial_weight, &initial_raw, 20))
     {
         ESP_LOGE(TAG, "Failed to measure initial weight");
+        report_error(action->data.pump.order_id, ERROR_CODE_WEIGHT_SCALE, "Failed to measure initial weight");
         return false;
     }
     ESP_LOGI(TAG, "Initial weight: %.2fg", initial_weight);
@@ -122,6 +123,7 @@ bool handle_pump(device_action_t *action)
         if (!measure_weight(&current_weight, &current_raw, 10))
         {
             ESP_LOGE(TAG, "Failed to measure current weight during pumping");
+            report_error(action->data.pump.order_id, ERROR_CODE_WEIGHT_SCALE, "Failed to measure current weight during pumping");
             success = false;
             break;
         }
@@ -147,7 +149,7 @@ bool handle_pump(device_action_t *action)
             ESP_LOGE(TAG, "Pump timeout: No weight change for %lld ms (threshold: %lld ms)",
                      current_time - last_weight_change_time, PUMP_TIMEOUT_MS);
             ESP_LOGE(TAG, "Pump may be malfunctioning or liquid reservoir is empty");
-            // TODO: Use error reporting API to notify server of pump failure
+            report_error(action->data.pump.order_id, ERROR_CODE_NO_WEIGHT_CHANGE, "Pump timeout: No weight change detected - pump may be malfunctioning or liquid reservoir is empty");
             success = false;
             break;
         }
@@ -157,6 +159,10 @@ bool handle_pump(device_action_t *action)
         {
             ESP_LOGE(TAG, "Weight decreased below initial weight (margin 10g): %.2fg < %.2fg",
                      current_weight, initial_weight - 10.0f);
+            char error_msg[128];
+            snprintf(error_msg, sizeof(error_msg), "Weight decreased below initial weight: %.2fg < %.2fg", 
+                     current_weight, initial_weight - 10.0f);
+            report_error(action->data.pump.order_id, ERROR_CODE_NEGATIVE_WEIGHT_CHANGE, error_msg);
             success = false;
             break;
         }
@@ -177,6 +183,7 @@ bool handle_pump(device_action_t *action)
         if (!api_success)
         {
             ESP_LOGE(TAG, "Failed to report progress to server");
+            report_error(action->data.pump.order_id, ERROR_CODE_UNABLE_TO_REPORT_PROGRESS, "Failed to report progress to server");
             // Don't fail completely - we might have already delivered the dose
             if (current_progress >= target_weight)
             {

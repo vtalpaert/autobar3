@@ -4,6 +4,17 @@
 #include <stdbool.h>
 #include <stddef.h>
 
+// Error codes for device error reporting
+typedef enum
+{
+    ERROR_CODE_UNKNOWN = 0,
+    ERROR_CODE_GENERAL = 1,
+    ERROR_CODE_WEIGHT_SCALE = 2,
+    ERROR_CODE_NO_WEIGHT_CHANGE = 3,
+    ERROR_CODE_NEGATIVE_WEIGHT_CHANGE = 4,
+    ERROR_CODE_UNABLE_TO_REPORT_PROGRESS = 5
+} error_code_t;
+
 // Function to verify device state with the server at `POST /api/devices/verify`
 bool verify_device(bool device_needs_calibration, bool *server_needs_calibration);
 
@@ -51,5 +62,11 @@ bool ask_server_for_action(device_action_t *action);
 
 // Function to report progress on a dose being poured at `POST /api/devices/progress`
 bool report_progress(const char *order_id, const char *dose_id, float weight_progress, bool *should_continue, char *message, size_t message_size);
+
+// Function to report an error during order processing at `POST /api/devices/error`
+bool report_error(const char *order_id, error_code_t error_code, const char *message);
+
+// Function to cancel an in-progress order at `POST /api/devices/cancel/order`
+bool cancel_order(const char *order_id);
 
 #endif // API_H

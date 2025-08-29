@@ -33,8 +33,15 @@ The following API endpoints are available for device communication:
 
 - `POST /api/devices/error`
   - Reports an error during order processing
-  - Request: `{ "token": "device_api_token", "orderId": "id", "message": "Error description" }`
+  - Request: `{ "token": "device_api_token", "orderId": "id", "errorCode": 2, "message": "Error description" }`
   - Response: `{ "message": "Error recorded" }`
+  - Error codes:
+    - `0`: Unknown error code
+    - `1`: General/unknown error
+    - `2`: Weight scale error
+    - `3`: No weight change (malfunctioning pump or empty liquid reservoir)
+    - `4`: Negative weight change (weight decreased below initial weight)
+    - `5`: Unable to report progress (API call not working)
 
 ## Order Cancellation
 

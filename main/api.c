@@ -386,6 +386,107 @@ bool report_progress(const char *order_id, const char *dose_id, float weight_pro
     return success;
 }
 
+bool report_error(const char *order_id, error_code_t error_code, const char *message)
+{
+    const char *api_path = "/api/devices/error";
+    bool success = false;
+
+    if (!order_id || !message)
+    {
+        ESP_LOGE(TAG, "Order ID and message cannot be NULL");
+        return false;
+    }
+
+    // Prepare JSON payload
+    cJSON *payload = cJSON_CreateObject();
+    cJSON_AddStringToObject(payload, "orderId", order_id);
+    cJSON_AddNumberToObject(payload, "errorCode", error_code);
+    cJSON_AddStringToObject(payload, "message", message);
+
+    cJSON *response = api_contact_server((char *)api_path, payload);
+
+    if (response)
+    {
+        cJSON *message_item = cJSON_GetObjectItem(response, "message");
+
+        if (message_item && cJSON_IsString(message_item))
+        {
+            ESP_LOGI(TAG, "Error report response: %s", message_item->valuestring);
+            success = true;
+        }
+        else
+        {
+            ESP_LOGE(TAG, "No message field found in error report response");
+        }
+    }
+    else
+    {
+        ESP_LOGE(TAG, "Failed to report error to server");
+    }
+
+    cJSON_Delete(payload);
+    cJSON_Delete(response);
+
+    return success;
+}
+
+bool cancel_order(const char *order_id)
+{
+    const char *api_path = "/api/devices/cancel/order";
+    bool success = false;
+
+    if (!order_id)
+    {
+        ESP_LOGE(TAG, "Order ID cannot be NULL");
+        return false;
+    }
+
+    // Prepare JSON payload
+    cJSON *payload = cJSON_CreateObject();
+    cJSON_AddStringToObject(payload, "orderId", order_id);
+
+    cJSON *response = api_contact_server((char *)api_path, payload);
+
+    if (response)
+    {
+        cJSON *success_item = cJSON_GetObjectItem(response, "success");
+        cJSON *message_item = cJSON_GetObjectItem(response, "message");
+
+        if (success_item && cJSON_IsTrue(success_item))
+        {
+            success = true;
+            if (message_item && cJSON_IsString(message_item))
+            {
+                ESP_LOGI(TAG, "Order cancellation response: %s", message_item->valuestring);
+            }
+            else
+            {
+                ESP_LOGI(TAG, "Order cancelled successfully");
+            }
+        }
+        else
+        {
+            if (message_item && cJSON_IsString(message_item))
+            {
+                ESP_LOGE(TAG, "Order cancellation failed: %s", message_item->valuestring);
+            }
+            else
+            {
+                ESP_LOGE(TAG, "Order cancellation failed");
+            }
+        }
+    }
+    else
+    {
+        ESP_LOGE(TAG, "Failed to cancel order on server");
+    }
+
+    cJSON_Delete(payload);
+    cJSON_Delete(response);
+
+    return success;
+}
+
 bool ask_server_for_action(device_action_t *action)
 {
     const char *api_path = "/api/devices/action";
