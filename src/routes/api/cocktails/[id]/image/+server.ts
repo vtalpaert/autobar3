@@ -3,10 +3,10 @@ import type { RequestHandler } from './$types';
 import { validateSessionToken, selectVerifiedProfile, sessionCookieName } from '$lib/server/auth';
 import { checkCocktailAccess } from '$lib/server/cocktail-permissions';
 import { getCocktailImagePath } from '$lib/server/storage';
-import { readFile } from 'fs/promises';
+import { readFile, stat } from 'fs/promises';
 import { existsSync } from 'fs';
 
-export const GET: RequestHandler = async ({ params, cookies }) => {
+export const GET: RequestHandler = async ({ params, request, cookies }) => {
     try {
         // Get session token from cookie
         const sessionToken = cookies.get(sessionCookieName);
@@ -41,13 +41,27 @@ export const GET: RequestHandler = async ({ params, cookies }) => {
             throw error(404, 'Image file not found');
         }
 
-        // Read and serve the image
+        // Get file stats for ETag generation
+        const stats = await stat(imagePath);
+        const etag = `"${cocktail.id}-${stats.mtime.getTime()}"`;
+        
+        // Check if client has current version
+        const clientETag = request.headers.get('if-none-match');
+        if (clientETag === etag) {
+            return new Response(null, { 
+                status: 304,
+                headers: { 'ETag': etag }
+            });
+        }
+
+        // Read and serve the image with ETag
         const imageBuffer = await readFile(imagePath);
         
         return new Response(imageBuffer, {
             headers: {
                 'Content-Type': 'image/webp',
-                'Cache-Control': 'private, max-age=3600',
+                'ETag': etag,
+                'Cache-Control': 'private, max-age=300, must-revalidate',
                 'Content-Length': imageBuffer.length.toString()
             }
         });

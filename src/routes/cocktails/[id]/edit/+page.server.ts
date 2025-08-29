@@ -230,6 +230,7 @@ export const actions: Actions = {
         const description = formData.get('description')?.toString();
         const instructions = formData.get('instructions')?.toString();
         const imageChanged = formData.get('imageChanged') === 'true';
+        const imageRemoved = formData.get('imageRemoved') === 'true';
         const imageFile = formData.get('image') as File | null;
 
         if (!name) {
@@ -239,8 +240,8 @@ export const actions: Actions = {
         // Handle image changes
         let imageUri = cocktail.imageUri;
         if (imageChanged) {
-            // Delete old image if it exists
-            if (cocktail.imageUri) {
+            // If image was removed or we're replacing it, delete the old one
+            if (cocktail.imageUri && (imageRemoved || (imageFile && imageFile.size > 0))) {
                 try {
                     await deleteCocktailImage(cocktail.creatorId, cocktail.id);
                 } catch (err) {
@@ -259,8 +260,8 @@ export const actions: Actions = {
                 } catch (error) {
                     return { error: `Image upload failed: ${error instanceof Error ? error.message : 'Unknown error'}` };
                 }
-            } else {
-                // Image was removed
+            } else if (imageRemoved) {
+                // Image was explicitly removed
                 imageUri = null;
             }
         }

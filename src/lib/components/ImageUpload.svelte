@@ -17,6 +17,7 @@
     const dispatch = createEventDispatcher<{
         fileSelected: { file: File; inputElement: HTMLInputElement };
         fileRemoved: {};
+        imageChanged: { hasImage: boolean };
     }>();
     
     // Image processing constants from environment variables
@@ -28,9 +29,14 @@
     let dragOver = false;
     let error: string | null = null;
     let processing = false;
+    let imageRemoved = false;
     
     // Update preview when currentImageUri changes (for edit mode)
-    $: previewUrl = currentImageUri;
+    $: {
+        if (!imageRemoved) {
+            previewUrl = currentImageUri;
+        }
+    }
     
     // Handle clipboard paste
     function handlePaste(event: ClipboardEvent) {
@@ -142,6 +148,8 @@
                 file: processedFile, 
                 inputElement: fileInput 
             });
+            dispatch('imageChanged', { hasImage: true });
+            imageRemoved = false;
         } catch (err) {
             error = err instanceof Error ? err.message : 'Failed to process image';
         } finally {
@@ -185,10 +193,12 @@
             URL.revokeObjectURL(previewUrl);
         }
         previewUrl = null;
+        imageRemoved = true;
         if (fileInput) {
             fileInput.value = '';
         }
         dispatch('fileRemoved');
+        dispatch('imageChanged', { hasImage: false });
     }
     
     function openFileDialog() {

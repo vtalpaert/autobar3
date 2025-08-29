@@ -23,6 +23,7 @@
     // For image upload
     let selectedImageFile: File | null = null;
     let imageChanged = false;
+    let imageRemoved = false;
     let hiddenImageInput: HTMLInputElement;
     
     // Get current image URI - now use the protected endpoint
@@ -31,6 +32,7 @@
     function handleImageSelected(event: CustomEvent<{ file: File; inputElement: HTMLInputElement }>) {
         selectedImageFile = event.detail.file;
         imageChanged = true;
+        imageRemoved = false;
         
         // Set the file on the hidden input using DataTransfer
         if (hiddenImageInput) {
@@ -43,8 +45,17 @@
     function handleImageRemoved() {
         selectedImageFile = null;
         imageChanged = true;
+        imageRemoved = true;
         if (hiddenImageInput) {
             hiddenImageInput.value = '';
+        }
+    }
+    
+    function handleImageChanged(event: CustomEvent<{ hasImage: boolean }>) {
+        imageChanged = true;
+        if (!event.detail.hasImage) {
+            imageRemoved = true;
+            selectedImageFile = null;
         }
     }
 </script>
@@ -84,12 +95,16 @@
                     currentImageUri={currentImageUri}
                     on:fileSelected={handleImageSelected}
                     on:fileRemoved={handleImageRemoved}
+                    on:imageChanged={handleImageChanged}
                 />
                 
                 <!-- Hidden inputs for image handling -->
                 <input bind:this={hiddenImageInput} type="file" name="image" class="hidden" />
                 {#if imageChanged}
                     <input type="hidden" name="imageChanged" value="true" />
+                {/if}
+                {#if imageRemoved}
+                    <input type="hidden" name="imageRemoved" value="true" />
                 {/if}
 
                 <div class="mb-4">
