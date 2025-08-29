@@ -47,10 +47,11 @@ export async function POST({ request }) {
 
     // Check if order status is valid for progress updates
     if (order.status !== 'pending' && order.status !== 'in_progress') {
+        // For cancelled/completed orders, tell device to stop but don't error
         return json({
-            message: `Cannot update progress for order with status: ${order.status}`,
+            message: `Order status is ${order.status} - stopping pump`,
             continue: false
-        }, { status: 400 });
+        }, { status: 200 });
     }
 
     // If order is pending, update it to in_progress

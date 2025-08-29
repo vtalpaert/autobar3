@@ -208,15 +208,19 @@
 		}
 	}
 	
-	@keyframes cross-out {
+	@keyframes stripe-slide {
 		0% {
-			background: linear-gradient(45deg, transparent 48%, rgb(107, 114, 128) 48%, rgb(107, 114, 128) 52%, transparent 52%);
-			background-size: 0% 100%;
+			background-position: 0% 0%;
 		}
 		100% {
-			background: linear-gradient(45deg, transparent 48%, rgb(107, 114, 128) 48%, rgb(107, 114, 128) 52%, transparent 52%);
-			background-size: 100% 100%;
+			background-position: 100% 0%;
 		}
+	}
+	
+	@keyframes fadeOut {
+		0% { opacity: 0.7; transform: scale(1); }
+		70% { opacity: 0.7; transform: scale(1); }
+		100% { opacity: 0; transform: scale(0.95); }
 	}
 	
 	.order-completed {
@@ -231,7 +235,15 @@
 	}
 	
 	.order-cancelled {
-		animation: cross-out 1.5s ease-in-out forwards;
+		background: repeating-linear-gradient(
+			45deg,
+			rgba(107, 114, 128, 0.1),
+			rgba(107, 114, 128, 0.1) 10px,
+			rgba(107, 114, 128, 0.3) 10px,
+			rgba(107, 114, 128, 0.3) 20px
+		);
+		background-size: 40px 40px;
+		animation: stripe-slide 2s linear infinite, fadeOut 3s ease-in-out forwards;
 		position: relative;
 		opacity: 0.7;
 	}

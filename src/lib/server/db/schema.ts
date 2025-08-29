@@ -1,4 +1,4 @@
-import { sqliteTable, text, integer, real } from 'drizzle-orm/sqlite-core';
+import { sqliteTable, text, integer, real, index } from 'drizzle-orm/sqlite-core';
 
 export const user = sqliteTable('user', {
 	id: text('id').primaryKey(),
@@ -153,3 +153,9 @@ export type OrderWithDetails = Order & {
     cocktail: { name: string };
     currentDose?: { id: string, ingredientId: string, quantity: number, number: number };
 };
+
+// Database indexes for performance
+export const orderCustomerStatusIndex = index('idx_order_customer_status').on(order.customerId, order.status);
+export const orderUpdatedAtIndex = index('idx_order_updated_at').on(order.updatedAt);
+export const deviceProfileIndex = index('idx_device_profile').on(device.profileId);
+export const orderCustomerStatusUpdatedIndex = index('idx_order_customer_status_updated').on(order.customerId, order.status, order.updatedAt);
