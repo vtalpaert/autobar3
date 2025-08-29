@@ -28,6 +28,7 @@ The following API endpoints are available for device communication:
   - Response:
     - Normal: `{ "message": "Progress updated", "continue": true }`, though continue will be false if the dose is complete
     - If cancelled: `{ "message": "Order cancelled", "continue": false }`
+  - Note: `weightProgress` is in grams. Server converts to volume using ingredient density and stores volume progress.
 
 ## Error Reporting
 

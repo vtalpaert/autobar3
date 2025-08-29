@@ -5,9 +5,9 @@ import { eq, and, gt } from 'drizzle-orm';
 
 export async function POST({ request }) {
     const data = await request.json();
-    const { token, orderId, doseId, progress } = data;
+    const { token, orderId, doseId, weightProgress } = data;
 
-    if (!token || !orderId || !doseId || progress === undefined) {
+    if (!token || !orderId || !doseId || weightProgress === undefined) {
         return json({
             message: "Missing required fields"
         }, { status: 400 });
@@ -72,10 +72,14 @@ export async function POST({ request }) {
         }, { status: 400 });
     }
 
-    // Get the current dose
+    // Get the current dose with ingredient information
     const currentDose = await db
-        .select()
+        .select({
+            dose: table.dose,
+            ingredient: table.ingredient
+        })
         .from(table.dose)
+        .innerJoin(table.ingredient, eq(table.dose.ingredientId, table.ingredient.id))
         .where(eq(table.dose.id, doseId))
         .get();
 
@@ -85,11 +89,15 @@ export async function POST({ request }) {
         }, { status: 404 });
     }
 
-    // Update the progress after verification
+    // Convert weight progress to volume progress using ingredient density
+    // Formula: volume (ml) = weight (g) / density (g/L) * 1000
+    const volumeProgress = (weightProgress / currentDose.ingredient.density) * 1000;
+
+    // Update the progress after verification (store volume progress)
     await db
         .update(table.order)
         .set({
-            doseProgress: progress,
+            doseProgress: volumeProgress,
             updatedAt: new Date()
         })
         .where(eq(table.order.id, orderId));
@@ -97,8 +105,8 @@ export async function POST({ request }) {
     // We don't update the order status or move to the next dose here
     // That will be handled by the action API when the device requests the next action
 
-    // If the progress >= currentDose.quantity, tell the device to stop pouring
-    const shouldContinue = progress < currentDose.quantity;
+    // If the volume progress >= dose quantity, tell the device to stop pouring
+    const shouldContinue = volumeProgress < currentDose.dose.quantity;
 
     return json({
         message: "Progress updated",
