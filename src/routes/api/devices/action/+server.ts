@@ -2,6 +2,7 @@ import { json } from '@sveltejs/kit';
 import { db } from '$lib/server/db';
 import * as table from '$lib/server/db/schema';
 import { eq, and, or, gt, isNull } from 'drizzle-orm';
+import { findPumpForOrderAndDose } from '$lib/server/device-capabilities';
 
 export async function POST({ request }) {
     const data = await request.json();
@@ -53,7 +54,8 @@ export async function POST({ request }) {
 
     if (!order) {
         return json({
-            action: "standby"
+            action: "standby",
+            idle: 1000
         });
     }
 
@@ -139,16 +141,44 @@ export async function POST({ request }) {
     if (!currentDose) {
         return json({
             action: "standby",
-            message: "No doses found or left for this order"
+            idle: 1000
         });
     }
 
+    // Find the pump for this dose
+    const pump = await findPumpForOrderAndDose(order.id, currentDose.id);
+    if (!pump || !pump.gpio) {
+        return json({
+            action: "standby",
+            idle: 1000
+        });
+    }
+
+    // Get ingredient information for weight conversion
+    const ingredient = await db
+        .select()
+        .from(table.ingredient)
+        .where(eq(table.ingredient.id, currentDose.ingredientId))
+        .get();
+
+    if (!ingredient) {
+        return json({
+            action: "standby",
+            idle: 1000
+        });
+    }
+
+    // Convert volumes (ml) to weights (grams) using ingredient density (g/L)
+    // Formula: weight_grams = volume_ml * (density_g_per_L / 1000)
+    const doseWeight = currentDose.quantity * (ingredient.density / 1000);
+    const doseWeightProgress = (order.doseProgress || 0) * (ingredient.density / 1000);
+
     return json({
-        action: "pour",
+        action: "pump",
         orderId: order.id,
         doseId: currentDose.id,
-        ingredientId: currentDose.ingredientId,
-        doseQuantity: currentDose.quantity,
-        doseProgress: order.doseProgress || 0
+        pumpGpio: pump.gpio,
+        doseWeight: doseWeight,
+        doseWeightProgress: doseWeightProgress
     });
 }
