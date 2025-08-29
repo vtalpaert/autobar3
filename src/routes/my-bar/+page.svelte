@@ -2,6 +2,8 @@
 	import { enhance } from '$app/forms';
 	import { onMount, onDestroy } from 'svelte';
 	import { browser } from '$app/environment';
+	import { fade, slide } from 'svelte/transition';
+	import { Confetti } from 'svelte-confetti';
 	import type { PageData } from './$types';
 	import { translations } from '$lib/i18n/translations';
 	import { currentLanguage } from '$lib/i18n/store';
@@ -13,6 +15,10 @@
 	let eventSource: EventSource | null = null;
 	let isConnected = false;
 	let shouldConnect = false;
+	
+	// Animation state tracking
+	let animatingOrders = new Map<string, { type: 'completed' | 'failed' | 'cancelled', startTime: number }>();
+	let showConfetti = new Map<string, boolean>();
 
 	// Format date based on language
 	function formatDate(date: Date) {
@@ -78,7 +84,42 @@
 		eventSource.onmessage = (event) => {
 			try {
 				const updatedData = JSON.parse(event.data);
-				if (updatedData.activeOrders) {
+				
+				// Handle completed orders with animations
+				if (updatedData.completedOrders && updatedData.completedOrders.length > 0) {
+					updatedData.completedOrders.forEach(completedOrder => {
+						let animationType: 'completed' | 'failed' | 'cancelled' = 'completed';
+						if (completedOrder.status === 'failed') animationType = 'failed';
+						else if (completedOrder.status === 'cancelled') animationType = 'cancelled';
+						
+						// Start animation
+						animatingOrders.set(completedOrder.id, { 
+							type: animationType, 
+							startTime: Date.now() 
+						});
+						animatingOrders = animatingOrders; // Trigger reactivity
+						
+						if (animationType === 'completed') {
+							showConfetti.set(completedOrder.id, true);
+							showConfetti = showConfetti; // Trigger reactivity
+						}
+						
+						// After animation completes, update data and add to history
+						setTimeout(() => {
+							data.activeOrders = updatedData.activeOrders;
+							
+							// Add completed order to history using SSE data
+							addCompletedOrderToHistory(completedOrder);
+							
+							// Clean up animation state
+							animatingOrders.delete(completedOrder.id);
+							animatingOrders = animatingOrders;
+							showConfetti.delete(completedOrder.id);
+							showConfetti = showConfetti;
+						}, 3000);
+					});
+				} else if (updatedData.activeOrders) {
+					// No completed orders, just update normally
 					data.activeOrders = updatedData.activeOrders;
 				}
 			} catch (error) {
@@ -114,6 +155,13 @@
 		}
 	}
 
+	
+	// Add completed order to history using data from SSE
+	function addCompletedOrderToHistory(completedOrder: any) {
+		// Add to the beginning of past orders and limit to 10
+		data.pastOrders = [completedOrder, ...data.pastOrders].slice(0, 10);
+	}
+
 	// Reactive statement to manage SSE connection based on active orders
 	$: if (browser) {
 		const hasActiveOrders = data.activeOrders.length > 0;
@@ -131,6 +179,64 @@
 <svelte:head>
 	<title>{t.myBar.title}</title>
 </svelte:head>
+
+<style>
+	@keyframes green-pulse {
+		0%, 100% { 
+			box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7);
+			border-color: rgb(16, 185, 129);
+		}
+		50% { 
+			box-shadow: 0 0 0 20px rgba(16, 185, 129, 0);
+			border-color: rgb(16, 185, 129);
+		}
+	}
+	
+	@keyframes shake-red {
+		0%, 100% { 
+			transform: translateX(0);
+			box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7);
+			border-color: rgb(239, 68, 68);
+		}
+		10%, 30%, 50%, 70%, 90% { 
+			transform: translateX(-5px);
+			box-shadow: 0 0 0 10px rgba(239, 68, 68, 0.3);
+		}
+		20%, 40%, 60%, 80% { 
+			transform: translateX(5px);
+			box-shadow: 0 0 0 10px rgba(239, 68, 68, 0.3);
+		}
+	}
+	
+	@keyframes cross-out {
+		0% {
+			background: linear-gradient(45deg, transparent 48%, rgb(107, 114, 128) 48%, rgb(107, 114, 128) 52%, transparent 52%);
+			background-size: 0% 100%;
+		}
+		100% {
+			background: linear-gradient(45deg, transparent 48%, rgb(107, 114, 128) 48%, rgb(107, 114, 128) 52%, transparent 52%);
+			background-size: 100% 100%;
+		}
+	}
+	
+	.order-completed {
+		animation: green-pulse 2s ease-in-out 3;
+		border: 2px solid rgb(16, 185, 129);
+		position: relative;
+	}
+	
+	.order-failed {
+		animation: shake-red 1s ease-in-out 2;
+		border: 2px solid rgb(239, 68, 68);
+	}
+	
+	.order-cancelled {
+		animation: cross-out 1.5s ease-in-out forwards;
+		position: relative;
+		opacity: 0.7;
+	}
+	
+</style>
 
 <Header user={data.user} />
 
@@ -189,7 +295,7 @@
 		<!-- Active Orders Section -->
 		<section class="mb-12">
 			<div class="flex items-center justify-between mb-4">
-				<h2 class="text-2xl font-semibold">{t.myBar.orders.current}</h2>
+				<h2 class="text-2xl font-semibold">Active Orders</h2>
 				{#if data.activeOrders.length > 0}
 					<div class="flex items-center space-x-2">
 						<div class={`w-2 h-2 rounded-full transition-colors duration-300 ${isConnected ? 'bg-green-500' : 'bg-red-500'}`}></div>
@@ -212,7 +318,23 @@
 				</div>
 			{:else}
 				{#each data.activeOrders as order}
-					<div class="bg-gray-800 rounded-lg shadow-lg p-6 mb-4">
+					<div 
+						id="order-{order.id}"
+						class="bg-gray-800 rounded-lg shadow-lg p-6 mb-4 transition-all duration-300 {animatingOrders.has(order.id) ? `order-${animatingOrders.get(order.id)?.type}` : ''} relative"
+					>
+						{#if showConfetti.has(order.id) && showConfetti.get(order.id)}
+							<div class="absolute inset-0 flex justify-center items-center pointer-events-none">
+								<Confetti 
+									x={[-2.5, 2.5]} 
+									y={[-0.5, 0.5]} 
+									duration={2000}
+									amount={50}
+									colorArray={['#10b981', '#3b82f6', '#f59e0b', '#ef4444', '#8b5cf6']}
+									fallDistance="200px"
+									size={15}
+								/>
+							</div>
+						{/if}
 						<div class="flex justify-between items-start mb-4">
 							<div>
 								<h3 class="text-xl font-medium text-white">

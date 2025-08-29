@@ -8,6 +8,7 @@ export async function GET({ locals }) {
     
     let interval: NodeJS.Timeout;
     let isClosed = false;
+    let previousActiveOrderIds = new Set<string>();
     
     // Track this controller for cleanup
     const cleanup = () => {
@@ -68,10 +69,50 @@ export async function GET({ locals }) {
                         )
                         .orderBy(desc(table.order.createdAt));
 
+                    const currentActiveOrderIds = new Set(activeOrders.map(o => o.id));
+                    const completedOrderIds = [...previousActiveOrderIds].filter(id => !currentActiveOrderIds.has(id));
+                    
+                    let completedOrders: any[] = [];
+                    
+                    // If orders completed, fetch their full data for history
+                    if (completedOrderIds.length > 0) {
+                        completedOrders = await db
+                            .select({
+                                id: table.order.id,
+                                createdAt: table.order.createdAt,
+                                updatedAt: table.order.updatedAt,
+                                status: table.order.status,
+                                errorMessage: table.order.errorMessage,
+                                cocktail: {
+                                    id: table.cocktail.id,
+                                    name: table.cocktail.name
+                                },
+                                device: {
+                                    id: table.device.id,
+                                    name: table.device.name
+                                }
+                            })
+                            .from(table.order)
+                            .innerJoin(table.cocktail, eq(table.order.cocktailId, table.cocktail.id))
+                            .leftJoin(table.device, eq(table.order.deviceId, table.device.id))
+                            .where(
+                                and(
+                                    eq(table.order.customerId, profile.id),
+                                    inArray(table.order.id, completedOrderIds)
+                                )
+                            );
+                    }
+                    
+                    // Update previous state
+                    previousActiveOrderIds = currentActiveOrderIds;
+
                     // Double-check before enqueueing
                     if (!isClosed) {
                         try {
-                            controller.enqueue(`data: ${JSON.stringify({ activeOrders })}\n\n`);
+                            controller.enqueue(`data: ${JSON.stringify({ 
+                                activeOrders,
+                                completedOrders: completedOrders.length > 0 ? completedOrders : undefined
+                            })}\n\n`);
                         } catch (enqueueError) {
                             // Controller was closed between checks
                             cleanup();

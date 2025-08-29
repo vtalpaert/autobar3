@@ -115,7 +115,7 @@ bool handle_pump(device_action_t *action)
     float last_weight = initial_weight;
     int64_t last_weight_change_time = esp_timer_get_time() / 1000; // Convert to milliseconds
     const int64_t PUMP_TIMEOUT_MS = 30000;                         // 30 seconds
-    const float WEIGHT_CHANGE_THRESHOLD = 1.0f;                    // 1g minimum change to consider progress
+    const float WEIGHT_CHANGE_THRESHOLD = 5.0f;                    // 5g minimum change to consider progress
 
     // Step 4: Main pouring loop
     while (should_continue && success)
