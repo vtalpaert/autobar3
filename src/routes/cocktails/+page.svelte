@@ -33,25 +33,25 @@
 	function getAvailabilityBadge(cocktail: any) {
 		switch (cocktail.availability) {
 			case 'available':
-				return { text: 'Available', class: 'bg-green-600' };
+				return { text: t.cocktails.available, class: 'bg-green-600' };
 			case 'partial':
-				return { text: `Missing ${cocktail.missingIngredients.length} ingredients`, class: 'bg-yellow-600' };
+				return { text: `${t.cocktails.missingIngredients} ${cocktail.missingIngredients.length}`, class: 'bg-yellow-600' };
 			case 'unavailable':
-				return { text: 'Unavailable', class: 'bg-red-600' };
+				return { text: t.cocktails.unavailable, class: 'bg-red-600' };
 			case 'no-device':
-				return { text: 'Device required', class: 'bg-gray-600' };
+				return { text: t.cocktails.deviceRequired, class: 'bg-gray-600' };
 			default:
-				return { text: 'Unknown', class: 'bg-gray-600' };
+				return { text: t.cocktails.unknown, class: 'bg-gray-600' };
 		}
 	}
 
 	function getActionButton(cocktail: any) {
 		if (cocktail.availability === 'available') {
-			return { text: 'Make Now', class: 'bg-green-600 hover:bg-green-700', action: 'order' };
+			return { text: t.cocktails.makeNow, class: 'bg-green-600 hover:bg-green-700', action: 'order' };
 		} else if (cocktail.availability === 'no-device') {
-			return { text: 'Setup Device', class: 'bg-blue-600 hover:bg-blue-700', action: 'setup' };
+			return { text: t.cocktails.setupDevice, class: 'bg-blue-600 hover:bg-blue-700', action: 'setup' };
 		} else {
-			return { text: 'View Recipe', class: 'bg-blue-600 hover:bg-blue-700', action: 'view' };
+			return { text: t.cocktails.viewDetails, class: 'bg-blue-600 hover:bg-blue-700', action: 'view' };
 		}
 	}
 </script>
@@ -64,19 +64,19 @@
 		{#if data.defaultDevice}
 			{#if data.deviceCapabilities?.needsCalibration}
 				<div class="bg-yellow-600 text-white p-4 rounded-lg mb-8">
-					<h2 class="text-xl font-bold mb-2">🟡 Device Needs Calibration</h2>
-					<p>Device "{data.defaultDevice.name || 'Unnamed'}" needs calibration before making cocktails.</p>
+					<h2 class="text-xl font-bold mb-2">🟡 {t.cocktails.deviceNeedsCalibration}</h2>
+					<p>Device "{data.defaultDevice.name || 'Unnamed'}" {t.cocktails.needsCalibrationMessage}</p>
 				</div>
 			{:else}
 				<div class="bg-green-600 text-white p-4 rounded-lg mb-8">
-					<h2 class="text-xl font-bold mb-2">🟢 Device Ready</h2>
-					<p>Device "{data.defaultDevice.name || 'Unnamed'}" - {data.deviceCapabilities?.availableIngredients?.length || 0} ingredients available</p>
+					<h2 class="text-xl font-bold mb-2">🟢 {t.cocktails.deviceReady}</h2>
+					<p>Device "{data.defaultDevice.name || 'Unnamed'}" - {data.deviceCapabilities?.availableIngredients?.length || 0} {t.cocktails.ingredientsAvailable}</p>
 				</div>
 			{/if}
 		{:else}
 			<div class="bg-red-600 text-white p-4 rounded-lg mb-8">
-				<h2 class="text-xl font-bold mb-2">🔴 No Default Device</h2>
-				<p>Set up a default device to make cocktails. <a href="/devices" class="underline">Configure device</a></p>
+				<h2 class="text-xl font-bold mb-2">🔴 {t.cocktails.noDefaultDevice}</h2>
+				<p>{t.cocktails.setUpDefaultDevice} <a href="/devices" class="underline">{t.cocktails.configureDevice}</a></p>
 			</div>
 		{/if}
 
@@ -89,7 +89,7 @@
 				<input
 					type="text"
 					bind:value={searchTerm}
-					placeholder="Search cocktails..."
+					placeholder={t.cocktails.searchPlaceholder}
 					class="bg-gray-700 text-white px-3 py-2 rounded-lg border border-gray-600 w-full sm:w-auto"
 				/>
 			</div>
@@ -101,7 +101,7 @@
 					bind:value={creatorFilter}
 					class="bg-gray-700 text-white px-3 py-2 rounded-lg border border-gray-600"
 				>
-					<option value="all">All Cocktails</option>
+					<option value="all">{t.cocktails.allCocktails}</option>
 					<option value="mine">{t.cocktails.filterMine}</option>
 					<option value="collaborations">{t.cocktails.filterCollaborations}</option>
 				</select>
@@ -111,9 +111,9 @@
 					bind:value={availabilityFilter}
 					class="bg-gray-700 text-white px-3 py-2 rounded-lg border border-gray-600"
 				>
-					<option value="all">All Availability</option>
-					<option value="available">Available Only</option>
-					<option value="unavailable">Unavailable Only</option>
+					<option value="all">{t.cocktails.allAvailability}</option>
+					<option value="available">{t.cocktails.availableOnly}</option>
+					<option value="unavailable">{t.cocktails.unavailableOnly}</option>
 				</select>
 
 				<a
@@ -177,13 +177,13 @@
 						{#if cocktail.availability !== 'no-device'}
 							<div class="mb-4 text-sm">
 								{#if cocktail.availableIngredients.length > 0}
-									<p class="text-green-400">✓ Available: {cocktail.availableIngredients.join(', ')}</p>
+									<p class="text-green-400">✓ {t.cocktails.availableLabel}: {cocktail.availableIngredients.join(', ')}</p>
 								{/if}
 								{#if cocktail.missingIngredients.length > 0}
-									<p class="text-red-400">⚠ Missing: {cocktail.missingIngredients.join(', ')}</p>
+									<p class="text-red-400">⚠ {t.cocktails.missingLabel}: {cocktail.missingIngredients.join(', ')}</p>
 								{/if}
 								{#if cocktail.manualIngredients.length > 0}
-									<p class="text-blue-400">ℹ Manual: {cocktail.manualIngredients.join(', ')}</p>
+									<p class="text-blue-400">ℹ {t.cocktails.manualLabel}: {cocktail.manualIngredients.join(', ')}</p>
 								{/if}
 							</div>
 						{/if}
@@ -194,7 +194,7 @@
 								href="/cocktails/{cocktail.id}"
 								class="flex-1 bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded transition-colors text-center"
 							>
-								View Details
+								{t.cocktails.viewDetails}
 							</a>
 							
 							{#if actionBtn.action === 'order' && cocktail.availability === 'available'}
@@ -222,7 +222,7 @@
 
 		{#if filteredCocktails.length === 0}
 			<div class="text-center text-gray-400 mt-16">
-				<p>No cocktails found matching your filters.</p>
+				<p>{t.cocktails.noCocktailsFound}</p>
 			</div>
 		{/if}
 	</div>
