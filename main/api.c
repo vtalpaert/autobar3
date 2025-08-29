@@ -54,13 +54,12 @@ static esp_err_t http_event_handler(esp_http_client_event_t *evt)
 }
 
 // Generic HTTP request function
-static cJSON* make_http_request(const char *url, const char *post_data, bool is_api_call)
+static cJSON *make_http_request(const char *url, const char *post_data, bool is_api_call)
 {
     // Initialize response buffer
     response_buffer_t resp = {
         .buffer = NULL,
-        .size = 0
-    };
+        .size = 0};
 
     esp_http_client_config_t config = {
         .url = url,
@@ -73,11 +72,10 @@ static cJSON* make_http_request(const char *url, const char *post_data, bool is_
         .timeout_ms = 10000,
         .keep_alive_enable = true,
         .event_handler = http_event_handler,
-        .user_data = &resp
-    };
+        .user_data = &resp};
 
     esp_http_client_handle_t client = esp_http_client_init(&config);
-    
+
     if (post_data)
     {
         esp_http_client_set_header(client, "Content-Type", "application/json");
@@ -137,7 +135,7 @@ static cJSON* make_http_request(const char *url, const char *post_data, bool is_
         else
         {
             ESP_LOGE(TAG, "HTTP request failed: %s (error code: %d)", esp_err_to_name(err), err);
-            
+
             if (err == ESP_ERR_HTTP_CONNECT)
             {
                 ESP_LOGE(TAG, "Connection failed - check server URL and connectivity");
@@ -175,7 +173,7 @@ static cJSON* make_http_request(const char *url, const char *post_data, bool is_
     return parsed_response;
 }
 
-cJSON* api_contact_server(char *api_path, cJSON *payload)
+cJSON *api_contact_server(char *api_path, cJSON *payload)
 {
     char server_url[MAX_URL_LEN] = {0};
     char api_token[MAX_TOKEN_LEN] = {0};
@@ -206,20 +204,22 @@ bool verify_device(bool device_needs_calibration, bool *server_needs_calibration
     bool verification_success = false;
 
     // Initialize output parameter
-    if (server_needs_calibration) {
+    if (server_needs_calibration)
+    {
         *server_needs_calibration = false;
     }
 
     // Prepare JSON payload
     cJSON *payload = cJSON_CreateObject();
     cJSON_AddStringToObject(payload, "firmwareVersion", FIRMWARE_VERSION);
-    
+
     // Add device calibration status if needed
-    if (device_needs_calibration) {
+    if (device_needs_calibration)
+    {
         cJSON_AddBoolToObject(payload, "needsCalibration", true);
     }
 
-    cJSON *response = api_contact_server((char*)api_path, payload);
+    cJSON *response = api_contact_server((char *)api_path, payload);
 
     if (response)
     {
@@ -272,7 +272,8 @@ bool fetch_manifest(char *version_buffer, size_t buffer_size)
     bool success = false;
 
     // Initialize output buffer
-    if (version_buffer && buffer_size > 0) {
+    if (version_buffer && buffer_size > 0)
+    {
         version_buffer[0] = '\0';
     }
 
@@ -316,24 +317,192 @@ bool fetch_manifest(char *version_buffer, size_t buffer_size)
     return success;
 }
 
+bool report_progress(const char *order_id, const char *dose_id, float weight_progress, bool *should_continue)
+{
+    const char *api_path = "/api/devices/progress";
+    bool success = false;
+
+    // Initialize output parameter
+    if (should_continue)
+    {
+        *should_continue = false;
+    }
+
+    if (!order_id || !dose_id)
+    {
+        ESP_LOGE(TAG, "Order ID and dose ID cannot be NULL");
+        return false;
+    }
+
+    // Prepare JSON payload
+    cJSON *payload = cJSON_CreateObject();
+    cJSON_AddStringToObject(payload, "orderId", order_id);
+    cJSON_AddStringToObject(payload, "doseId", dose_id);
+    cJSON_AddNumberToObject(payload, "weightProgress", weight_progress);
+
+    cJSON *response = api_contact_server((char *)api_path, payload);
+
+    if (response)
+    {
+        cJSON *message = cJSON_GetObjectItem(response, "message");
+        cJSON *continue_item = cJSON_GetObjectItem(response, "continue");
+
+        if (message && cJSON_IsString(message))
+        {
+            ESP_LOGI(TAG, "Progress report response: %s", message->valuestring);
+            success = true;
+
+            // Check if we should continue
+            if (should_continue && continue_item && cJSON_IsBool(continue_item))
+            {
+                *should_continue = cJSON_IsTrue(continue_item);
+                ESP_LOGI(TAG, "Should continue: %s", *should_continue ? "true" : "false");
+            }
+        }
+        else
+        {
+            ESP_LOGE(TAG, "No message field found in progress response");
+        }
+    }
+    else
+    {
+        ESP_LOGE(TAG, "Failed to report progress to server");
+    }
+
+    cJSON_Delete(payload);
+    cJSON_Delete(response);
+
+    return success;
+}
+
+bool ask_server_for_action(device_action_t *action)
+{
+    const char *api_path = "/api/devices/action";
+    bool success = false;
+
+    if (!action)
+    {
+        ESP_LOGE(TAG, "Action parameter cannot be NULL");
+        return false;
+    }
+
+    // Initialize action structure
+    memset(action, 0, sizeof(device_action_t));
+    action->type = ACTION_ERROR;
+
+    // Prepare JSON payload (just needs token, which is added by api_contact_server)
+    cJSON *payload = cJSON_CreateObject();
+
+    cJSON *response = api_contact_server((char *)api_path, payload);
+
+    if (response)
+    {
+        cJSON *action_item = cJSON_GetObjectItem(response, "action");
+
+        if (action_item && cJSON_IsString(action_item))
+        {
+            const char *action_str = action_item->valuestring;
+
+            if (strcmp(action_str, "standby") == 0)
+            {
+                action->type = ACTION_STANDBY;
+                cJSON *idle = cJSON_GetObjectItem(response, "idle");
+                if (idle && cJSON_IsNumber(idle))
+                {
+                    action->data.standby.idle_ms = idle->valueint;
+                }
+                else
+                {
+                    action->data.standby.idle_ms = 1000; // Default 1000ms if missing
+                }
+                success = true;
+                ESP_LOGI(TAG, "Received standby action, idle for %d ms", action->data.standby.idle_ms);
+            }
+            else if (strcmp(action_str, "pump") == 0)
+            {
+                action->type = ACTION_PUMP;
+                cJSON *order_id = cJSON_GetObjectItem(response, "orderId");
+                cJSON *dose_id = cJSON_GetObjectItem(response, "doseId");
+                cJSON *pump_gpio = cJSON_GetObjectItem(response, "pumpGpio");
+                cJSON *dose_weight = cJSON_GetObjectItem(response, "doseWeight");
+                cJSON *dose_weight_progress = cJSON_GetObjectItem(response, "doseWeightProgress");
+
+                if (order_id && cJSON_IsString(order_id) &&
+                    dose_id && cJSON_IsString(dose_id) &&
+                    pump_gpio && cJSON_IsNumber(pump_gpio) &&
+                    dose_weight && cJSON_IsNumber(dose_weight) &&
+                    dose_weight_progress && cJSON_IsNumber(dose_weight_progress))
+                {
+                    strncpy(action->data.pump.order_id, order_id->valuestring, sizeof(action->data.pump.order_id) - 1);
+                    strncpy(action->data.pump.dose_id, dose_id->valuestring, sizeof(action->data.pump.dose_id) - 1);
+                    action->data.pump.pump_gpio = pump_gpio->valueint;
+                    action->data.pump.dose_weight = (float)dose_weight->valuedouble;
+                    action->data.pump.dose_weight_progress = (float)dose_weight_progress->valuedouble;
+                    success = true;
+                    ESP_LOGI(TAG, "Received pump action for order %s, dose %s, GPIO %d",
+                             action->data.pump.order_id, action->data.pump.dose_id, action->data.pump.pump_gpio);
+                }
+            }
+            else if (strcmp(action_str, "completed") == 0)
+            {
+                action->type = ACTION_COMPLETED;
+                cJSON *order_id = cJSON_GetObjectItem(response, "orderId");
+                cJSON *message = cJSON_GetObjectItem(response, "message");
+
+                if (order_id && cJSON_IsString(order_id) &&
+                    message && cJSON_IsString(message))
+                {
+                    strncpy(action->data.completed.order_id, order_id->valuestring, sizeof(action->data.completed.order_id) - 1);
+                    strncpy(action->data.completed.message, message->valuestring, sizeof(action->data.completed.message) - 1);
+                    success = true;
+                    ESP_LOGI(TAG, "Received completed action for order %s: %s",
+                             action->data.completed.order_id, action->data.completed.message);
+                }
+            }
+            else
+            {
+                ESP_LOGE(TAG, "Unknown action type: %s", action_str);
+            }
+        }
+        else
+        {
+            ESP_LOGE(TAG, "No action field found in server response");
+        }
+    }
+    else
+    {
+        ESP_LOGE(TAG, "Failed to get action from server");
+    }
+
+    cJSON_Delete(payload);
+    cJSON_Delete(response);
+
+    return success;
+}
+
 bool send_weight_measurement(float weight, int raw_measure, bool *need_calibration, unsigned int *dt_pin, unsigned int *sck_pin, int *offset, float *scale)
 {
     const char *api_path = "/api/devices/weight";
     bool success = false;
 
     // Initialize output parameters
-    if (need_calibration) *need_calibration = false;
-    if (dt_pin) *dt_pin = 0;
-    if (sck_pin) *sck_pin = 0;
-    if (offset) *offset = 0;
-    if (scale) *scale = 0.0;
+    if (need_calibration)
+        *need_calibration = false;
+    if (dt_pin)
+        *dt_pin = 0;
+    if (sck_pin)
+        *sck_pin = 0;
+    if (offset)
+        *offset = 0;
+    if (scale)
+        *scale = 0.0;
 
     // Prepare JSON payload
     cJSON *payload = cJSON_CreateObject();
     cJSON_AddNumberToObject(payload, "weight", weight);
     cJSON_AddNumberToObject(payload, "rawMeasure", raw_measure);
 
-    cJSON *response = api_contact_server((char*)api_path, payload);
+    cJSON *response = api_contact_server((char *)api_path, payload);
 
     if (response)
     {
@@ -345,7 +514,8 @@ bool send_weight_measurement(float weight, int raw_measure, bool *need_calibrati
 
         if (need_cal && cJSON_IsBool(need_cal))
         {
-            if (need_calibration) *need_calibration = cJSON_IsTrue(need_cal);
+            if (need_calibration)
+                *need_calibration = cJSON_IsTrue(need_cal);
             success = true;
         }
 

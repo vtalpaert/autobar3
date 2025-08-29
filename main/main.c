@@ -8,6 +8,7 @@
 #include "esp_http_client.h"
 #include "lwip/ip4_addr.h"
 
+// local files
 #include "storage.h"
 #include "wifi_config.h"
 #include "ap_server.h"
@@ -15,6 +16,7 @@
 #include "version.h"
 #include "ota.h"
 #include "weight_scale.h"
+#include "action.h"
 
 static const char *TAG = "autobar3";
 
@@ -110,6 +112,9 @@ void app_main(void)
             }
             ESP_LOGI(TAG, "Weight scale is calibrated");
         }
+
+        init_gpio(13);
+        blink(13);
     }
     else
     {

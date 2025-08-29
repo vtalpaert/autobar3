@@ -16,15 +16,15 @@ The following API endpoints are available for device communication:
   - Retrieves the next action for the device to perform
   - Request: `{ "token": "device_api_token" }`
   - Response:
-    - If no order: `{ "action": "standby" }`
-    - If order exists: `{ "action": "pour", "orderId": "id", "doseId": "id", "ingredientId": "id", "doseQuantity": 50.0, "doseProgress": 5.0 }`
-    - If order completed: `{ "action": "completed", "orderId": "id", "message": "Order completed - drink ready for pickup" }`
+    - If no order: `{ "action": "standby", "idle": 30000 }` where idle is a time in milliseconds for the device to wait before asking the next action again
+    - If a dose exists requiring a pump: `{ "action": "pump", "orderId": "id", "doseId": "id", "pumpGpio": 12, "doseWeight": 50.0, "doseWeightProgress": 5.0 }`
+    - If order completed: `{ "action": "completed", "orderId": "id", "message": "Order completed - drink ready for pickup" }` which is used for eventual display if a screen exists. Suppose the device asks once more for action to perform right after.
 
 ## Progress Reporting
 
 - `POST /api/devices/progress`
   - Reports progress on a dose being poured
-  - Request: `{ "token": "device_api_token", "orderId": "id", "doseId": "id", "progress": 25.5 }`
+  - Request: `{ "token": "device_api_token", "orderId": "id", "doseId": "id", "weightProgress": 25.5 }`
   - Response:
     - Normal: `{ "message": "Progress updated", "continue": true }`, though continue will be false if the dose is complete
     - If cancelled: `{ "message": "Order cancelled", "continue": false }`
