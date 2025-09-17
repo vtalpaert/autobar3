@@ -164,12 +164,15 @@ export const actions: Actions = {
                 action: result.action,
                 orderId: result.orderId,
                 doseId: result.doseId,
-                ingredientId: result.ingredientId,
-                ingredientName: ingredientName,
-                doseQuantity: result.doseQuantity,
-                doseProgress: result.doseProgress,
-                message: result.action === 'pour' 
-                    ? `Ready to pour: ${result.doseQuantity - result.doseProgress}ml remaining for order ${result.orderId} (${result.doseProgress}ml/${result.doseQuantity}ml done)`
+                pumpGpio: result.pumpGpio,
+                doseWeight: result.doseWeight,
+                doseWeightProgress: result.doseWeightProgress,
+                message: result.action === 'pump' 
+                    ? `Ready to pump: ${result.doseWeight - result.doseWeightProgress}g remaining for order ${result.orderId} (${result.doseWeightProgress}g/${result.doseWeight}g done) on GPIO ${result.pumpGpio}`
+                    : result.action === 'standby'
+                    ? `Device on standby, idle for ${result.idle}ms`
+                    : result.action === 'completed'
+                    ? `Order ${result.orderId} completed: ${result.message}`
                     : `Device status: ${result.action}`
                 // Don't refresh for checkAction - it's just reading state
             };
@@ -216,7 +219,7 @@ export const actions: Actions = {
                     token: device.apiToken,
                     orderId: orderId,
                     doseId: doseId,
-                    progress: progressAmount
+                    weightProgress: progressAmount
                 })
             });
 
@@ -228,14 +231,14 @@ export const actions: Actions = {
             if (result.continue) {
                 return { 
                     success: true, 
-                    message: `Progress reported from ${deviceName}: ${(progressAmount / 10).toFixed(1)}cL (${progressAmount}ml) for order ${orderInfo}`,
-                    completed: false, // We don't know completion status from absolute amounts
+                    message: `Progress reported from ${deviceName}: Set weight to ${progressAmount}g for order ${orderInfo}`,
+                    completed: false,
                     refreshOrders: true
                 };
             } else {
                 return { 
                     success: true, 
-                    message: 'Order was cancelled or completed',
+                    message: result.message || 'Order was cancelled or completed',
                     cancelled: true,
                     refreshOrders: true
                 };
@@ -275,12 +278,15 @@ export const actions: Actions = {
         }
 
         try {
+            const errorCode = formData.get('errorCode')?.toString() || '1'; // Default to general error
+            
             const response = await fetch('/api/devices/error', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     token: device.apiToken,
                     orderId: orderId,
+                    errorCode: parseInt(errorCode),
                     message: errorMessage
                 })
             });

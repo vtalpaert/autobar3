@@ -47,10 +47,9 @@
                 currentAction = form.action;
                 currentOrderId = form.orderId || null;
                 currentDoseId = form.doseId || null;
-                currentIngredientId = form.ingredientId || null;
-                currentIngredientName = form.ingredientName || null;
-                currentQuantity = form.doseQuantity || 0;
-                currentProgress = form.doseProgress || 0;
+                currentPumpGpio = form.pumpGpio || null;
+                currentDoseWeight = form.doseWeight || 0;
+                currentWeightProgress = form.doseWeightProgress || 0;
             }
             
             // Clear current action if pour was completed or cancelled
@@ -59,10 +58,9 @@
                     currentAction = null;
                     currentOrderId = null;
                     currentDoseId = null;
-                    currentIngredientId = null;
-                    currentIngredientName = null;
-                    currentQuantity = 0;
-                    currentProgress = 0;
+                    currentPumpGpio = null;
+                    currentDoseWeight = 0;
+                    currentWeightProgress = 0;
                 }
             }
             
@@ -95,10 +93,9 @@
     let currentAction = null;
     let currentOrderId = null;
     let currentDoseId = null;
-    let currentIngredientId = null;
-    let currentIngredientName = null;
-    let currentQuantity = 0;
-    let currentProgress = 0;
+    let currentPumpGpio = null;
+    let currentDoseWeight = 0;
+    let currentWeightProgress = 0;
     
     // Manual override variables for testing error scenarios
     let manualOrderId = '';
@@ -111,10 +108,9 @@
         currentAction = null;
         currentOrderId = null;
         currentDoseId = null;
-        currentIngredientId = null;
-        currentIngredientName = null;
-        currentQuantity = 0;
-        currentProgress = 0;
+        currentPumpGpio = null;
+        currentDoseWeight = 0;
+        currentWeightProgress = 0;
         // Reset manual overrides
         manualOrderId = '';
         manualDoseId = '';
@@ -209,13 +205,18 @@
         {#if currentAction}
             <div class="mb-4 p-4 bg-gray-700 rounded">
                 <h3 class="font-semibold mb-2">Current Action: {currentAction}</h3>
-                {#if currentAction === 'pour'}
+                {#if currentAction === 'pump'}
                     <p><strong>Order ID:</strong> {currentOrderId}</p>
                     <p><strong>Dose ID:</strong> {currentDoseId}</p>
-                    <p><strong>Ingredient:</strong> {currentIngredientName || 'Unknown'} ({currentIngredientId})</p>
-                    <p><strong>Total Dose Quantity:</strong> {(currentQuantity / 10).toFixed(1)}cL ({currentQuantity}ml)</p>
-                    <p><strong>Current Progress:</strong> {(currentProgress / 10).toFixed(1)}cL ({currentProgress}ml)</p>
-                    <p><strong>Remaining to Pour:</strong> {((currentQuantity - currentProgress) / 10).toFixed(1)}cL ({currentQuantity - currentProgress}ml)</p>
+                    <p><strong>Pump GPIO:</strong> {currentPumpGpio}</p>
+                    <p><strong>Total Dose Weight:</strong> {currentDoseWeight}g</p>
+                    <p><strong>Current Progress:</strong> {currentWeightProgress}g</p>
+                    <p><strong>Remaining to Pump:</strong> {currentDoseWeight - currentWeightProgress}g</p>
+                {:else if currentAction === 'standby'}
+                    <p>Device is on standby</p>
+                {:else if currentAction === 'completed'}
+                    <p><strong>Order ID:</strong> {currentOrderId}</p>
+                    <p>Order completed - drink ready for pickup</p>
                 {/if}
             </div>
         {/if}
@@ -292,23 +293,23 @@
         </div>
         
         <!-- Progress Controls -->
-        {#if (currentAction === 'pour' || useManualIds) && selectedDevice}
+        {#if (currentAction === 'pump' || useManualIds) && selectedDevice}
             <div class="mb-4">
-                <h3 class="font-semibold mb-2">Pour Progress (in cL):</h3>
-                {#if currentAction === 'pour' && !useManualIds}
+                <h3 class="font-semibold mb-2">Set Progress Weight (absolute weight in grams):</h3>
+                {#if currentAction === 'pump' && !useManualIds}
                     <p class="text-sm text-gray-300 mb-2">
-                        Total dose: {(currentQuantity / 10).toFixed(1)}cL | 
-                        Progress: {(currentProgress / 10).toFixed(1)}cL | 
-                        Remaining: {((currentQuantity - currentProgress) / 10).toFixed(1)}cL
+                        Total dose: {currentDoseWeight}g | 
+                        Current progress: {currentWeightProgress}g | 
+                        Remaining: {currentDoseWeight - currentWeightProgress}g
                     </p>
                 {/if}
                 <div class="flex flex-wrap gap-2 mb-2">
-                    {#each [0.5, 1.0, 2.0, 3.0, 5.0] as quantityCl}
+                    {#each [5, 10, 20, 30, 50] as weightG}
                         <form method="POST" action="?/progress" use:enhance class="inline">
                             <input type="hidden" name="deviceId" value={selectedDevice.id} />
                             <input type="hidden" name="orderId" value={useManualIds ? manualOrderId : currentOrderId} />
                             <input type="hidden" name="doseId" value={useManualIds ? manualDoseId : currentDoseId} />
-                            <input type="hidden" name="progressAmount" value={quantityCl * 10} />
+                            <input type="hidden" name="progressAmount" value={weightG} />
                             <input type="hidden" name="isManual" value={useManualIds} />
                             {#if simulateAsDevice}
                                 <input type="hidden" name="overrideDeviceId" value={simulateAsDevice.id} />
@@ -317,27 +318,27 @@
                                 type="submit"
                                 class="px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700 transition"
                             >
-                                Pour {quantityCl}cL
+                                Set {weightG}g
                             </button>
                         </form>
                     {/each}
                 </div>
                 <div class="flex items-center gap-2">
-                    <span class="text-sm">Custom amount:</span>
+                    <span class="text-sm">Set to weight:</span>
                     <input 
                         type="number" 
-                        step="0.1" 
+                        step="1" 
                         min="0" 
-                        max="10" 
-                        placeholder="cL"
+                        max="200" 
+                        placeholder="grams"
                         class="w-20 p-1 bg-gray-600 border border-gray-500 rounded text-white text-sm"
-                        id="customAmount"
+                        id="customWeight"
                     />
                     <form method="POST" action="?/progress" use:enhance class="inline">
                         <input type="hidden" name="deviceId" value={selectedDevice.id} />
                         <input type="hidden" name="orderId" value={useManualIds ? manualOrderId : currentOrderId} />
                         <input type="hidden" name="doseId" value={useManualIds ? manualDoseId : currentDoseId} />
-                        <input type="hidden" name="progressAmount" value="" id="customAmountHidden" />
+                        <input type="hidden" name="progressAmount" value="" id="customWeightHidden" />
                         <input type="hidden" name="isManual" value={useManualIds} />
                         {#if simulateAsDevice}
                             <input type="hidden" name="overrideDeviceId" value={simulateAsDevice.id} />
@@ -346,18 +347,18 @@
                             type="submit"
                             class="px-3 py-1 bg-green-600 text-white rounded hover:bg-green-700 transition text-sm"
                             on:click={(e) => {
-                                const customInput = document.getElementById('customAmount') as HTMLInputElement;
-                                const hiddenInput = document.getElementById('customAmountHidden') as HTMLInputElement;
+                                const customInput = document.getElementById('customWeight') as HTMLInputElement;
+                                const hiddenInput = document.getElementById('customWeightHidden') as HTMLInputElement;
                                 const value = parseFloat(customInput.value);
                                 if (isNaN(value) || value <= 0) {
                                     e.preventDefault();
-                                    alert('Please enter a valid amount in cL');
+                                    alert('Please enter a valid weight in grams');
                                     return;
                                 }
-                                hiddenInput.value = (value * 10).toString(); // Convert cL to ml
+                                hiddenInput.value = value.toString();
                             }}
                         >
-                            Pour Custom
+                            Set Weight
                         </button>
                     </form>
                 </div>
@@ -365,15 +366,22 @@
         {/if}
         
         <!-- Error Controls -->
-        {#if (currentAction === 'pour' || useManualIds) && selectedDevice}
+        {#if (currentAction === 'pump' || useManualIds) && selectedDevice}
             <div class="mt-4">
                 <h3 class="font-semibold mb-2">Simulate Hardware Errors:</h3>
                 <div class="flex flex-wrap gap-2">
-                    {#each ['Empty ingredient', 'Pump failure', 'Glass not detected', 'Connection timeout'] as errorMsg}
+                    {#each [
+                        {msg: 'General error', code: '1'},
+                        {msg: 'Weight scale error', code: '2'},
+                        {msg: 'No weight change (pump/reservoir issue)', code: '3'},
+                        {msg: 'Negative weight change', code: '4'},
+                        {msg: 'Unable to report progress', code: '5'}
+                    ] as error}
                         <form method="POST" action="?/error" use:enhance class="inline">
                             <input type="hidden" name="deviceId" value={selectedDevice.id} />
                             <input type="hidden" name="orderId" value={useManualIds ? manualOrderId : currentOrderId} />
-                            <input type="hidden" name="errorMessage" value={errorMsg} />
+                            <input type="hidden" name="errorMessage" value={error.msg} />
+                            <input type="hidden" name="errorCode" value={error.code} />
                             {#if simulateAsDevice}
                                 <input type="hidden" name="overrideDeviceId" value={simulateAsDevice.id} />
                             {/if}
@@ -381,7 +389,7 @@
                                 type="submit"
                                 class="px-3 py-1 bg-red-600 text-white rounded hover:bg-red-700 transition text-sm"
                             >
-                                {errorMsg}
+                                {error.msg}
                             </button>
                         </form>
                     {/each}
@@ -435,9 +443,9 @@
                                     <p class="font-medium">Current Dose #{order.currentDoseNumber}:</p>
                                     <p><strong>Dose ID:</strong> <span class="font-mono text-xs bg-gray-800 px-1 rounded">{order.currentDoseId}</span></p>
                                     <p><strong>Ingredient:</strong> {order.currentIngredientName || 'Unknown'}</p>
-                                    <p><strong>Quantity:</strong> {(order.currentDoseQuantity / 10).toFixed(1)}cL ({order.currentDoseQuantity}ml)</p>
-                                    <p><strong>Progress:</strong> {((order.doseProgress || 0) / 10).toFixed(1)}cL ({order.doseProgress || 0}ml)</p>
-                                    <p><strong>Remaining:</strong> {((order.currentDoseQuantity - (order.doseProgress || 0)) / 10).toFixed(1)}cL</p>
+                                    <p><strong>Weight:</strong> {order.currentDoseQuantity}g</p>
+                                    <p><strong>Progress:</strong> {order.doseProgress || 0}g</p>
+                                    <p><strong>Remaining:</strong> {(order.currentDoseQuantity - (order.doseProgress || 0))}g</p>
                                 </div>
                             {:else}
                                 <p class="text-yellow-400 mt-2">No current dose assigned</p>

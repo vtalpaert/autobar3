@@ -14,11 +14,33 @@
 
 	let eventSource: EventSource | null = null;
 	let isConnected = false;
-	let shouldConnect = false;
+	
+	// State management
+	let activeOrders = data.initialActiveOrders;
+	let orderHistory = data.orderHistory;
+	let cocktailCache = new Map(); // Cache for cocktail details
+	let previousActiveOrderIds = new Set(activeOrders.map(o => o.id));
 	
 	// Animation state tracking
 	let animatingOrders = new Map<string, { type: 'completed' | 'failed' | 'cancelled', startTime: number }>();
 	let showConfetti = new Map<string, boolean>();
+
+	// Initialize cocktail cache with initial data
+	onMount(() => {
+		activeOrders.forEach(order => {
+			if (order.cocktail) {
+				cocktailCache.set(order.cocktailId, order.cocktail);
+			}
+		});
+		
+		if (browser) {
+			connectSSE();
+		}
+	});
+
+	onDestroy(() => {
+		disconnectSSE();
+	});
 
 	// Format date based on language
 	function formatDate(date: Date) {
@@ -56,24 +78,18 @@
 		return Math.min(100, Math.round((order.doseProgress / order.currentDose.quantity) * 100));
 	}
 
-	// Setup Server-Sent Events for real-time updates
-	onMount(() => {
-		shouldConnect = data.activeOrders.length > 0;
-		if (browser && shouldConnect) {
-			connectSSE();
-		}
-	});
+	// Get cocktail details from cache
+	function getCocktailDetails(cocktailId: string) {
+		return cocktailCache.get(cocktailId);
+	}
 
-	onDestroy(() => {
-		shouldConnect = false;
-		disconnectSSE();
-	});
+	// Get current dose number for timeline
+	function getCurrentDoseNumber(order) {
+		return order.currentDose ? order.currentDose.number : 0;
+	}
 
 	function connectSSE() {
-		// Don't create multiple connections
-		if (eventSource) {
-			return;
-		}
+		if (eventSource) return;
 
 		eventSource = new EventSource('/api/sse/my-bar');
 		
@@ -83,44 +99,70 @@
 
 		eventSource.onmessage = (event) => {
 			try {
-				const updatedData = JSON.parse(event.data);
+				const data = JSON.parse(event.data);
 				
-				// Handle completed orders with animations
-				if (updatedData.completedOrders && updatedData.completedOrders.length > 0) {
-					updatedData.completedOrders.forEach(completedOrder => {
-						let animationType: 'completed' | 'failed' | 'cancelled' = 'completed';
-						if (completedOrder.status === 'failed') animationType = 'failed';
-						else if (completedOrder.status === 'cancelled') animationType = 'cancelled';
-						
-						// Start animation
-						animatingOrders.set(completedOrder.id, { 
-							type: animationType, 
-							startTime: Date.now() 
-						});
-						animatingOrders = animatingOrders; // Trigger reactivity
-						
-						if (animationType === 'completed') {
-							showConfetti.set(completedOrder.id, true);
-							showConfetti = showConfetti; // Trigger reactivity
-						}
-						
-						// After animation completes, update data and add to history
-						setTimeout(() => {
-							data.activeOrders = updatedData.activeOrders;
-							
-							// Add completed order to history using SSE data
-							addCompletedOrderToHistory(completedOrder);
-							
-							// Clean up animation state
-							animatingOrders.delete(completedOrder.id);
-							animatingOrders = animatingOrders;
-							showConfetti.delete(completedOrder.id);
-							showConfetti = showConfetti;
-						}, 3000);
+				// Update cocktail cache with new cocktail data
+				if (data.newCocktails) {
+					Object.entries(data.newCocktails).forEach(([id, cocktail]) => {
+						cocktailCache.set(id, cocktail);
 					});
-				} else if (updatedData.activeOrders) {
-					// No completed orders, just update normally
-					data.activeOrders = updatedData.activeOrders;
+					cocktailCache = cocktailCache; // Trigger reactivity
+				}
+				
+				// Handle order completion detection
+				if (data.activeOrders) {
+					const currentActiveIds = new Set(data.activeOrders.map(o => o.id));
+					const completedOrderIds = [...previousActiveOrderIds].filter(id => !currentActiveIds.has(id));
+					
+					// Handle completed orders
+					if (completedOrderIds.length > 0) {
+						completedOrderIds.forEach(orderId => {
+							const completedOrder = activeOrders.find(o => o.id === orderId);
+							if (completedOrder) {
+								// Determine animation type (we'll assume completed for now, could be enhanced)
+								const animationType = 'completed';
+								
+								// Start animation
+								animatingOrders.set(orderId, { 
+									type: animationType, 
+									startTime: Date.now() 
+								});
+								
+								if (animationType === 'completed') {
+									showConfetti.set(orderId, true);
+								}
+								
+								// After animation, move to history
+								setTimeout(() => {
+									// Add to history
+									orderHistory = [{
+										id: completedOrder.id,
+										createdAt: completedOrder.createdAt,
+										updatedAt: new Date(),
+										status: 'completed', // Could be enhanced to get actual status
+										errorMessage: completedOrder.errorMessage,
+										cocktail: { 
+											id: completedOrder.cocktail.id, 
+											name: completedOrder.cocktail.name 
+										},
+										device: completedOrder.device
+									}, ...orderHistory].slice(0, 10);
+									
+									// Clean up animation state
+									animatingOrders.delete(orderId);
+									showConfetti.delete(orderId);
+									animatingOrders = animatingOrders;
+									showConfetti = showConfetti;
+								}, 3000);
+							}
+						});
+						animatingOrders = animatingOrders;
+						showConfetti = showConfetti;
+					}
+					
+					// Update active orders
+					activeOrders = data.activeOrders;
+					previousActiveOrderIds = currentActiveIds;
 				}
 			} catch (error) {
 				console.error('Failed to parse SSE data:', error);
@@ -130,11 +172,10 @@
 		eventSource.onerror = (error) => {
 			isConnected = false;
 			
-			// Only reconnect if we should still be connected
-			if (shouldConnect && eventSource?.readyState === EventSource.CLOSED) {
+			if (eventSource?.readyState === EventSource.CLOSED) {
 				eventSource = null;
 				setTimeout(() => {
-					if (shouldConnect && !eventSource) {
+					if (!eventSource) {
 						connectSSE();
 					}
 				}, 5000);
@@ -152,26 +193,6 @@
 			eventSource.close();
 			eventSource = null;
 			isConnected = false;
-		}
-	}
-
-	
-	// Add completed order to history using data from SSE
-	function addCompletedOrderToHistory(completedOrder: any) {
-		// Add to the beginning of past orders and limit to 10
-		data.pastOrders = [completedOrder, ...data.pastOrders].slice(0, 10);
-	}
-
-	// Reactive statement to manage SSE connection based on active orders
-	$: if (browser) {
-		const hasActiveOrders = data.activeOrders.length > 0;
-		
-		if (hasActiveOrders && !shouldConnect) {
-			shouldConnect = true;
-			connectSSE();
-		} else if (!hasActiveOrders && shouldConnect) {
-			shouldConnect = false;
-			disconnectSSE();
 		}
 	}
 </script>
@@ -308,7 +329,7 @@
 		<section class="mb-12">
 			<div class="flex items-center justify-between mb-4">
 				<h2 class="text-2xl font-semibold">Active Orders</h2>
-				{#if data.activeOrders.length > 0}
+				{#if activeOrders.length > 0}
 					<div class="flex items-center space-x-2">
 						<div class={`w-2 h-2 rounded-full transition-colors duration-300 ${isConnected ? 'bg-green-500' : 'bg-red-500'}`}></div>
 						<span class="text-sm text-gray-400">
@@ -318,7 +339,7 @@
 				{/if}
 			</div>
 
-			{#if data.activeOrders.length === 0}
+			{#if activeOrders.length === 0}
 				<div class="bg-gray-800 rounded-lg shadow-lg p-6 text-center">
 					<p class="text-gray-400">{t.myBar.orders.noOrders}</p>
 					<a
@@ -329,13 +350,14 @@
 					</a>
 				</div>
 			{:else}
-				{#each data.activeOrders as order}
+				{#each activeOrders as order}
+					{@const cocktail = getCocktailDetails(order.cocktailId)}
 					<div 
 						id="order-{order.id}"
-						class="bg-gray-800 rounded-lg shadow-lg p-6 mb-4 transition-all duration-300 {animatingOrders.has(order.id) ? `order-${animatingOrders.get(order.id)?.type}` : ''} relative"
+						class="bg-gray-800 rounded-lg shadow-lg overflow-hidden mb-6 transition-all duration-300 {animatingOrders.has(order.id) ? `order-${animatingOrders.get(order.id)?.type}` : ''} relative"
 					>
 						{#if showConfetti.has(order.id) && showConfetti.get(order.id)}
-							<div class="absolute inset-0 flex justify-center items-center pointer-events-none">
+							<div class="absolute inset-0 flex justify-center items-center pointer-events-none z-10">
 								<Confetti 
 									x={[-2.5, 2.5]} 
 									y={[-0.5, 0.5]} 
@@ -347,79 +369,146 @@
 								/>
 							</div>
 						{/if}
-						<div class="flex justify-between items-start mb-4">
-							<div>
-								<h3 class="text-xl font-medium text-white">
-									<a
-										href="/cocktails/{order.cocktail.id}"
-										class="text-blue-600 hover:text-blue-800"
-									>
-										{order.cocktail.name}
-									</a>
-								</h3>
-								<span
-									class={`inline-block mt-1 px-2 py-1 rounded-full text-xs font-medium
-                                ${order.status === 'pending' ? 'bg-yellow-600 text-white' : ''}
-                                ${order.status === 'in_progress' ? 'bg-blue-600 text-white' : ''}
-                                ${order.status === 'completed' ? 'bg-green-600 text-white' : ''}
-                                ${order.status === 'failed' ? 'bg-red-600 text-white' : ''}
-                                ${order.status === 'cancelled' ? 'bg-gray-600 text-white' : ''}
-                            `}
-								>
-									{t.myBar.orders.status[order.status]}
-								</span>
-							</div>
 
-							<form method="POST" action="?/cancelOrder" use:enhance>
-								<input type="hidden" name="orderId" value={order.id} />
-								<button
-									type="submit"
-									class="bg-red-600 hover:bg-red-700 text-white text-sm font-bold py-1 px-3 rounded transition-colors"
-								>
-									{t.myBar.orders.cancel}
-								</button>
-							</form>
-						</div>
-
-						<div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-							<div>
-								<p class="text-sm text-gray-400">
-									{t.myBar.orders.createdAt}
-									{formatDate(order.createdAt)}
-								</p>
-								<p class="text-sm text-gray-400">
-									{t.myBar.orders.updatedAt}
-									{formatDate(order.updatedAt)}
-								</p>
-								<p class="text-sm text-gray-400">
-									{t.myBar.orders.device}
-									{order.device ? (order.device.name || order.device.id.substring(0, 8)) : 'Deleted Device'}
-								</p>
-							</div>
-
-							{#if order.status === 'in_progress' && order.currentDose}
-								<div>
-									<p class="text-sm font-medium mb-1">{t.myBar.orders.progress}</p>
-									<div class="w-full bg-gray-700 rounded-full h-2.5 overflow-hidden">
-										<div
-											class="bg-blue-600 h-2.5 rounded-full transition-all duration-500 ease-out"
-											style="width: {calculateProgress(order)}%"
-										></div>
+						<!-- Rich Order Header with Image -->
+						<div class="flex flex-col md:flex-row">
+							{#if cocktail?.imageUri}
+								<div class="md:w-48 h-48 md:h-auto flex-shrink-0">
+									<img 
+										src={cocktail.imageUri} 
+										alt={cocktail.name}
+										class="w-full h-full object-cover"
+									/>
+								</div>
+							{/if}
+							
+							<div class="flex-1 p-6">
+								<!-- Header with title and cancel button -->
+								<div class="flex justify-between items-start mb-4">
+									<div class="flex-1">
+										<h3 class="text-2xl font-bold text-white mb-1">
+											{cocktail?.name || 'Loading...'}
+										</h3>
+										{#if cocktail?.creator}
+											<p class="text-sm text-gray-400 mb-2">
+												by {cocktail.creator.artistName || cocktail.creator.username}
+											</p>
+										{/if}
+										<span
+											class={`inline-block px-3 py-1 rounded-full text-sm font-medium
+											${order.status === 'pending' ? 'bg-yellow-600 text-white' : ''}
+											${order.status === 'in_progress' ? 'bg-blue-600 text-white' : ''}
+											${order.status === 'completed' ? 'bg-green-600 text-white' : ''}
+											${order.status === 'failed' ? 'bg-red-600 text-white' : ''}
+											${order.status === 'cancelled' ? 'bg-gray-600 text-white' : ''}
+											`}
+										>
+											{t.myBar.orders.status[order.status]}
+										</span>
 									</div>
-									<p class="text-xs text-gray-400 mt-1 transition-all duration-300">
-										{order.currentDose.ingredient.name}: {order.doseProgress.toFixed(1)} / {order
-											.currentDose.quantity} ml
-									</p>
-								</div>
-							{/if}
 
-							{#if order.errorMessage}
-								<div
-									class="col-span-2 bg-red-900/20 border border-red-800/30 text-red-400 px-4 py-3 rounded"
-								>
-									<p class="text-sm">{order.errorMessage}</p>
+									<form method="POST" action="?/cancelOrder" use:enhance>
+										<input type="hidden" name="orderId" value={order.id} />
+										<button
+											type="submit"
+											class="bg-red-600 hover:bg-red-700 text-white text-sm font-bold py-2 px-4 rounded transition-colors"
+											disabled={order.status === 'completed' || order.status === 'failed' || order.status === 'cancelled'}
+										>
+											{t.myBar.orders.cancel}
+										</button>
+									</form>
 								</div>
-							{/if}
+
+								<!-- Description -->
+								{#if cocktail?.description}
+									<p class="text-gray-300 mb-4 leading-relaxed">
+										{cocktail.description}
+									</p>
+								{/if}
+
+								<!-- Current Progress for In-Progress Orders -->
+								{#if order.status === 'in_progress' && order.currentDose}
+									<div class="bg-gray-700 rounded-lg p-4 mb-4">
+										<div class="flex items-center justify-between mb-2">
+											<span class="text-sm font-medium text-white">
+												Now pouring: {order.currentDose.ingredient.name}
+											</span>
+											<span class="text-xs text-gray-400">
+												Step {order.currentDose.number} of {cocktail?.doses?.length || '?'}
+											</span>
+										</div>
+										<div class="w-full bg-gray-600 rounded-full h-3 overflow-hidden">
+											<div
+												class="bg-blue-500 h-3 rounded-full transition-all duration-500 ease-out"
+												style="width: {calculateProgress(order)}%"
+											></div>
+										</div>
+										<p class="text-xs text-gray-400 mt-1">
+											{order.doseProgress.toFixed(1)} / {order.currentDose.quantity} ml
+										</p>
+									</div>
+								{/if}
+
+								<!-- Ingredient Timeline -->
+								{#if cocktail?.doses && cocktail.doses.length > 0}
+									<div class="mb-4">
+										<h4 class="text-sm font-medium text-gray-300 mb-3">Recipe Timeline</h4>
+										<div class="space-y-2">
+											{#each cocktail.doses as dose}
+												{@const isCompleted = order.currentDose && dose.number < order.currentDose.number}
+												{@const isCurrent = order.currentDose && dose.number === order.currentDose.number}
+												<div class="flex items-center space-x-3">
+													<div class={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold
+														${isCompleted ? 'bg-green-500 text-white' : ''}
+														${isCurrent ? 'bg-blue-500 text-white animate-pulse' : ''}
+														${!isCompleted && !isCurrent ? 'bg-gray-600 text-gray-400' : ''}
+													`}>
+														{dose.number}
+													</div>
+													<div class="flex-1">
+														<span class={`text-sm ${isCurrent ? 'text-white font-medium' : 'text-gray-400'}`}>
+															{dose.ingredient.name}
+														</span>
+														<span class="text-xs text-gray-500 ml-2">
+															{dose.quantity}ml
+														</span>
+													</div>
+												</div>
+											{/each}
+										</div>
+									</div>
+								{/if}
+
+								<!-- Instructions (Expandable) -->
+								{#if cocktail?.instructions}
+									<details class="mb-4">
+										<summary class="text-sm font-medium text-gray-300 cursor-pointer hover:text-white transition-colors">
+											Preparation Instructions
+										</summary>
+										<div class="mt-2 p-3 bg-gray-700 rounded text-sm text-gray-300 leading-relaxed">
+											{cocktail.instructions}
+										</div>
+									</details>
+								{/if}
+
+								<!-- Order Details -->
+								<div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs text-gray-400">
+									<div>
+										<p>Created: {formatDate(order.createdAt)}</p>
+										<p>Updated: {formatDate(order.updatedAt)}</p>
+									</div>
+									<div>
+										<p>Device: {order.device ? (order.device.name || order.device.id.substring(0, 8)) : 'No device'}</p>
+									</div>
+								</div>
+
+								<!-- Error Message -->
+								{#if order.errorMessage}
+									<div class="mt-4 bg-red-900/20 border border-red-800/30 text-red-400 px-4 py-3 rounded">
+										<p class="text-sm">{order.errorMessage}</p>
+									</div>
+								{/if}
+							</div>
 						</div>
 					</div>
 				{/each}
@@ -430,7 +519,7 @@
 		<section>
 			<h2 class="text-2xl font-semibold mb-4">{t.myBar.orders.history}</h2>
 
-			{#if data.pastOrders.length === 0}
+			{#if orderHistory.length === 0}
 				<div class="bg-gray-800 rounded-lg shadow-lg p-6 text-center">
 					<p class="text-gray-400">{t.myBar.orders.noOrders}</p>
 				</div>
@@ -466,7 +555,7 @@
 							</tr>
 						</thead>
 						<tbody class="bg-gray-800 divide-y divide-gray-700">
-							{#each data.pastOrders as order}
+							{#each orderHistory as order}
 								<tr>
 									<td class="px-6 py-4 whitespace-nowrap">
 										<a

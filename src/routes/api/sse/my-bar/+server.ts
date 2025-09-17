@@ -1,54 +1,60 @@
-import { eq, and, inArray, desc, gte } from 'drizzle-orm';
+import { eq, and, inArray, desc } from 'drizzle-orm';
 import { db } from '$lib/server/db';
 import * as table from '$lib/server/db/schema';
 import { selectVerifiedProfile } from '$lib/server/auth.js';
 
-// Cache for static data to avoid repeated JOINs
-const staticDataCache = new Map<string, {
-    cocktails: Map<string, { id: string, name: string }>,
-    devices: Map<string, { id: string, name: string }>,
-    ingredients: Map<string, { id: string, name: string }>,
-    doses: Map<string, { id: string, number: number, quantity: number, ingredientId: string }>,
-    lastUpdated: number
-}>();
+// Simple cache for cocktail data to avoid re-sending same cocktail info
+const cocktailCache = new Map<string, any>();
 
-async function getStaticData(profileId: string) {
-    const cacheKey = profileId;
-    const cached = staticDataCache.get(cacheKey);
-    const now = Date.now();
-    
-    // Cache for 30 seconds
-    if (cached && (now - cached.lastUpdated) < 30000) {
-        return cached;
+async function getCocktailWithDetails(cocktailId: string) {
+    if (cocktailCache.has(cocktailId)) {
+        return cocktailCache.get(cocktailId);
     }
-    
-    // Fetch all static data in parallel
-    const [cocktails, devices, ingredients, doses] = await Promise.all([
-        db.select({ id: table.cocktail.id, name: table.cocktail.name })
-          .from(table.cocktail),
-        db.select({ id: table.device.id, name: table.device.name })
-          .from(table.device)
-          .where(eq(table.device.profileId, profileId)),
-        db.select({ id: table.ingredient.id, name: table.ingredient.name })
-          .from(table.ingredient),
-        db.select({ 
-            id: table.dose.id, 
-            number: table.dose.number, 
-            quantity: table.dose.quantity, 
-            ingredientId: table.dose.ingredientId 
-        }).from(table.dose)
-    ]);
-    
-    const staticData = {
-        cocktails: new Map(cocktails.map(c => [c.id, c])),
-        devices: new Map(devices.map(d => [d.id, d])),
-        ingredients: new Map(ingredients.map(i => [i.id, i])),
-        doses: new Map(doses.map(d => [d.id, d])),
-        lastUpdated: now
-    };
-    
-    staticDataCache.set(cacheKey, staticData);
-    return staticData;
+
+    const cocktailWithDetails = await db
+        .select({
+            id: table.cocktail.id,
+            name: table.cocktail.name,
+            description: table.cocktail.description,
+            instructions: table.cocktail.instructions,
+            imageUri: table.cocktail.imageUri,
+            creator: {
+                username: table.profile.userId,
+                artistName: table.profile.artistName
+            }
+        })
+        .from(table.cocktail)
+        .innerJoin(table.profile, eq(table.cocktail.creatorId, table.profile.id))
+        .where(eq(table.cocktail.id, cocktailId))
+        .get();
+
+    if (cocktailWithDetails) {
+        // Get doses for this cocktail
+        const doses = await db
+            .select({
+                id: table.dose.id,
+                number: table.dose.number,
+                quantity: table.dose.quantity,
+                ingredient: {
+                    id: table.ingredient.id,
+                    name: table.ingredient.name
+                }
+            })
+            .from(table.dose)
+            .innerJoin(table.ingredient, eq(table.dose.ingredientId, table.ingredient.id))
+            .where(eq(table.dose.cocktailId, cocktailId))
+            .orderBy(table.dose.number);
+
+        const result = {
+            ...cocktailWithDetails,
+            doses
+        };
+
+        cocktailCache.set(cocktailId, result);
+        return result;
+    }
+
+    return null;
 }
 
 export async function GET({ locals }) {
@@ -56,9 +62,8 @@ export async function GET({ locals }) {
     
     let interval: NodeJS.Timeout;
     let isClosed = false;
-    let previousActiveOrderIds = new Set<string>();
+    let knownCocktailIds = new Set<string>();
     
-    // Track this controller for cleanup
     const cleanup = () => {
         if (!isClosed) {
             isClosed = true;
@@ -70,15 +75,11 @@ export async function GET({ locals }) {
     
     const stream = new ReadableStream({
         start(controller) {
-
             const sendUpdate = async () => {
-                // Check if controller is closed before trying to enqueue
-                if (isClosed) {
-                    return;
-                }
+                if (isClosed) return;
 
                 try {
-                    // Simplified query - no JOINs, just essential order data
+                    // Get active orders with basic info
                     const rawActiveOrders = await db
                         .select({
                             id: table.order.id,
@@ -100,15 +101,58 @@ export async function GET({ locals }) {
                         )
                         .orderBy(desc(table.order.createdAt));
 
-                    // Get cached static data
-                    const staticData = await getStaticData(profile.id);
+                    // Get device info for orders that have devices
+                    const deviceIds = rawActiveOrders
+                        .map(o => o.deviceId)
+                        .filter(Boolean) as string[];
                     
-                    // Enrich orders with cached data
+                    const devices = deviceIds.length > 0 ? await db
+                        .select({ id: table.device.id, name: table.device.name })
+                        .from(table.device)
+                        .where(inArray(table.device.id, deviceIds)) : [];
+                    
+                    const deviceMap = new Map(devices.map(d => [d.id, d]));
+
+                    // Get current dose info
+                    const currentDoseIds = rawActiveOrders
+                        .map(o => o.currentDoseId)
+                        .filter(Boolean) as string[];
+                    
+                    const currentDoses = currentDoseIds.length > 0 ? await db
+                        .select({
+                            id: table.dose.id,
+                            number: table.dose.number,
+                            quantity: table.dose.quantity,
+                            ingredient: {
+                                id: table.ingredient.id,
+                                name: table.ingredient.name
+                            }
+                        })
+                        .from(table.dose)
+                        .innerJoin(table.ingredient, eq(table.dose.ingredientId, table.ingredient.id))
+                        .where(inArray(table.dose.id, currentDoseIds)) : [];
+                    
+                    const currentDoseMap = new Map(currentDoses.map(d => [d.id, d]));
+
+                    // Determine which cocktails need full data
+                    const newCocktailIds = rawActiveOrders
+                        .map(o => o.cocktailId)
+                        .filter(id => !knownCocktailIds.has(id));
+
+                    // Get full cocktail data for new cocktails
+                    const newCocktails = new Map();
+                    for (const cocktailId of newCocktailIds) {
+                        const cocktailDetails = await getCocktailWithDetails(cocktailId);
+                        if (cocktailDetails) {
+                            newCocktails.set(cocktailId, cocktailDetails);
+                            knownCocktailIds.add(cocktailId);
+                        }
+                    }
+
+                    // Build enriched active orders
                     const activeOrders = rawActiveOrders.map(order => {
-                        const cocktail = staticData.cocktails.get(order.cocktailId);
-                        const device = order.deviceId ? staticData.devices.get(order.deviceId) : null;
-                        const currentDose = order.currentDoseId ? staticData.doses.get(order.currentDoseId) : null;
-                        const ingredient = currentDose?.ingredientId ? staticData.ingredients.get(currentDose.ingredientId) : null;
+                        const device = order.deviceId ? deviceMap.get(order.deviceId) : null;
+                        const currentDose = order.currentDoseId ? currentDoseMap.get(order.currentDoseId) : null;
                         
                         return {
                             id: order.id,
@@ -117,116 +161,39 @@ export async function GET({ locals }) {
                             status: order.status,
                             doseProgress: order.doseProgress,
                             errorMessage: order.errorMessage,
-                            cocktail: cocktail ? { id: cocktail.id, name: cocktail.name } : null,
+                            cocktailId: order.cocktailId,
                             device: device ? { id: device.id, name: device.name } : null,
-                            currentDose: currentDose && ingredient ? {
+                            currentDose: currentDose ? {
                                 id: currentDose.id,
                                 number: currentDose.number,
                                 quantity: currentDose.quantity,
-                                ingredient: { id: ingredient.id, name: ingredient.name }
+                                ingredient: currentDose.ingredient
                             } : null
                         };
                     });
 
-                    const currentActiveOrderIds = new Set(activeOrders.map(o => o.id));
-                    let completedOrders: any[] = [];
-                    
-                    if (previousActiveOrderIds.size > 0) {
-                        // Normal case: detect orders that were active but now aren't
-                        const completedOrderIds = [...previousActiveOrderIds].filter(id => !currentActiveOrderIds.has(id));
-                        
-                        if (completedOrderIds.length > 0) {
-                            const rawCompletedOrders = await db
-                                .select({
-                                    id: table.order.id,
-                                    createdAt: table.order.createdAt,
-                                    updatedAt: table.order.updatedAt,
-                                    status: table.order.status,
-                                    errorMessage: table.order.errorMessage,
-                                    cocktailId: table.order.cocktailId,
-                                    deviceId: table.order.deviceId
-                                })
-                                .from(table.order)
-                                .where(
-                                    and(
-                                        eq(table.order.customerId, profile.id),
-                                        inArray(table.order.id, completedOrderIds)
-                                    )
-                                );
-                            
-                            // Enrich with cached data
-                            completedOrders = rawCompletedOrders.map(order => {
-                                const cocktail = staticData.cocktails.get(order.cocktailId);
-                                const device = order.deviceId ? staticData.devices.get(order.deviceId) : null;
-                                
-                                return {
-                                    id: order.id,
-                                    createdAt: order.createdAt,
-                                    updatedAt: order.updatedAt,
-                                    status: order.status,
-                                    errorMessage: order.errorMessage,
-                                    cocktail: cocktail ? { id: cocktail.id, name: cocktail.name } : null,
-                                    device: device ? { id: device.id, name: device.name } : null
-                                };
-                            });
-                        }
-                    } else {
-                        // First connection: check for very recently completed orders (last 10 seconds)
-                        // This catches orders cancelled via form action before SSE reconnection
-                        const tenSecondsAgo = new Date(Date.now() - 10000);
-                        
-                        const rawRecentOrders = await db
-                            .select({
-                                id: table.order.id,
-                                createdAt: table.order.createdAt,
-                                updatedAt: table.order.updatedAt,
-                                status: table.order.status,
-                                errorMessage: table.order.errorMessage,
-                                cocktailId: table.order.cocktailId,
-                                deviceId: table.order.deviceId
-                            })
-                            .from(table.order)
-                            .where(
-                                and(
-                                    eq(table.order.customerId, profile.id),
-                                    inArray(table.order.status, ['completed', 'failed', 'cancelled']),
-                                    // Only orders updated in last 10 seconds
-                                    gte(table.order.updatedAt, tenSecondsAgo)
-                                )
-                            )
-                            .orderBy(desc(table.order.updatedAt));
-                        
-                        // Enrich with cached data
-                        completedOrders = rawRecentOrders.map(order => {
-                            const cocktail = staticData.cocktails.get(order.cocktailId);
-                            const device = order.deviceId ? staticData.devices.get(order.deviceId) : null;
-                            
-                            return {
-                                id: order.id,
-                                createdAt: order.createdAt,
-                                updatedAt: order.updatedAt,
-                                status: order.status,
-                                errorMessage: order.errorMessage,
-                                cocktail: cocktail ? { id: cocktail.id, name: cocktail.name } : null,
-                                device: device ? { id: device.id, name: device.name } : null
-                            };
-                        });
-                    }
-                    
-                    // Update previous state
-                    previousActiveOrderIds = currentActiveOrderIds;
+                    // Determine polling frequency based on order status
+                    const hasInProgressOrders = activeOrders.some(o => o.status === 'in_progress');
+                    const nextInterval = hasInProgressOrders ? 1000 : 
+                                       activeOrders.length > 0 ? 3000 : 5000;
 
-                    // Double-check before enqueueing
+                    // Update interval if needed
+                    if (interval) {
+                        clearInterval(interval);
+                    }
                     if (!isClosed) {
-                        try {
-                            controller.enqueue(`data: ${JSON.stringify({ 
-                                activeOrders,
-                                completedOrders: completedOrders.length > 0 ? completedOrders : undefined
-                            })}\n\n`);
-                        } catch (enqueueError) {
-                            // Controller was closed between checks
-                            cleanup();
+                        interval = setInterval(sendUpdate, nextInterval);
+                    }
+
+                    if (!isClosed) {
+                        const response: any = { activeOrders };
+                        
+                        // Include full cocktail data for new cocktails
+                        if (newCocktails.size > 0) {
+                            response.newCocktails = Object.fromEntries(newCocktails);
                         }
+
+                        controller.enqueue(`data: ${JSON.stringify(response)}\n\n`);
                     }
                 } catch (error) {
                     console.error('SSE error:', error);
@@ -234,7 +201,6 @@ export async function GET({ locals }) {
                         try {
                             controller.enqueue(`data: ${JSON.stringify({ error: 'Failed to fetch orders' })}\n\n`);
                         } catch (enqueueError) {
-                            // Controller is already closed, stop the interval
                             cleanup();
                         }
                     }
@@ -244,10 +210,6 @@ export async function GET({ locals }) {
             // Send initial data
             sendUpdate();
             
-            // Send updates every 1 second for good balance of real-time feel and performance
-            interval = setInterval(sendUpdate, 1000);
-            
-            // Cleanup on close
             return cleanup;
         },
         cancel: cleanup

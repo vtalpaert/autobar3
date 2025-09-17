@@ -9,7 +9,7 @@ export const load: PageServerLoad = async ({ locals }) => {
     // Check if user is logged in, profile exists and is verified
     const profile = await selectVerifiedProfile(locals.user);
 
-    // Get user's devices
+    // Get user's devices (static data)
     const devices = await db
         .select({
             id: table.device.id,
@@ -23,48 +23,8 @@ export const load: PageServerLoad = async ({ locals }) => {
         .from(table.device)
         .where(eq(table.device.profileId, profile.id));
 
-    // Get active orders (pending or in_progress)
-    const activeOrders = await db
-        .select({
-            id: table.order.id,
-            createdAt: table.order.createdAt,
-            updatedAt: table.order.updatedAt,
-            status: table.order.status,
-            doseProgress: table.order.doseProgress,
-            errorMessage: table.order.errorMessage,
-            cocktail: {
-                id: table.cocktail.id,
-                name: table.cocktail.name
-            },
-            device: {
-                id: table.device.id,
-                name: table.device.name
-            },
-            currentDose: {
-                id: table.dose.id,
-                number: table.dose.number,
-                quantity: table.dose.quantity,
-                ingredient: {
-                    id: table.ingredient.id,
-                    name: table.ingredient.name
-                }
-            }
-        })
-        .from(table.order)
-        .innerJoin(table.cocktail, eq(table.order.cocktailId, table.cocktail.id))
-        .leftJoin(table.device, eq(table.order.deviceId, table.device.id))
-        .leftJoin(table.dose, eq(table.order.currentDoseId, table.dose.id))
-        .leftJoin(table.ingredient, eq(table.dose.ingredientId, table.ingredient.id))
-        .where(
-            and(
-                eq(table.order.customerId, profile.id),
-                inArray(table.order.status, ['pending', 'in_progress'])
-            )
-        )
-        .orderBy(desc(table.order.createdAt));
-
-    // Get completed orders (completed, failed, cancelled)
-    const pastOrders = await db
+    // Get order history (static data - completed orders only)
+    const orderHistory = await db
         .select({
             id: table.order.id,
             createdAt: table.order.createdAt,
@@ -90,12 +50,102 @@ export const load: PageServerLoad = async ({ locals }) => {
             )
         )
         .orderBy(desc(table.order.createdAt))
-        .limit(10); // Limit to last 10 orders
+        .limit(10);
+
+    // Get initial active orders with full cocktail details for immediate display
+    const initialActiveOrders = await db
+        .select({
+            id: table.order.id,
+            createdAt: table.order.createdAt,
+            updatedAt: table.order.updatedAt,
+            status: table.order.status,
+            doseProgress: table.order.doseProgress,
+            errorMessage: table.order.errorMessage,
+            cocktailId: table.order.cocktailId,
+            deviceId: table.order.deviceId,
+            currentDoseId: table.order.currentDoseId,
+            cocktail: {
+                id: table.cocktail.id,
+                name: table.cocktail.name,
+                description: table.cocktail.description,
+                instructions: table.cocktail.instructions,
+                imageUri: table.cocktail.imageUri,
+                creator: {
+                    username: table.profile.userId,
+                    artistName: table.profile.artistName
+                }
+            },
+            device: {
+                id: table.device.id,
+                name: table.device.name
+            },
+            currentDose: {
+                id: table.dose.id,
+                number: table.dose.number,
+                quantity: table.dose.quantity,
+                ingredient: {
+                    id: table.ingredient.id,
+                    name: table.ingredient.name
+                }
+            }
+        })
+        .from(table.order)
+        .innerJoin(table.cocktail, eq(table.order.cocktailId, table.cocktail.id))
+        .innerJoin(table.profile, eq(table.cocktail.creatorId, table.profile.id))
+        .leftJoin(table.device, eq(table.order.deviceId, table.device.id))
+        .leftJoin(table.dose, eq(table.order.currentDoseId, table.dose.id))
+        .leftJoin(table.ingredient, eq(table.dose.ingredientId, table.ingredient.id))
+        .where(
+            and(
+                eq(table.order.customerId, profile.id),
+                inArray(table.order.status, ['pending', 'in_progress'])
+            )
+        )
+        .orderBy(desc(table.order.createdAt));
+
+    // Get doses for each active order's cocktail
+    const cocktailIds = [...new Set(initialActiveOrders.map(o => o.cocktailId))];
+    const allDoses = cocktailIds.length > 0 ? await db
+        .select({
+            cocktailId: table.dose.cocktailId,
+            id: table.dose.id,
+            number: table.dose.number,
+            quantity: table.dose.quantity,
+            ingredient: {
+                id: table.ingredient.id,
+                name: table.ingredient.name
+            }
+        })
+        .from(table.dose)
+        .innerJoin(table.ingredient, eq(table.dose.ingredientId, table.ingredient.id))
+        .where(inArray(table.dose.cocktailId, cocktailIds))
+        .orderBy(table.dose.number) : [];
+
+    // Group doses by cocktail
+    const dosesByCocktail = allDoses.reduce((acc, dose) => {
+        if (!acc[dose.cocktailId]) acc[dose.cocktailId] = [];
+        acc[dose.cocktailId].push({
+            id: dose.id,
+            number: dose.number,
+            quantity: dose.quantity,
+            ingredient: dose.ingredient
+        });
+        return acc;
+    }, {} as Record<string, any[]>);
+
+    // Enrich active orders with full cocktail data including doses
+    const enrichedActiveOrders = initialActiveOrders.map(order => ({
+        ...order,
+        cocktail: {
+            ...order.cocktail,
+            doses: dosesByCocktail[order.cocktailId] || []
+        }
+    }));
 
     return {
         devices,
-        activeOrders,
-        pastOrders,
+        orderHistory,
+        initialActiveOrders: enrichedActiveOrders,
         user: {
             ...locals.user,
             isAdmin: profile?.isAdmin || false
