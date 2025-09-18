@@ -342,12 +342,12 @@
 		<!-- Active Orders Section -->
 		<section class="mb-12">
 			<div class="flex items-center justify-between mb-4">
-				<h2 class="text-2xl font-semibold">Active Orders</h2>
+				<h2 class="text-2xl font-semibold">{t.myBar.orders.active}</h2>
 				{#if activeOrders.length > 0}
 					<div class="flex items-center space-x-2">
 						<div class={`w-2 h-2 rounded-full transition-colors duration-300 ${isConnected ? 'bg-green-500' : 'bg-red-500'}`}></div>
 						<span class="text-sm text-gray-400">
-							{isConnected ? 'Live updates' : 'Reconnecting...'}
+							{isConnected ? t.myBar.orders.liveUpdates : t.myBar.orders.reconnecting}
 						</span>
 					</div>
 				{/if}
@@ -408,12 +408,12 @@
 												href="/cocktails/{cocktail?.id}" 
 												class="hover:text-blue-400 transition-colors"
 											>
-												{cocktail?.name || 'Loading...'}
+												{cocktail?.name || t.myBar.orders.loading}
 											</a>
 										</h3>
 										{#if cocktail?.creator}
 											<p class="text-sm text-gray-400 mb-2">
-												by {#if cocktail.creator?.artistName}
+												{t.myBar.orders.by} {#if cocktail.creator?.artistName}
 													{cocktail.creator.artistName} ({cocktail.creator.username})
 												{:else}
 													{cocktail.creator?.username || 'Unknown'}
@@ -458,7 +458,7 @@
 												href="/cocktails/{cocktail.id}" 
 												class="text-blue-400 hover:text-blue-300 text-sm mt-2 inline-block transition-colors"
 											>
-												Read more...
+												{t.myBar.orders.readMore}
 											</a>
 										{/if}
 									</div>
@@ -469,10 +469,10 @@
 									<div class="bg-gray-700 rounded-lg p-4 mb-4">
 										<div class="flex items-center justify-between mb-2">
 											<span class="text-sm font-medium text-white">
-												Now pouring: {order.currentDose.ingredient.name}
+												{t.myBar.orders.nowPouring} {order.currentDose.ingredient.name}
 											</span>
 											<span class="text-xs text-gray-400">
-												Step {order.currentDose.number} of {cocktail?.doses?.length || '?'}
+												{t.myBar.orders.stepOf.replace('{current}', order.currentDose.number).replace('{total}', cocktail?.doses?.length || '?')}
 											</span>
 										</div>
 										<div class="w-full bg-gray-600 rounded-full h-3 overflow-hidden">
@@ -490,7 +490,7 @@
 								<!-- Ingredient Timeline -->
 								{#if cocktail?.doses && cocktail.doses.length > 0}
 									<div class="mb-4">
-										<h4 class="text-sm font-medium text-gray-300 mb-3">Recipe Timeline</h4>
+										<h4 class="text-sm font-medium text-gray-300 mb-3">{t.myBar.orders.recipeTimeline}</h4>
 										<div class="space-y-2">
 											{#each cocktail.doses as dose}
 												{@const isCompleted = order.currentDose && dose.number < order.currentDose.number}
@@ -520,7 +520,7 @@
 								<!-- Instructions -->
 								{#if cocktail?.instructions}
 									<div class="mb-4">
-										<h4 class="text-sm font-medium text-gray-300 mb-2">Preparation Instructions</h4>
+										<h4 class="text-sm font-medium text-gray-300 mb-2">{t.myBar.orders.preparationInstructions}</h4>
 										<div class="p-3 bg-gray-700 rounded text-sm text-gray-300 leading-relaxed whitespace-pre-wrap">
 											{cocktail.instructions}
 										</div>
@@ -530,11 +530,11 @@
 								<!-- Order Details -->
 								<div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs text-gray-400">
 									<div>
-										<p>Created: {formatDate(order.createdAt)}</p>
-										<p>Updated: {formatDate(order.updatedAt)}</p>
+										<p>{t.myBar.orders.orderCreated} {formatDate(order.createdAt)}</p>
+										<p>{t.myBar.orders.orderUpdated} {formatDate(order.updatedAt)}</p>
 									</div>
 									<div>
-										<p>Device: {order.device ? (order.device.name || order.device.id.substring(0, 8)) : 'No device'}</p>
+										<p>{t.myBar.orders.device}: {order.device ? (order.device.name || order.device.id.substring(0, 8)) : t.myBar.orders.deletedDevice}</p>
 									</div>
 								</div>
 
@@ -596,7 +596,7 @@
 									<td class="px-6 py-4 whitespace-nowrap">
 										<a
 											href="/cocktails/{order.cocktail.id}"
-											class="text-blue-600 hover:text-blue-800"
+											class="text-white font-bold hover:text-gray-300 transition-colors"
 										>
 											{order.cocktail.name}
 										</a>
@@ -613,7 +613,7 @@
 										</span>
 									</td>
 									<td class="px-6 py-4 whitespace-nowrap">
-										{order.device ? (order.device.name || order.device.id.substring(0, 8)) : 'Deleted Device'}
+										{order.device ? (order.device.name || order.device.id.substring(0, 8)) : t.myBar.orders.deletedDevice}
 									</td>
 									<td class="px-6 py-4 whitespace-nowrap">
 										{formatDate(order.createdAt)}
