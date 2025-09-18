@@ -14,6 +14,7 @@ export const myBar = {
       orders: {
           title: 'My Orders',
           active: 'Active Orders',
+          recent: 'Recently Completed',
           current: 'Current Order',
           history: 'Order History',
           noOrders: 'You don\'t have any orders yet.',
@@ -64,6 +65,7 @@ export const myBar = {
       orders: {
           title: 'Mes Commandes',
           active: 'Commandes Actives',
+          recent: 'Récemment Terminées',
           current: 'Commande en Cours',
           history: 'Historique des Commandes',
           noOrders: 'Vous n\'avez pas encore de commandes.',
