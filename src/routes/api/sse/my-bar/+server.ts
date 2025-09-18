@@ -1,4 +1,4 @@
-import { eq, and, inArray, desc } from 'drizzle-orm';
+import { eq, and, inArray, desc, or, gte } from 'drizzle-orm';
 import { db } from '$lib/server/db';
 import * as table from '$lib/server/db/schema';
 import { selectVerifiedProfile } from '$lib/server/auth.js';
@@ -80,7 +80,9 @@ export async function GET({ locals }) {
                 if (isClosed) return;
 
                 try {
-                    // Get active orders with basic info
+                    // Get active and recently completed orders (within last 10 minutes)
+                    const tenMinutesAgo = new Date(Date.now() - 10 * 60 * 1000);
+                    
                     const rawActiveOrders = await db
                         .select({
                             id: table.order.id,
@@ -97,7 +99,15 @@ export async function GET({ locals }) {
                         .where(
                             and(
                                 eq(table.order.customerId, profile.id),
-                                inArray(table.order.status, ['pending', 'in_progress'])
+                                or(
+                                    // Active orders
+                                    inArray(table.order.status, ['pending', 'in_progress']),
+                                    // Recently completed orders (within last 10 minutes)
+                                    and(
+                                        inArray(table.order.status, ['completed', 'failed', 'cancelled']),
+                                        gte(table.order.updatedAt, tenMinutesAgo)
+                                    )
+                                )
                             )
                         )
                         .orderBy(desc(table.order.createdAt));
@@ -175,8 +185,9 @@ export async function GET({ locals }) {
 
                     // Determine polling frequency based on order status
                     const hasInProgressOrders = activeOrders.some(o => o.status === 'in_progress');
+                    const hasActiveOrders = activeOrders.some(o => ['pending', 'in_progress'].includes(o.status));
                     const nextInterval = hasInProgressOrders ? 1000 : 
-                                       activeOrders.length > 0 ? 3000 : 5000;
+                                       hasActiveOrders ? 3000 : 5000;
 
                     // Update interval if needed
                     if (interval) {

@@ -1,5 +1,5 @@
 import { error, redirect } from '@sveltejs/kit';
-import { eq, desc, and, inArray } from 'drizzle-orm';
+import { eq, desc, and, inArray, lt } from 'drizzle-orm';
 import type { PageServerLoad, Actions } from './$types';
 import { db } from '$lib/server/db';
 import * as table from '$lib/server/db/schema';
@@ -23,7 +23,8 @@ export const load: PageServerLoad = async ({ locals }) => {
         .from(table.device)
         .where(eq(table.device.profileId, profile.id));
 
-    // Get order history (static data - completed orders only)
+    // Get order history (static data - completed orders older than 10 minutes)
+    const tenMinutesAgo = new Date(Date.now() - 10 * 60 * 1000);
     const orderHistory = await db
         .select({
             id: table.order.id,
@@ -46,7 +47,9 @@ export const load: PageServerLoad = async ({ locals }) => {
         .where(
             and(
                 eq(table.order.customerId, profile.id),
-                inArray(table.order.status, ['completed', 'failed', 'cancelled'])
+                inArray(table.order.status, ['completed', 'failed', 'cancelled']),
+                // Only include orders older than 10 minutes to avoid duplication with SSE
+                lt(table.order.updatedAt, tenMinutesAgo)
             )
         )
         .orderBy(desc(table.order.createdAt))
