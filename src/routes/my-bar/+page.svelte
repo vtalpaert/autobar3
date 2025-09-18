@@ -375,9 +375,12 @@
 							{#if cocktail?.imageUri}
 								<div class="md:w-48 h-48 md:h-auto flex-shrink-0">
 									<img 
-										src={cocktail.imageUri} 
-										alt={cocktail.name}
+										src="/api/cocktails/{cocktail.id}/image"
+										alt="{cocktail.name} image"
 										class="w-full h-full object-cover"
+										on:error={(e) => {
+											e.currentTarget.style.display = 'none';
+										}}
 									/>
 								</div>
 							{/if}
