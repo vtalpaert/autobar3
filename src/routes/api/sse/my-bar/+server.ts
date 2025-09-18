@@ -207,7 +207,7 @@ export async function GET({ locals }) {
                     const hasActiveOrders = activeOrders.some((o) =>
                         ['pending', 'in_progress'].includes(o.status)
                     );
-                    const nextInterval = hasInProgressOrders ? 1000 : hasActiveOrders ? 3000 : 5000;
+                    const nextInterval = hasInProgressOrders ? 500 : hasActiveOrders ? 1000 : 5000;
 
                     // Update interval if needed
                     if (interval) {

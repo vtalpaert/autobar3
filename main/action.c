@@ -229,6 +229,7 @@ bool handle_pump(device_action_t *action)
     {
         gpio_set_level(pump_gpio, 0);
         ESP_LOGI(TAG, "Pump turned OFF (final safety check)");
+        vTaskDelay(pdMS_TO_TICKS(1000)); // 1000ms delay between doses
     }
 
     if (success)
