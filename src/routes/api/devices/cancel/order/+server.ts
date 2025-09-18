@@ -8,10 +8,13 @@ export async function POST({ request }) {
     const { token, orderId } = data;
 
     if (!token || !orderId) {
-        return json({
-            success: false,
-            message: "Missing required fields"
-        }, { status: 400 });
+        return json(
+            {
+                success: false,
+                message: 'Missing required fields'
+            },
+            { status: 400 }
+        );
     }
 
     // Find the device by token
@@ -22,10 +25,13 @@ export async function POST({ request }) {
         .get();
 
     if (!device) {
-        return json({
-            success: false,
-            message: "Invalid device token"
-        }, { status: 401 });
+        return json(
+            {
+                success: false,
+                message: 'Invalid device token'
+            },
+            { status: 401 }
+        );
     }
 
     // Update last ping time
@@ -35,25 +41,27 @@ export async function POST({ request }) {
         .where(eq(table.device.id, device.id));
 
     // Find the order
-    const order = await db
-        .select()
-        .from(table.order)
-        .where(eq(table.order.id, orderId))
-        .get();
+    const order = await db.select().from(table.order).where(eq(table.order.id, orderId)).get();
 
     if (!order) {
-        return json({
-            success: false,
-            message: "Order not found"
-        }, { status: 404 });
+        return json(
+            {
+                success: false,
+                message: 'Order not found'
+            },
+            { status: 404 }
+        );
     }
 
     // Check if the order belongs to this device
     if (order.deviceId !== device.id) {
-        return json({
-            success: false,
-            message: "Order does not belong to this device"
-        }, { status: 403 });
+        return json(
+            {
+                success: false,
+                message: 'Order does not belong to this device'
+            },
+            { status: 403 }
+        );
     }
 
     // Update the order status to cancelled
@@ -67,6 +75,6 @@ export async function POST({ request }) {
 
     return json({
         success: true,
-        message: "Order cancelled"
+        message: 'Order cancelled'
     });
 }

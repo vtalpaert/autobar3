@@ -7,25 +7,21 @@ import { getCurrentWeightMeasurement } from '$lib/server/weight-store.js';
 export async function GET({ locals, params }) {
     const profile = await selectVerifiedProfile(locals.user);
     const deviceId = params.deviceId;
-    
+
     if (!deviceId) {
         return new Response('Device ID required', { status: 400 });
     }
 
     // Verify device belongs to user
-    const device = await db
-        .select()
-        .from(table.device)
-        .where(eq(table.device.id, deviceId))
-        .get();
+    const device = await db.select().from(table.device).where(eq(table.device.id, deviceId)).get();
 
     if (!device || device.profileId !== profile.id) {
         return new Response('Device not found or access denied', { status: 404 });
     }
-    
+
     let interval: NodeJS.Timeout;
     let isClosed = false;
-    
+
     const cleanup = () => {
         if (!isClosed) {
             isClosed = true;
@@ -34,7 +30,7 @@ export async function GET({ locals, params }) {
             }
         }
     };
-    
+
     const stream = new ReadableStream({
         start(controller) {
             const sendUpdate = async () => {
@@ -44,13 +40,15 @@ export async function GET({ locals, params }) {
 
                 try {
                     const currentMeasurement = getCurrentWeightMeasurement(deviceId);
-                    
+
                     if (!isClosed) {
                         try {
-                            controller.enqueue(`data: ${JSON.stringify({ 
-                                weight: currentMeasurement?.weight || null,
-                                rawMeasure: currentMeasurement?.rawMeasure || null
-                            })}\n\n`);
+                            controller.enqueue(
+                                `data: ${JSON.stringify({
+                                    weight: currentMeasurement?.weight || null,
+                                    rawMeasure: currentMeasurement?.rawMeasure || null
+                                })}\n\n`
+                            );
                         } catch (enqueueError) {
                             cleanup();
                         }
@@ -59,9 +57,11 @@ export async function GET({ locals, params }) {
                     console.error('Calibration SSE error:', error);
                     if (!isClosed) {
                         try {
-                            controller.enqueue(`data: ${JSON.stringify({ 
-                                error: 'Failed to fetch weight' 
-                            })}\n\n`);
+                            controller.enqueue(
+                                `data: ${JSON.stringify({
+                                    error: 'Failed to fetch weight'
+                                })}\n\n`
+                            );
                         } catch (enqueueError) {
                             cleanup();
                         }
@@ -71,10 +71,10 @@ export async function GET({ locals, params }) {
 
             // Send initial data
             sendUpdate();
-            
+
             // Send updates every 1 second for calibration
             interval = setInterval(sendUpdate, 1000);
-            
+
             return cleanup;
         },
         cancel: cleanup

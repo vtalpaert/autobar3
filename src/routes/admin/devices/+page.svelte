@@ -4,7 +4,7 @@
     import { enhance } from '$app/forms';
 
     export let data: PageData;
-    
+
     // Function to check if device is online (pinged in the last 5 minutes)
     function isDeviceOnline(lastPingAt: Date | null): boolean {
         if (!lastPingAt) return false;
@@ -48,7 +48,9 @@
                                 </p>
                                 {#if device.lastUsedAt}
                                     <p class="text-sm text-gray-400">
-                                        Last used: {new Date(device.lastUsedAt).toLocaleDateString()}
+                                        Last used: {new Date(
+                                            device.lastUsedAt
+                                        ).toLocaleDateString()}
                                     </p>
                                 {/if}
                                 {#if device.lastPingAt}
@@ -56,20 +58,24 @@
                                         Last online: {new Date(device.lastPingAt).toLocaleString()}
                                     </p>
                                     <p class="text-sm">
-                                        <span class={`px-2 py-0.5 rounded-full text-xs ${isDeviceOnline(device.lastPingAt) ? 'bg-green-600' : 'bg-red-600'}`}>
-                                            {isDeviceOnline(device.lastPingAt) ? 'Online' : 'Offline'}
+                                        <span
+                                            class={`px-2 py-0.5 rounded-full text-xs ${isDeviceOnline(device.lastPingAt) ? 'bg-green-600' : 'bg-red-600'}`}
+                                        >
+                                            {isDeviceOnline(device.lastPingAt)
+                                                ? 'Online'
+                                                : 'Offline'}
                                         </span>
                                     </p>
                                 {/if}
                             </div>
-                            <form 
-                                method="POST" 
-                                action="?/deleteDevice" 
+                            <form
+                                method="POST"
+                                action="?/deleteDevice"
                                 use:enhance
                                 class="flex gap-2"
                             >
                                 <input type="hidden" name="deviceId" value={device.id} />
-                                <button 
+                                <button
                                     type="submit"
                                     class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded"
                                 >

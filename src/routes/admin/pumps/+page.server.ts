@@ -82,9 +82,7 @@ export const actions: Actions = {
         }
 
         try {
-            await db
-                .delete(table.pump)
-                .where(eq(table.pump.id, pumpId));
+            await db.delete(table.pump).where(eq(table.pump.id, pumpId));
 
             return { success: true };
         } catch (error) {

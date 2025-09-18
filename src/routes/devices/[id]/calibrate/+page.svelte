@@ -45,7 +45,7 @@
         }
 
         eventSource = new EventSource(`/api/sse/calibration/${data.device.id}`);
-        
+
         eventSource.onopen = () => {
             isConnected = true;
         };
@@ -63,10 +63,10 @@
                 console.error('Failed to parse weight data:', error);
             }
         };
-        
+
         eventSource.onerror = (error) => {
             isConnected = false;
-            
+
             if (eventSource?.readyState === EventSource.CLOSED) {
                 eventSource = null;
                 setTimeout(() => {
@@ -140,7 +140,8 @@
                 calibrationModeMessage = result.data?.message || t.calibrationModeEnabled;
                 await update();
             } else if (result.type === 'failure') {
-                calibrationModeMessage = result.data?.message || 'Failed to enable calibration mode';
+                calibrationModeMessage =
+                    result.data?.message || 'Failed to enable calibration mode';
             }
         };
     }
@@ -154,33 +155,33 @@
     // Calculate server-side weight based on current calibration values
     function getServerCalculatedWeight(): number | null {
         if (currentRawMeasure === null || tareOffset === null) return null;
-        
+
         const rawReading = currentRawMeasure - tareOffset;
         if (calculatedScale === null) return rawReading;
-        
+
         return rawReading * calculatedScale;
     }
 
     // Check if device weight matches server calculation (within tolerance)
     function getWeightValidation(): { isValid: boolean; message: string } | null {
         if (currentWeight === null || currentRawMeasure === null) return null;
-        
+
         const storedOffset = data.device.hx711Offset || 0;
         const storedScale = data.device.hx711Scale || 1.0;
-        
+
         if (storedOffset === 0 && storedScale === 1.0) return null; // No calibration stored
-        
+
         const serverCalculated = storedScale * (currentRawMeasure - storedOffset);
         const tolerance = Math.max(1.0, Math.abs(serverCalculated) * 0.05); // 5% tolerance, minimum 1g
         const difference = Math.abs(currentWeight - serverCalculated);
-        
+
         if (difference > tolerance) {
             return {
                 isValid: false,
                 message: `Device weight (${currentWeight.toFixed(1)}g) doesn't match server calculation (${serverCalculated.toFixed(1)}g). Calibration may be out of sync.`
             };
         }
-        
+
         return { isValid: true, message: '' };
     }
 
@@ -206,10 +207,7 @@
 <div class="min-h-screen bg-gradient-to-b from-gray-900 to-gray-800 text-white">
     <div class="container mx-auto px-4 py-16">
         <div class="mb-8">
-            <a 
-                href="/devices" 
-                class="text-blue-400 hover:text-blue-300 mb-6 inline-block"
-            >
+            <a href="/devices" class="text-blue-400 hover:text-blue-300 mb-6 inline-block">
                 {t.backToDevices}
             </a>
             <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4">
@@ -221,7 +219,11 @@
                         {t.device}: {data.device.name || data.device.id.substring(0, 8)}
                     </p>
                 </div>
-                <form method="POST" action="?/enableCalibrationMode" use:enhance={handleCalibrationModeEnhance}>
+                <form
+                    method="POST"
+                    action="?/enableCalibrationMode"
+                    use:enhance={handleCalibrationModeEnhance}
+                >
                     <button
                         type="submit"
                         disabled={isConnected && hasRecentReading()}
@@ -232,7 +234,12 @@
                 </form>
             </div>
             {#if calibrationModeMessage}
-                <p class="text-sm {calibrationModeMessage.includes('success') || calibrationModeMessage === t.calibrationModeEnabled ? 'text-green-400' : 'text-red-400'}">
+                <p
+                    class="text-sm {calibrationModeMessage.includes('success') ||
+                    calibrationModeMessage === t.calibrationModeEnabled
+                        ? 'text-green-400'
+                        : 'text-red-400'}"
+                >
                     {calibrationModeMessage}
                 </p>
             {/if}
@@ -243,13 +250,15 @@
             <div class="flex items-center justify-between mb-4">
                 <h2 class="text-xl font-semibold">{t.weightReadings}</h2>
                 <div class="flex items-center space-x-2">
-                    <div class={`w-2 h-2 rounded-full transition-colors duration-300 ${isConnected && hasRecentReading() ? 'bg-green-500' : 'bg-red-500'}`}></div>
+                    <div
+                        class={`w-2 h-2 rounded-full transition-colors duration-300 ${isConnected && hasRecentReading() ? 'bg-green-500' : 'bg-red-500'}`}
+                    ></div>
                     <span class="text-sm text-gray-400">
                         {isConnected ? (hasRecentReading() ? t.live : t.stale) : t.disconnected}
                     </span>
                 </div>
             </div>
-            
+
             <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <!-- Raw Measure -->
                 <div class="text-center">
@@ -259,7 +268,7 @@
                     </div>
                     <p class="text-sm text-gray-400">{t.directSensorReading}</p>
                 </div>
-                
+
                 <!-- Device Weight -->
                 <div class="text-center">
                     <h3 class="text-lg font-medium text-gray-300 mb-2">{t.deviceWeight}</h3>
@@ -268,26 +277,34 @@
                     </div>
                     <p class="text-sm text-gray-400">{t.calculatedByDevice}</p>
                 </div>
-                
+
                 <!-- Server Calculated Weight -->
                 <div class="text-center">
                     <h3 class="text-lg font-medium text-gray-300 mb-2">{t.serverWeight}</h3>
-                    <div class="text-3xl font-mono py-4 {getServerCalculatedWeight() !== null ? 'text-green-400' : 'text-gray-500'}">
+                    <div
+                        class="text-3xl font-mono py-4 {getServerCalculatedWeight() !== null
+                            ? 'text-green-400'
+                            : 'text-gray-500'}"
+                    >
                         {formatServerCalculatedWeight()}
                     </div>
                     <p class="text-sm text-gray-400">
-                        {tareOffset !== null && calculatedScale !== null ? t.withCurrentCalibrationShort : t.needsCalibrationShort}
+                        {tareOffset !== null && calculatedScale !== null
+                            ? t.withCurrentCalibrationShort
+                            : t.needsCalibrationShort}
                     </p>
                 </div>
             </div>
-            
+
             <!-- Weight Validation Warning -->
             {#if getWeightValidation()?.isValid === false}
-                <div class="bg-yellow-900/20 border border-yellow-800/30 text-yellow-400 px-4 py-3 rounded mt-4">
+                <div
+                    class="bg-yellow-900/20 border border-yellow-800/30 text-yellow-400 px-4 py-3 rounded mt-4"
+                >
                     <p class="text-sm">{getWeightValidation()?.message}</p>
                 </div>
             {/if}
-            
+
             {#if !isConnected}
                 <p class="text-yellow-400 text-center mt-4">
                     {t.deviceConnectionWarning}
@@ -305,7 +322,7 @@
             <p class="text-gray-400 mb-6">
                 {t.hardwareConfigDescription}
             </p>
-            
+
             <form method="POST" action="?/savePins" use:enhance={handlePinsEnhance}>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                     <div>
@@ -339,16 +356,21 @@
                         />
                     </div>
                 </div>
-                
+
                 <button
                     type="submit"
                     class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-6 rounded transition-colors"
                 >
                     {t.savePins}
                 </button>
-                
+
                 {#if pinsFormMessage}
-                    <p class="mt-2 text-sm {pinsFormMessage.includes('success') || pinsFormMessage.includes('saved') ? 'text-green-400' : 'text-red-400'}">
+                    <p
+                        class="mt-2 text-sm {pinsFormMessage.includes('success') ||
+                        pinsFormMessage.includes('saved')
+                            ? 'text-green-400'
+                            : 'text-red-400'}"
+                    >
                         {pinsFormMessage}
                     </p>
                 {/if}
@@ -363,7 +385,9 @@
             </p>
 
             {#if !isConnected || !hasRecentReading()}
-                <div class="bg-yellow-900/20 border border-yellow-800/30 text-yellow-400 px-4 py-3 rounded mb-6">
+                <div
+                    class="bg-yellow-900/20 border border-yellow-800/30 text-yellow-400 px-4 py-3 rounded mb-6"
+                >
                     <p>{t.connectionRequiredWarning}</p>
                 </div>
             {/if}
@@ -384,7 +408,8 @@
                 </button>
                 {#if tareOffset !== null}
                     <p class="mt-2 text-sm text-green-400">
-                        {t.tareCompleted} {tareOffset}
+                        {t.tareCompleted}
+                        {tareOffset}
                     </p>
                 {/if}
             </div>
@@ -397,7 +422,10 @@
                 </p>
                 <div class="flex items-center space-x-4 mb-4">
                     <div>
-                        <label for="knownWeight" class="block text-sm font-medium text-gray-300 mb-2">
+                        <label
+                            for="knownWeight"
+                            class="block text-sm font-medium text-gray-300 mb-2"
+                        >
                             {t.knownWeight}
                         </label>
                         <input
@@ -423,17 +451,22 @@
                 </div>
                 {#if calculatedScale !== null}
                     <p class="text-sm text-green-400">
-                        {t.scaleCalculated} {calculatedScale.toFixed(6)}
+                        {t.scaleCalculated}
+                        {calculatedScale.toFixed(6)}
                     </p>
                 {/if}
             </div>
 
             <!-- Save Calibration -->
             <div class="border-t border-gray-700 pt-6">
-                <form method="POST" action="?/saveCalibration" use:enhance={handleCalibrationEnhance}>
+                <form
+                    method="POST"
+                    action="?/saveCalibration"
+                    use:enhance={handleCalibrationEnhance}
+                >
                     <input type="hidden" name="offset" value={tareOffset || 0} />
                     <input type="hidden" name="scale" value={calculatedScale || 0} />
-                    
+
                     <button
                         type="submit"
                         disabled={tareOffset === null || calculatedScale === null}
@@ -441,9 +474,14 @@
                     >
                         {t.saveCalibration}
                     </button>
-                    
+
                     {#if calibrationFormMessage}
-                        <p class="mt-2 text-sm {calibrationFormMessage.includes('success') || calibrationFormMessage.includes('saved') ? 'text-green-400' : 'text-red-400'}">
+                        <p
+                            class="mt-2 text-sm {calibrationFormMessage.includes('success') ||
+                            calibrationFormMessage.includes('saved')
+                                ? 'text-green-400'
+                                : 'text-red-400'}"
+                        >
                             {calibrationFormMessage}
                         </p>
                     {/if}

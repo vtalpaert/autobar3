@@ -108,37 +108,43 @@ export const load: PageServerLoad = async ({ locals }) => {
         .orderBy(desc(table.order.createdAt));
 
     // Get doses for each active order's cocktail
-    const cocktailIds = [...new Set(initialActiveOrders.map(o => o.cocktailId))];
-    const allDoses = cocktailIds.length > 0 ? await db
-        .select({
-            cocktailId: table.dose.cocktailId,
-            id: table.dose.id,
-            number: table.dose.number,
-            quantity: table.dose.quantity,
-            ingredient: {
-                id: table.ingredient.id,
-                name: table.ingredient.name
-            }
-        })
-        .from(table.dose)
-        .innerJoin(table.ingredient, eq(table.dose.ingredientId, table.ingredient.id))
-        .where(inArray(table.dose.cocktailId, cocktailIds))
-        .orderBy(table.dose.number) : [];
+    const cocktailIds = [...new Set(initialActiveOrders.map((o) => o.cocktailId))];
+    const allDoses =
+        cocktailIds.length > 0
+            ? await db
+                  .select({
+                      cocktailId: table.dose.cocktailId,
+                      id: table.dose.id,
+                      number: table.dose.number,
+                      quantity: table.dose.quantity,
+                      ingredient: {
+                          id: table.ingredient.id,
+                          name: table.ingredient.name
+                      }
+                  })
+                  .from(table.dose)
+                  .innerJoin(table.ingredient, eq(table.dose.ingredientId, table.ingredient.id))
+                  .where(inArray(table.dose.cocktailId, cocktailIds))
+                  .orderBy(table.dose.number)
+            : [];
 
     // Group doses by cocktail
-    const dosesByCocktail = allDoses.reduce((acc, dose) => {
-        if (!acc[dose.cocktailId]) acc[dose.cocktailId] = [];
-        acc[dose.cocktailId].push({
-            id: dose.id,
-            number: dose.number,
-            quantity: dose.quantity,
-            ingredient: dose.ingredient
-        });
-        return acc;
-    }, {} as Record<string, any[]>);
+    const dosesByCocktail = allDoses.reduce(
+        (acc, dose) => {
+            if (!acc[dose.cocktailId]) acc[dose.cocktailId] = [];
+            acc[dose.cocktailId].push({
+                id: dose.id,
+                number: dose.number,
+                quantity: dose.quantity,
+                ingredient: dose.ingredient
+            });
+            return acc;
+        },
+        {} as Record<string, any[]>
+    );
 
     // Enrich active orders with full cocktail data including doses
-    const enrichedActiveOrders = initialActiveOrders.map(order => ({
+    const enrichedActiveOrders = initialActiveOrders.map((order) => ({
         ...order,
         cocktail: {
             ...order.cocktail,
@@ -171,12 +177,7 @@ export const actions: Actions = {
         const order = await db
             .select()
             .from(table.order)
-            .where(
-                and(
-                    eq(table.order.id, orderId),
-                    eq(table.order.customerId, profile.id)
-                )
-            )
+            .where(and(eq(table.order.id, orderId), eq(table.order.customerId, profile.id)))
             .get();
 
         if (!order) {

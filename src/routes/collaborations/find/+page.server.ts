@@ -21,12 +21,7 @@ export const load: PageServerLoad = async ({ locals }) => {
         .from(table.profile)
         .innerJoin(table.user, eq(table.user.id, table.profile.userId))
         .leftJoin(table.cocktail, eq(table.cocktail.creatorId, table.profile.id))
-        .where(
-            and(
-                ne(table.profile.id, profile.id),
-                eq(table.profile.isVerified, true)
-            )
-        )
+        .where(and(ne(table.profile.id, profile.id), eq(table.profile.isVerified, true)))
         .groupBy(table.profile.id, table.user.username, table.profile.artistName)
         .orderBy(table.user.username);
 
@@ -84,9 +79,8 @@ export const load: PageServerLoad = async ({ locals }) => {
     // Get profiles for active collaborations
     const activeCollaborations = await Promise.all(
         acceptedRequests.map(async (request) => {
-            const otherProfileId = request.senderId === profile.id
-                ? request.receiverId
-                : request.senderId;
+            const otherProfileId =
+                request.senderId === profile.id ? request.receiverId : request.senderId;
 
             const otherProfileData = await db
                 .select({

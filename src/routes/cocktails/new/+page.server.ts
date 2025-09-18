@@ -12,10 +12,7 @@ export const load: PageServerLoad = async ({ locals }) => {
     const profile = await selectVerifiedProfile(locals.user);
 
     // Get all ingredients for the dropdown
-    const ingredients = await db
-        .select()
-        .from(table.ingredient)
-        .orderBy(table.ingredient.name);
+    const ingredients = await db.select().from(table.ingredient).orderBy(table.ingredient.name);
 
     return {
         ingredients,
@@ -57,7 +54,9 @@ export const actions: Actions = {
                     imageFile
                 );
             } catch (error) {
-                return { error: `Image upload failed: ${error instanceof Error ? error.message : 'Unknown error'}` };
+                return {
+                    error: `Image upload failed: ${error instanceof Error ? error.message : 'Unknown error'}`
+                };
             }
         }
 
@@ -94,8 +93,12 @@ export const actions: Actions = {
 
         // Sort by index to ensure proper ordering
         const sortedDoseValues = doseValues.sort((a, b) => {
-            const indexA = parseInt(Object.keys(dosesByIndex).find(key => dosesByIndex[key] === a) || '0');
-            const indexB = parseInt(Object.keys(dosesByIndex).find(key => dosesByIndex[key] === b) || '0');
+            const indexA = parseInt(
+                Object.keys(dosesByIndex).find((key) => dosesByIndex[key] === a) || '0'
+            );
+            const indexB = parseInt(
+                Object.keys(dosesByIndex).find((key) => dosesByIndex[key] === b) || '0'
+            );
             return indexA - indexB;
         });
 

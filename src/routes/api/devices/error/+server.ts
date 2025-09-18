@@ -8,10 +8,13 @@ export async function POST({ request }) {
     const { token, orderId, errorCode, message } = data;
 
     if (!token || !orderId || !message) {
-        return json({
-            success: false,
-            message: "Missing required fields"
-        }, { status: 400 });
+        return json(
+            {
+                success: false,
+                message: 'Missing required fields'
+            },
+            { status: 400 }
+        );
     }
 
     // Find the device by token
@@ -22,10 +25,13 @@ export async function POST({ request }) {
         .get();
 
     if (!device) {
-        return json({
-            success: false,
-            message: "Invalid device token"
-        }, { status: 401 });
+        return json(
+            {
+                success: false,
+                message: 'Invalid device token'
+            },
+            { status: 401 }
+        );
     }
 
     // Update last ping time
@@ -35,30 +41,29 @@ export async function POST({ request }) {
         .where(eq(table.device.id, device.id));
 
     // Find the order
-    const order = await db
-        .select()
-        .from(table.order)
-        .where(eq(table.order.id, orderId))
-        .get();
+    const order = await db.select().from(table.order).where(eq(table.order.id, orderId)).get();
 
     if (!order) {
-        return json({
-            success: false,
-            message: "Order not found"
-        }, { status: 404 });
+        return json(
+            {
+                success: false,
+                message: 'Order not found'
+            },
+            { status: 404 }
+        );
     }
 
     // Create a formatted error message combining error code and message
     const errorCodeNames = {
-        0: "Unknown error code",
-        1: "General/unknown error", 
-        2: "Weight scale error",
-        3: "No weight change",
-        4: "Negative weight change",
-        5: "Unable to report progress"
+        0: 'Unknown error code',
+        1: 'General/unknown error',
+        2: 'Weight scale error',
+        3: 'No weight change',
+        4: 'Negative weight change',
+        5: 'Unable to report progress'
     };
-    
-    const errorCodeName = errorCodeNames[errorCode] || "Unknown error code";
+
+    const errorCodeName = errorCodeNames[errorCode] || 'Unknown error code';
     const formattedErrorMessage = `[${errorCode}] ${errorCodeName}: ${message}`;
 
     // Update the order with the error
@@ -73,6 +78,6 @@ export async function POST({ request }) {
 
     return json({
         success: true,
-        message: "Error recorded"
+        message: 'Error recorded'
     });
 }

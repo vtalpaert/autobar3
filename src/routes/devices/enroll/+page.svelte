@@ -13,10 +13,7 @@
 <div class="min-h-screen bg-gradient-to-b from-gray-900 to-gray-800 text-white">
     <div class="container mx-auto px-4 py-16">
         <div class="mb-8">
-            <a 
-                href="/devices" 
-                class="text-blue-400 hover:text-blue-300 transition-colors"
-            >
+            <a href="/devices" class="text-blue-400 hover:text-blue-300 transition-colors">
                 ← {t.devices.back}
             </a>
             <h1 class="text-4xl font-bold mt-4">{t.devices.ap.title}</h1>
@@ -37,14 +34,14 @@
                 <div class="mt-8 p-6 bg-gray-700 rounded-lg">
                     <h3 class="text-xl font-bold mb-4">{t.devices.ap.token.title}</h3>
                     <p class="mb-4">{t.devices.ap.token.description}</p>
-                    
+
                     <div class="bg-gray-800 p-4 rounded-lg mb-6">
                         <code class="text-lg" id="deviceToken">{data.token}</code>
                     </div>
 
                     <form method="POST" action="?/enrollDevice" class="text-center">
-                        <input type="hidden" name="token" value={data.token}>
-                        <button 
+                        <input type="hidden" name="token" value={data.token} />
+                        <button
                             type="submit"
                             class="bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-6 rounded-lg transition-colors"
                         >

@@ -21,38 +21,24 @@ export const load: PageServerLoad = async ({ locals }) => {
     }
 
     // Get counts for dashboard
-    const [userCount] = await db
-        .select({ count: count() })
-        .from(table.user);
-    
+    const [userCount] = await db.select({ count: count() }).from(table.user);
+
     const [unverifiedCount] = await db
         .select({ count: count() })
         .from(table.profile)
         .where(eq(table.profile.isVerified, false));
-    
-    const [cocktailCount] = await db
-        .select({ count: count() })
-        .from(table.cocktail);
-    
-    const [deviceCount] = await db
-        .select({ count: count() })
-        .from(table.device);
-        
-    const [ingredientCount] = await db
-        .select({ count: count() })
-        .from(table.ingredient);
-        
-    const [doseCount] = await db
-        .select({ count: count() })
-        .from(table.dose);
-        
-    const [orderCount] = await db
-        .select({ count: count() })
-        .from(table.order);
-        
-    const [pumpCount] = await db
-        .select({ count: count() })
-        .from(table.pump);
+
+    const [cocktailCount] = await db.select({ count: count() }).from(table.cocktail);
+
+    const [deviceCount] = await db.select({ count: count() }).from(table.device);
+
+    const [ingredientCount] = await db.select({ count: count() }).from(table.ingredient);
+
+    const [doseCount] = await db.select({ count: count() }).from(table.dose);
+
+    const [orderCount] = await db.select({ count: count() }).from(table.order);
+
+    const [pumpCount] = await db.select({ count: count() }).from(table.pump);
 
     return {
         counts: {

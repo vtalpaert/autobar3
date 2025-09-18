@@ -31,21 +31,22 @@ RobotCocktail is a modern reimagining of the [Autobar v1 project](https://github
 The project consists of two main parts:
 
 1. **Web Platform**
-   - User authentication and management
-   - Cocktail recipe database with ingredients and doses management
-   - Device management interface
-   - [API endpoints](docs/api.md) for device communication
-   - Cocktail creation and editing with ingredient doses
-   - Artist collaboration system for joint cocktail creation
-   - Order management system for cocktail preparation
-   - Device simulator for testing order processing without physical hardware
+
+    - User authentication and management
+    - Cocktail recipe database with ingredients and doses management
+    - Device management interface
+    - [API endpoints](docs/api.md) for device communication
+    - Cocktail creation and editing with ingredient doses
+    - Artist collaboration system for joint cocktail creation
+    - Order management system for cocktail preparation
+    - Device simulator for testing order processing without physical hardware
 
 2. **Hardware Implementation**
-   - ESP32-based cocktail mixing machine (primary target)
-   - Support for legacy Raspberry Pi implementation (todo)
-   - Automated OTA updates (todo)
-   - Weight-based pour measurement
-   - Multiple pump control
+    - ESP32-based cocktail mixing machine (primary target)
+    - Support for legacy Raspberry Pi implementation (todo)
+    - Automated OTA updates (todo)
+    - Weight-based pour measurement
+    - Multiple pump control
 
 ### ESP32 configuration using the access point
 

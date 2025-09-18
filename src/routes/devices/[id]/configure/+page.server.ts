@@ -17,12 +17,7 @@ export const load: PageServerLoad = async ({ locals, params }) => {
     const device = await db
         .select()
         .from(table.device)
-        .where(
-            and(
-                eq(table.device.id, deviceId),
-                eq(table.device.profileId, profile.id)
-            )
-        )
+        .where(and(eq(table.device.id, deviceId), eq(table.device.profileId, profile.id)))
         .get();
 
     if (!device) {
@@ -46,10 +41,7 @@ export const load: PageServerLoad = async ({ locals, params }) => {
         .where(eq(table.pump.deviceId, deviceId));
 
     // Get all ingredients for dropdown
-    const ingredients = await db
-        .select()
-        .from(table.ingredient)
-        .orderBy(table.ingredient.name);
+    const ingredients = await db.select().from(table.ingredient).orderBy(table.ingredient.name);
 
     return {
         device,
@@ -75,12 +67,7 @@ export const actions: Actions = {
         const device = await db
             .select()
             .from(table.device)
-            .where(
-                and(
-                    eq(table.device.id, deviceId),
-                    eq(table.device.profileId, profile.id)
-                )
-            )
+            .where(and(eq(table.device.id, deviceId), eq(table.device.profileId, profile.id)))
             .get();
 
         if (!device) {
@@ -89,11 +76,11 @@ export const actions: Actions = {
 
         const formData = await request.formData();
         const entries = Array.from(formData.entries());
-        
+
         // Parse existing pumps
         const existingPumpEntries = entries.filter(([key]) => key.startsWith('existingPumps['));
         const existingPumpsByIndex = {};
-        
+
         for (const [key, value] of existingPumpEntries) {
             const match = key.match(/existingPumps\[(\d+)\]\.(.+)/);
             if (match) {
@@ -108,7 +95,7 @@ export const actions: Actions = {
         // Parse new pumps
         const newPumpEntries = entries.filter(([key]) => key.startsWith('newPumps['));
         const newPumpsByIndex = {};
-        
+
         for (const [key, value] of newPumpEntries) {
             const match = key.match(/newPumps\[(\d+)\]\.(.+)/);
             if (match) {
@@ -127,7 +114,7 @@ export const actions: Actions = {
         try {
             // Validate GPIO uniqueness
             const allGpios = [];
-            
+
             // Check existing pumps
             for (const pump of Object.values(existingPumpsByIndex)) {
                 if (pump.gpio) {
@@ -138,7 +125,7 @@ export const actions: Actions = {
                     allGpios.push(gpio);
                 }
             }
-            
+
             // Check new pumps
             for (const pump of Object.values(newPumpsByIndex)) {
                 if (pump.gpio) {
@@ -152,9 +139,7 @@ export const actions: Actions = {
 
             // Delete removed pumps
             for (const pumpId of deletedPumpIds) {
-                await db
-                    .delete(table.pump)
-                    .where(eq(table.pump.id, pumpId));
+                await db.delete(table.pump).where(eq(table.pump.id, pumpId));
             }
 
             // Update existing pumps
@@ -191,10 +176,10 @@ export const actions: Actions = {
         }
 
         // console.log('All pump operations completed successfully');
-        
+
         // Add a small delay to ensure database transaction is fully committed
         // await new Promise(resolve => setTimeout(resolve, 200));
-        
+
         // Debug: Read the pumps immediately after creation to verify they exist
         /*const debugPumps = await db
             .select({
@@ -214,7 +199,7 @@ export const actions: Actions = {
         console.log('Debug: Pumps immediately after creation:', debugPumps);
         console.log('Debug: Total pump count:', debugPumps.length);
         */
-        
+
         throw redirect(303, `/devices/${deviceId}/configure`);
     }
 };

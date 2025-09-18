@@ -54,7 +54,7 @@ export const load: PageServerLoad = async ({ locals }) => {
         .orderBy(table.ingredient.name);
 
     // Calculate weight for each dose
-    const dosesWithWeight = doses.map(dose => ({
+    const dosesWithWeight = doses.map((dose) => ({
         id: dose.id,
         cocktailId: dose.cocktailId,
         ingredientId: dose.ingredientId,

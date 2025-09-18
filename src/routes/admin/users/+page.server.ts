@@ -90,14 +90,10 @@ export const actions: Actions = {
         }
 
         // Delete associated profile first (due to foreign key constraints)
-        await db
-            .delete(table.profile)
-            .where(eq(table.profile.userId, userId));
+        await db.delete(table.profile).where(eq(table.profile.userId, userId));
 
         // Delete the user
-        await db
-            .delete(table.user)
-            .where(eq(table.user.id, userId));
+        await db.delete(table.user).where(eq(table.user.id, userId));
 
         return { success: true };
     },

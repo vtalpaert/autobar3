@@ -73,9 +73,7 @@ export const actions: Actions = {
             return { error: 'Order ID is required' };
         }
 
-        await db
-            .delete(table.order)
-            .where(eq(table.order.id, orderId));
+        await db.delete(table.order).where(eq(table.order.id, orderId));
 
         return { success: true };
     },
@@ -105,7 +103,7 @@ export const actions: Actions = {
         // Update order status to cancelled
         await db
             .update(table.order)
-            .set({ 
+            .set({
                 status: 'cancelled',
                 updatedAt: new Date()
             })

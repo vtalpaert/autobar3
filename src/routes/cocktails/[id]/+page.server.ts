@@ -13,14 +13,14 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 
     // Check cocktail access and get cocktail data (reusing permission logic)
     const { hasAccess, cocktail } = await checkCocktailAccess(profile, params.id);
-    
+
     if (!hasAccess || !cocktail) {
         throw error(404, 'Cocktail not found');
     }
 
     // Get creator info
     const creator = await db
-        .select({ 
+        .select({
             username: table.user.username,
             artistName: table.profile.artistName
         })
@@ -55,7 +55,7 @@ export const load: PageServerLoad = async ({ params, locals }) => {
         .where(eq(table.device.profileId, profile.id));
 
     // Find default device if exists
-    const defaultDevice = devices.find(device => device.isDefault) || devices[0];
+    const defaultDevice = devices.find((device) => device.isDefault) || devices[0];
 
     return {
         cocktail,
@@ -88,7 +88,7 @@ export const actions: Actions = {
                 .where(eq(table.device.profileId, profile.id));
 
             // Use default device or first device
-            const defaultDevice = devices.find(device => device.isDefault) || devices[0];
+            const defaultDevice = devices.find((device) => device.isDefault) || devices[0];
             if (defaultDevice) {
                 selectedDeviceId = defaultDevice.id;
             } else {

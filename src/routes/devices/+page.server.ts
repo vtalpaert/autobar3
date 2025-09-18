@@ -37,12 +37,7 @@ export const actions: Actions = {
         const device = await db
             .select()
             .from(table.device)
-            .where(
-                and(
-                    eq(table.device.id, deviceId),
-                    eq(table.device.profileId, profile.id)
-                )
-            )
+            .where(and(eq(table.device.id, deviceId), eq(table.device.profileId, profile.id)))
             .get();
 
         if (!device) {
@@ -90,12 +85,7 @@ export const actions: Actions = {
         const device = await db
             .select()
             .from(table.device)
-            .where(
-                and(
-                    eq(table.device.id, deviceId),
-                    eq(table.device.profileId, profile.id)
-                )
-            )
+            .where(and(eq(table.device.id, deviceId), eq(table.device.profileId, profile.id)))
             .get();
 
         if (!device) {
@@ -124,12 +114,7 @@ export const actions: Actions = {
         const device = await db
             .select()
             .from(table.device)
-            .where(
-                and(
-                    eq(table.device.id, deviceId),
-                    eq(table.device.profileId, profile.id)
-                )
-            )
+            .where(and(eq(table.device.id, deviceId), eq(table.device.profileId, profile.id)))
             .get();
 
         if (!device) {
@@ -152,9 +137,7 @@ export const actions: Actions = {
                 .where(eq(table.order.deviceId, deviceId));
 
             // Now delete the device
-            await db
-                .delete(table.device)
-                .where(eq(table.device.id, deviceId));
+            await db.delete(table.device).where(eq(table.device.id, deviceId));
 
             return { success: true };
         } catch (error) {

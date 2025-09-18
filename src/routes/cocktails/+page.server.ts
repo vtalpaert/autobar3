@@ -4,7 +4,11 @@ import type { PageServerLoad } from './$types';
 import { db } from '$lib/server/db';
 import * as table from '$lib/server/db/schema';
 import { selectVerifiedProfile } from '$lib/server/auth.js';
-import { getAllAccessibleCocktailsForProfile, getDeviceCapabilities, enhanceCocktailsWithAvailability } from '$lib/server/device-capabilities.js';
+import {
+    getAllAccessibleCocktailsForProfile,
+    getDeviceCapabilities,
+    enhanceCocktailsWithAvailability
+} from '$lib/server/device-capabilities.js';
 
 export const load: PageServerLoad = async ({ locals }) => {
     // Check if user is logged in, profile exists and is verified
@@ -14,21 +18,14 @@ export const load: PageServerLoad = async ({ locals }) => {
     const defaultDevice = await db
         .select()
         .from(table.device)
-        .where(
-            and(
-                eq(table.device.profileId, profile.id),
-                eq(table.device.isDefault, true)
-            )
-        )
+        .where(and(eq(table.device.profileId, profile.id), eq(table.device.isDefault, true)))
         .get();
 
     // Get ALL accessible cocktails (regardless of device availability)
     const allAccessibleCocktails = await getAllAccessibleCocktailsForProfile(profile.id);
 
     // Get device capabilities if device exists
-    const deviceCapabilities = defaultDevice 
-        ? await getDeviceCapabilities(defaultDevice.id)
-        : null;
+    const deviceCapabilities = defaultDevice ? await getDeviceCapabilities(defaultDevice.id) : null;
 
     // Enhance cocktails with availability information
     const cocktailsWithAvailability = enhanceCocktailsWithAvailability(
@@ -37,7 +34,7 @@ export const load: PageServerLoad = async ({ locals }) => {
     );
 
     // Get creator names for all cocktails
-    const cocktailIds = cocktailsWithAvailability.map(c => c.id);
+    const cocktailIds = cocktailsWithAvailability.map((c) => c.id);
     let cocktailsWithCreators: any[] = [];
 
     if (cocktailIds.length > 0) {
@@ -59,8 +56,8 @@ export const load: PageServerLoad = async ({ locals }) => {
             .where(inArray(table.cocktail.id, cocktailIds));
 
         // Merge creator data with availability data
-        cocktailsWithCreators = cocktailsWithAvailability.map(cocktail => {
-            const creatorData = creatorsData.find(c => c.id === cocktail.id);
+        cocktailsWithCreators = cocktailsWithAvailability.map((cocktail) => {
+            const creatorData = creatorsData.find((c) => c.id === cocktail.id);
             return {
                 ...creatorData,
                 ...cocktail,

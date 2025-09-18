@@ -77,9 +77,8 @@ export const load: PageServerLoad = async ({ locals }) => {
     // Get profiles for active collaborations
     const activeCollaborations = await Promise.all(
         acceptedRequests.map(async (request) => {
-            const otherProfileId = request.senderId === profile.id
-                ? request.receiverId
-                : request.senderId;
+            const otherProfileId =
+                request.senderId === profile.id ? request.receiverId : request.senderId;
 
             const otherProfileData = await db
                 .select({

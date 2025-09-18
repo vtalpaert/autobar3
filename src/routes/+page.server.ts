@@ -11,7 +11,7 @@ export const load: PageServerLoad = async (event) => {
             .from(table.profile)
             .where(eq(table.profile.userId, user.id))
             .get();
-        
+
         return {
             user: {
                 ...user,

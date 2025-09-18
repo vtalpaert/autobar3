@@ -9,9 +9,12 @@ export async function POST({ request }) {
     const { token, weight, rawMeasure } = data;
 
     if (!token || weight === undefined || rawMeasure === undefined) {
-        return json({
-            error: "Missing token, weight, or rawMeasure"
-        }, { status: 400 });
+        return json(
+            {
+                error: 'Missing token, weight, or rawMeasure'
+            },
+            { status: 400 }
+        );
     }
 
     // Find the device by token
@@ -22,9 +25,12 @@ export async function POST({ request }) {
         .get();
 
     if (!device) {
-        return json({
-            error: "Invalid device token"
-        }, { status: 401 });
+        return json(
+            {
+                error: 'Invalid device token'
+            },
+            { status: 401 }
+        );
     }
 
     // Store current weight measurement in memory
@@ -44,6 +50,6 @@ export async function POST({ request }) {
         hx711Offset: device.hx711Offset,
         hx711Scale: device.hx711Scale
     };
-    
+
     return json(response);
 }

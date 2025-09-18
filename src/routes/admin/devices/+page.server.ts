@@ -78,15 +78,13 @@ export const actions: Actions = {
                 .where(eq(table.order.deviceId, deviceId));
 
             // Now delete the device
-            await db
-                .delete(table.device)
-                .where(eq(table.device.id, deviceId));
+            await db.delete(table.device).where(eq(table.device.id, deviceId));
 
             return { success: true };
         } catch (error) {
             console.error('Error deleting device:', error);
-            return { 
-                error: 'Failed to delete device. Please try again.' 
+            return {
+                error: 'Failed to delete device. Please try again.'
             };
         }
     }

@@ -8,32 +8,34 @@
 
     export let data: PageData;
     export let form;
-    
+
     $: t = translations[$currentLanguage];
-    
+
     // For ingredient form
     let selectedIngredientId = '';
     let quantity = 50; // Default quantity in ml
     let showAddDose = false;
     let errorMessage = form?.error || '';
-    
+
     // For delete confirmation
     let showDeleteConfirmation = false;
-    
+
     // For image upload
     let selectedImageFile: File | null = null;
     let imageChanged = false;
     let imageRemoved = false;
     let hiddenImageInput: HTMLInputElement;
-    
+
     // Get current image URI - now use the protected endpoint
     $: currentImageUri = data.cocktail.imageUri ? `/api/cocktails/${data.cocktail.id}/image` : null;
-    
-    function handleImageSelected(event: CustomEvent<{ file: File; inputElement: HTMLInputElement }>) {
+
+    function handleImageSelected(
+        event: CustomEvent<{ file: File; inputElement: HTMLInputElement }>
+    ) {
         selectedImageFile = event.detail.file;
         imageChanged = true;
         imageRemoved = false;
-        
+
         // Set the file on the hidden input using DataTransfer
         if (hiddenImageInput) {
             const dataTransfer = new DataTransfer();
@@ -41,7 +43,7 @@
             hiddenImageInput.files = dataTransfer.files;
         }
     }
-    
+
     function handleImageRemoved() {
         selectedImageFile = null;
         imageChanged = true;
@@ -50,7 +52,7 @@
             hiddenImageInput.value = '';
         }
     }
-    
+
     function handleImageChanged(event: CustomEvent<{ hasImage: boolean }>) {
         imageChanged = true;
         if (!event.detail.hasImage) {
@@ -65,13 +67,13 @@
 <div class="min-h-screen bg-gradient-to-b from-gray-900 to-gray-800 text-white">
     <div class="container mx-auto px-4 py-16">
         <div class="max-w-2xl mx-auto bg-gray-800 rounded-lg shadow-lg p-8">
-            <a 
-                href="/cocktails/{data.cocktail.id}" 
+            <a
+                href="/cocktails/{data.cocktail.id}"
                 class="text-blue-400 hover:text-blue-300 mb-6 inline-block"
             >
                 {t.cocktails.backToCocktail}
             </a>
-            
+
             <h1 class="text-3xl font-bold mb-6">{t.cocktails.editCocktail}</h1>
 
             {#if errorMessage}
@@ -80,24 +82,29 @@
                 </div>
             {/if}
 
-            <form method="POST" action="?/updateCocktail" enctype="multipart/form-data" use:enhance={({ formData }) => {
-                return async ({ result }) => {
-                    if (result.type === 'failure') {
-                        errorMessage = result.data?.error || 'An error occurred';
-                    }
-                };
-            }}>
+            <form
+                method="POST"
+                action="?/updateCocktail"
+                enctype="multipart/form-data"
+                use:enhance={({ formData }) => {
+                    return async ({ result }) => {
+                        if (result.type === 'failure') {
+                            errorMessage = result.data?.error || 'An error occurred';
+                        }
+                    };
+                }}
+            >
                 <!-- Image Upload -->
                 <ImageUpload
                     label={t.createCocktail.image}
                     uploadHint={t.createCocktail.imageUploadHint}
                     uploadText={t.createCocktail.imageUploadText}
-                    currentImageUri={currentImageUri}
+                    {currentImageUri}
                     on:fileSelected={handleImageSelected}
                     on:fileRemoved={handleImageRemoved}
                     on:imageChanged={handleImageChanged}
                 />
-                
+
                 <!-- Hidden inputs for image handling -->
                 <input bind:this={hiddenImageInput} type="file" name="image" class="hidden" />
                 {#if imageChanged}
@@ -130,7 +137,8 @@
                         name="description"
                         rows="3"
                         class="w-full bg-gray-700 text-white rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    >{data.cocktail.description || ''}</textarea>
+                        >{data.cocktail.description || ''}</textarea
+                    >
                 </div>
 
                 <div class="mb-6">
@@ -142,7 +150,8 @@
                         name="instructions"
                         rows="5"
                         class="w-full bg-gray-700 text-white rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    >{data.cocktail.instructions || ''}</textarea>
+                        >{data.cocktail.instructions || ''}</textarea
+                    >
                 </div>
 
                 <button
@@ -152,24 +161,26 @@
                     {t.cocktails.saveChanges}
                 </button>
             </form>
-            
+
             <!-- Delete Cocktail Button -->
             <button
-                on:click={() => showDeleteConfirmation = true}
+                on:click={() => (showDeleteConfirmation = true)}
                 class="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-lg transition-colors mb-8"
             >
                 {t.cocktails.delete}
             </button>
-            
+
             <!-- Delete Confirmation Modal -->
             {#if showDeleteConfirmation}
-                <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+                <div
+                    class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+                >
                     <div class="bg-gray-800 p-6 rounded-lg shadow-lg max-w-md w-full">
                         <h3 class="text-xl font-bold mb-4">{t.cocktails.deleteConfirmTitle}</h3>
                         <p class="mb-6">{t.cocktails.deleteConfirmMessage}</p>
                         <div class="flex justify-end space-x-4">
                             <button
-                                on:click={() => showDeleteConfirmation = false}
+                                on:click={() => (showDeleteConfirmation = false)}
                                 class="px-4 py-2 bg-gray-600 hover:bg-gray-700 rounded-lg transition-colors"
                             >
                                 {t.cocktails.cancel}
@@ -186,17 +197,19 @@
                     </div>
                 </div>
             {/if}
-            
+
             <!-- Ingredients Section -->
             <div class="mt-8 border-t border-gray-700 pt-6">
                 <h2 class="text-2xl font-bold mb-4">{t.cocktails.ingredients}</h2>
-                
+
                 {#if data.cocktail.doses && data.cocktail.doses.length > 0}
                     <div class="mb-6">
                         <ul class="divide-y divide-gray-700">
                             {#each data.cocktail.doses as dose}
                                 <li class="py-3 flex items-center">
-                                    <span class="inline-flex items-center justify-center w-6 h-6 bg-blue-600 rounded-full mr-3 text-sm font-bold">
+                                    <span
+                                        class="inline-flex items-center justify-center w-6 h-6 bg-blue-600 rounded-full mr-3 text-sm font-bold"
+                                    >
                                         {dose.number}
                                     </span>
                                     <div class="flex-grow">
@@ -206,9 +219,13 @@
                                     <div class="flex items-center space-x-2">
                                         {#if dose.number > 1}
                                             <form method="POST" action="?/moveDoseUp" use:enhance>
-                                                <input type="hidden" name="doseId" value={dose.id} />
-                                                <button 
-                                                    type="submit" 
+                                                <input
+                                                    type="hidden"
+                                                    name="doseId"
+                                                    value={dose.id}
+                                                />
+                                                <button
+                                                    type="submit"
                                                     class="text-blue-400 hover:text-blue-300 p-1"
                                                     title={t.cocktails.moveUp}
                                                 >
@@ -218,9 +235,13 @@
                                         {/if}
                                         {#if dose.number < data.cocktail.doses.length}
                                             <form method="POST" action="?/moveDoseDown" use:enhance>
-                                                <input type="hidden" name="doseId" value={dose.id} />
-                                                <button 
-                                                    type="submit" 
+                                                <input
+                                                    type="hidden"
+                                                    name="doseId"
+                                                    value={dose.id}
+                                                />
+                                                <button
+                                                    type="submit"
                                                     class="text-blue-400 hover:text-blue-300 p-1"
                                                     title={t.cocktails.moveDown}
                                                 >
@@ -230,8 +251,8 @@
                                         {/if}
                                         <form method="POST" action="?/removeDose" use:enhance>
                                             <input type="hidden" name="doseId" value={dose.id} />
-                                            <button 
-                                                type="submit" 
+                                            <button
+                                                type="submit"
                                                 class="text-red-500 hover:text-red-400 p-1"
                                                 title={t.cocktails.remove}
                                             >
@@ -244,18 +265,23 @@
                         </ul>
                     </div>
                 {/if}
-                
+
                 <!-- Add Ingredient Button -->
-                <button 
-                    on:click={() => showAddDose = !showAddDose}
+                <button
+                    on:click={() => (showAddDose = !showAddDose)}
                     class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-lg transition-colors"
                 >
                     {showAddDose ? t.cocktails.cancel : t.cocktails.addIngredient}
                 </button>
-                
+
                 <!-- Add Ingredient Form -->
                 {#if showAddDose}
-                    <form method="POST" action="?/addDose" class="mt-4 p-4 bg-gray-700 rounded-lg" use:enhance>
+                    <form
+                        method="POST"
+                        action="?/addDose"
+                        class="mt-4 p-4 bg-gray-700 rounded-lg"
+                        use:enhance
+                    >
                         <div class="mb-4">
                             <label for="ingredientId" class="block text-sm font-medium mb-2">
                                 {t.cocktails.selectIngredient}
@@ -273,7 +299,7 @@
                                 {/each}
                             </select>
                         </div>
-                        
+
                         <div class="mb-4">
                             <label for="quantity" class="block text-sm font-medium mb-2">
                                 {t.cocktails.quantity} (ml)
@@ -289,7 +315,7 @@
                                 required
                             />
                         </div>
-                        
+
                         <button
                             type="submit"
                             class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg transition-colors"

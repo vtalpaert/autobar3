@@ -25,7 +25,7 @@ export const GET: RequestHandler = async ({ params, request, cookies }) => {
 
         // Check cocktail access (reusing permission logic)
         const { hasAccess, cocktail } = await checkCocktailAccess(profile, params.id);
-        
+
         if (!hasAccess || !cocktail) {
             throw error(403, 'Access denied');
         }
@@ -36,7 +36,7 @@ export const GET: RequestHandler = async ({ params, request, cookies }) => {
 
         // Get the image file path
         const imagePath = getCocktailImagePath(cocktail.creatorId, cocktail.id);
-        
+
         if (!existsSync(imagePath)) {
             throw error(404, 'Image file not found');
         }
@@ -44,28 +44,27 @@ export const GET: RequestHandler = async ({ params, request, cookies }) => {
         // Get file stats for ETag generation
         const stats = await stat(imagePath);
         const etag = `"${cocktail.id}-${stats.mtime.getTime()}"`;
-        
+
         // Check if client has current version
         const clientETag = request.headers.get('if-none-match');
         if (clientETag === etag) {
-            return new Response(null, { 
+            return new Response(null, {
                 status: 304,
-                headers: { 'ETag': etag }
+                headers: { ETag: etag }
             });
         }
 
         // Read and serve the image with ETag
         const imageBuffer = await readFile(imagePath);
-        
+
         return new Response(imageBuffer, {
             headers: {
                 'Content-Type': 'image/webp',
-                'ETag': etag,
+                ETag: etag,
                 'Cache-Control': 'private, max-age=300, must-revalidate',
                 'Content-Length': imageBuffer.length.toString()
             }
         });
-
     } catch (err) {
         if (err instanceof Error && 'status' in err) {
             throw err;

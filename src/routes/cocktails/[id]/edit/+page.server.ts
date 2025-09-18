@@ -14,7 +14,7 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 
     // Check edit access (reusing permission logic)
     const { canEdit, cocktail } = await checkCocktailEditAccess(profile, params.id);
-    
+
     if (!canEdit || !cocktail) {
         throw error(403, 'Not authorized to edit this cocktail');
     }
@@ -36,10 +36,7 @@ export const load: PageServerLoad = async ({ params, locals }) => {
     cocktail.doses = doses;
 
     // Get all ingredients for the dropdown
-    const ingredients = await db
-        .select()
-        .from(table.ingredient)
-        .orderBy(table.ingredient.name);
+    const ingredients = await db.select().from(table.ingredient).orderBy(table.ingredient.name);
 
     return {
         cocktail,
@@ -88,12 +85,7 @@ export const actions: Actions = {
         const doseToMove = await db
             .select()
             .from(table.dose)
-            .where(
-                and(
-                    eq(table.dose.id, doseId),
-                    eq(table.dose.cocktailId, params.id)
-                )
-            )
+            .where(and(eq(table.dose.id, doseId), eq(table.dose.cocktailId, params.id)))
             .get();
 
         if (!doseToMove || doseToMove.number <= 1) {
@@ -161,12 +153,7 @@ export const actions: Actions = {
         const doseToMove = await db
             .select()
             .from(table.dose)
-            .where(
-                and(
-                    eq(table.dose.id, doseId),
-                    eq(table.dose.cocktailId, params.id)
-                )
-            )
+            .where(and(eq(table.dose.id, doseId), eq(table.dose.cocktailId, params.id)))
             .get();
 
         if (!doseToMove) {
@@ -220,7 +207,7 @@ export const actions: Actions = {
 
         // Check edit access (reusing permission logic)
         const { canEdit, cocktail } = await checkCocktailEditAccess(profile, params.id);
-        
+
         if (!canEdit || !cocktail) {
             throw error(403, 'Not authorized to edit this cocktail');
         }
@@ -258,7 +245,9 @@ export const actions: Actions = {
                         imageFile
                     );
                 } catch (error) {
-                    return { error: `Image upload failed: ${error instanceof Error ? error.message : 'Unknown error'}` };
+                    return {
+                        error: `Image upload failed: ${error instanceof Error ? error.message : 'Unknown error'}`
+                    };
                 }
             } else if (imageRemoved) {
                 // Image was explicitly removed
@@ -366,9 +355,7 @@ export const actions: Actions = {
         }
 
         // Delete the cocktail (doses will be cascade deleted due to foreign key constraint)
-        await db
-            .delete(table.cocktail)
-            .where(eq(table.cocktail.id, params.id));
+        await db.delete(table.cocktail).where(eq(table.cocktail.id, params.id));
 
         // Redirect to cocktails list
         throw redirect(302, '/cocktails');
@@ -405,12 +392,7 @@ export const actions: Actions = {
         const doseToDelete = await db
             .select()
             .from(table.dose)
-            .where(
-                and(
-                    eq(table.dose.id, doseId),
-                    eq(table.dose.cocktailId, params.id)
-                )
-            )
+            .where(and(eq(table.dose.id, doseId), eq(table.dose.cocktailId, params.id)))
             .get();
 
         if (!doseToDelete) {
@@ -420,12 +402,7 @@ export const actions: Actions = {
         // Delete the dose
         await db
             .delete(table.dose)
-            .where(
-                and(
-                    eq(table.dose.id, doseId),
-                    eq(table.dose.cocktailId, params.id)
-                )
-            );
+            .where(and(eq(table.dose.id, doseId), eq(table.dose.cocktailId, params.id)));
 
         // Update the numbers of all doses with higher numbers
         // to maintain continuous ordering starting from 1
@@ -433,10 +410,7 @@ export const actions: Actions = {
             .select()
             .from(table.dose)
             .where(
-                and(
-                    eq(table.dose.cocktailId, params.id),
-                    table.dose.number.gt(doseToDelete.number)
-                )
+                and(eq(table.dose.cocktailId, params.id), table.dose.number.gt(doseToDelete.number))
             )
             .orderBy(table.dose.number);
 

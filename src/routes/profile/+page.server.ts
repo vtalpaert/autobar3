@@ -8,7 +8,7 @@ export const load: PageServerLoad = async (event) => {
     const currentUser = event.locals.user;
 
     // Default to viewing own profile if no ID is provided
-    const userId = event.url.searchParams.get('id') || (currentUser?.id || '');
+    const userId = event.url.searchParams.get('id') || currentUser?.id || '';
     const isOwnProfile = currentUser && userId === currentUser.id;
 
     // If not logged in and no specific profile requested, redirect to login
@@ -166,17 +166,21 @@ export const load: PageServerLoad = async (event) => {
     }
 
     // Get current user's profile for admin check
-    const currentProfile = currentUser ? await db
-        .select()
-        .from(table.profile)
-        .where(eq(table.profile.userId, currentUser.id))
-        .get() : null;
+    const currentProfile = currentUser
+        ? await db
+              .select()
+              .from(table.profile)
+              .where(eq(table.profile.userId, currentUser.id))
+              .get()
+        : null;
 
     return {
-        user: currentUser ? {
-            ...currentUser,
-            isAdmin: currentProfile?.isAdmin || false
-        } : null,
+        user: currentUser
+            ? {
+                  ...currentUser,
+                  isAdmin: currentProfile?.isAdmin || false
+              }
+            : null,
         viewedUser,
         profile,
         isOwnProfile,

@@ -4,22 +4,22 @@
     import { enhance } from '$app/forms';
 
     export let data: PageData;
-    
+
     let selectedCocktail = '';
     let selectedIngredient = '';
-    
-    $: filteredDoses = data.doses.filter(dose => {
+
+    $: filteredDoses = data.doses.filter((dose) => {
         if (selectedCocktail && dose.cocktailId !== selectedCocktail) return false;
         if (selectedIngredient && dose.ingredientId !== selectedIngredient) return false;
         return true;
     });
-    
+
     // Group cocktails by ID for the dropdown
     $: cocktailOptions = data.cocktails.reduce((acc, cocktail) => {
         acc[cocktail.id] = cocktail.name;
         return acc;
     }, {});
-    
+
     // Group ingredients by ID for the dropdown
     $: ingredientOptions = data.ingredients.reduce((acc, ingredient) => {
         acc[ingredient.id] = ingredient.name;
@@ -57,9 +57,12 @@
                         {/each}
                     </select>
                 </div>
-                
+
                 <div>
-                    <label for="ingredient-filter" class="block text-sm font-medium text-white mb-1">
+                    <label
+                        for="ingredient-filter"
+                        class="block text-sm font-medium text-white mb-1"
+                    >
                         Filter by Ingredient
                     </label>
                     <select
@@ -79,9 +82,9 @@
         <!-- Add New Dose -->
         <div class="mb-8 bg-gray-800 p-6 rounded-lg">
             <h2 class="text-2xl font-bold mb-4">Add New Dose</h2>
-            <form 
-                method="POST" 
-                action="?/addDose" 
+            <form
+                method="POST"
+                action="?/addDose"
                 use:enhance={() => {
                     return ({ update }) => {
                         update();
@@ -105,7 +108,7 @@
                             {/each}
                         </select>
                     </div>
-                    
+
                     <div>
                         <label for="ingredient" class="block text-sm font-medium text-white mb-1">
                             Ingredient
@@ -122,7 +125,7 @@
                             {/each}
                         </select>
                     </div>
-                    
+
                     <div>
                         <label for="quantity" class="block text-sm font-medium text-white mb-1">
                             Quantity (ml)
@@ -138,7 +141,7 @@
                             placeholder="e.g. 30"
                         />
                     </div>
-                    
+
                     <div>
                         <label for="number" class="block text-sm font-medium text-white mb-1">
                             Order Number
@@ -154,7 +157,7 @@
                             placeholder="e.g. 1"
                         />
                     </div>
-                    
+
                     <div class="md:col-span-2 lg:col-span-4">
                         <button
                             type="submit"
@@ -177,12 +180,24 @@
                     <table class="min-w-full bg-gray-700 border border-gray-600 rounded-lg">
                         <thead>
                             <tr>
-                                <th class="px-4 py-2 border-b border-gray-600 text-left text-white">Cocktail</th>
-                                <th class="px-4 py-2 border-b border-gray-600 text-left text-white">Ingredient</th>
-                                <th class="px-4 py-2 border-b border-gray-600 text-left text-white">Quantity (ml)</th>
-                                <th class="px-4 py-2 border-b border-gray-600 text-left text-white">Order</th>
-                                <th class="px-4 py-2 border-b border-gray-600 text-left text-white">Weight (g)</th>
-                                <th class="px-4 py-2 border-b border-gray-600 text-left text-white">Actions</th>
+                                <th class="px-4 py-2 border-b border-gray-600 text-left text-white"
+                                    >Cocktail</th
+                                >
+                                <th class="px-4 py-2 border-b border-gray-600 text-left text-white"
+                                    >Ingredient</th
+                                >
+                                <th class="px-4 py-2 border-b border-gray-600 text-left text-white"
+                                    >Quantity (ml)</th
+                                >
+                                <th class="px-4 py-2 border-b border-gray-600 text-left text-white"
+                                    >Order</th
+                                >
+                                <th class="px-4 py-2 border-b border-gray-600 text-left text-white"
+                                    >Weight (g)</th
+                                >
+                                <th class="px-4 py-2 border-b border-gray-600 text-left text-white"
+                                    >Actions</th
+                                >
                             </tr>
                         </thead>
                         <tbody>
@@ -204,13 +219,13 @@
                                         {dose.weight.toFixed(1)}
                                     </td>
                                     <td class="px-4 py-2 border-b border-gray-600 text-white">
-                                        <form 
-                                            method="POST" 
-                                            action="?/deleteDose" 
+                                        <form
+                                            method="POST"
+                                            action="?/deleteDose"
                                             use:enhance={({ formData }) => {
                                                 const id = formData.get('id');
                                                 console.log('Deleting dose:', id);
-                                                
+
                                                 return ({ update }) => {
                                                     console.log('Delete completed, updating page');
                                                     update({ reset: false });
@@ -218,8 +233,8 @@
                                             }}
                                         >
                                             <input type="hidden" name="id" value={dose.id} />
-                                            <button 
-                                                type="submit" 
+                                            <button
+                                                type="submit"
                                                 class="bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded text-sm"
                                             >
                                                 Delete

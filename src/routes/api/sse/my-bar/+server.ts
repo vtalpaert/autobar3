@@ -60,11 +60,11 @@ async function getCocktailWithDetails(cocktailId: string) {
 
 export async function GET({ locals }) {
     const profile = await selectVerifiedProfile(locals.user);
-    
+
     let interval: NodeJS.Timeout;
     let isClosed = false;
     let knownCocktailIds = new Set<string>();
-    
+
     const cleanup = () => {
         if (!isClosed) {
             isClosed = true;
@@ -73,7 +73,7 @@ export async function GET({ locals }) {
             }
         }
     };
-    
+
     const stream = new ReadableStream({
         start(controller) {
             const sendUpdate = async () => {
@@ -82,7 +82,7 @@ export async function GET({ locals }) {
                 try {
                     // Get active and recently completed orders (within last 10 minutes)
                     const tenMinutesAgo = new Date(Date.now() - 10 * 60 * 1000);
-                    
+
                     const rawActiveOrders = await db
                         .select({
                             id: table.order.id,
@@ -104,7 +104,11 @@ export async function GET({ locals }) {
                                     inArray(table.order.status, ['pending', 'in_progress']),
                                     // Recently completed orders (within last 10 minutes)
                                     and(
-                                        inArray(table.order.status, ['completed', 'failed', 'cancelled']),
+                                        inArray(table.order.status, [
+                                            'completed',
+                                            'failed',
+                                            'cancelled'
+                                        ]),
                                         gte(table.order.updatedAt, tenMinutesAgo)
                                     )
                                 )
@@ -114,41 +118,50 @@ export async function GET({ locals }) {
 
                     // Get device info for orders that have devices
                     const deviceIds = rawActiveOrders
-                        .map(o => o.deviceId)
+                        .map((o) => o.deviceId)
                         .filter(Boolean) as string[];
-                    
-                    const devices = deviceIds.length > 0 ? await db
-                        .select({ id: table.device.id, name: table.device.name })
-                        .from(table.device)
-                        .where(inArray(table.device.id, deviceIds)) : [];
-                    
-                    const deviceMap = new Map(devices.map(d => [d.id, d]));
+
+                    const devices =
+                        deviceIds.length > 0
+                            ? await db
+                                  .select({ id: table.device.id, name: table.device.name })
+                                  .from(table.device)
+                                  .where(inArray(table.device.id, deviceIds))
+                            : [];
+
+                    const deviceMap = new Map(devices.map((d) => [d.id, d]));
 
                     // Get current dose info
                     const currentDoseIds = rawActiveOrders
-                        .map(o => o.currentDoseId)
+                        .map((o) => o.currentDoseId)
                         .filter(Boolean) as string[];
-                    
-                    const currentDoses = currentDoseIds.length > 0 ? await db
-                        .select({
-                            id: table.dose.id,
-                            number: table.dose.number,
-                            quantity: table.dose.quantity,
-                            ingredient: {
-                                id: table.ingredient.id,
-                                name: table.ingredient.name
-                            }
-                        })
-                        .from(table.dose)
-                        .innerJoin(table.ingredient, eq(table.dose.ingredientId, table.ingredient.id))
-                        .where(inArray(table.dose.id, currentDoseIds)) : [];
-                    
-                    const currentDoseMap = new Map(currentDoses.map(d => [d.id, d]));
+
+                    const currentDoses =
+                        currentDoseIds.length > 0
+                            ? await db
+                                  .select({
+                                      id: table.dose.id,
+                                      number: table.dose.number,
+                                      quantity: table.dose.quantity,
+                                      ingredient: {
+                                          id: table.ingredient.id,
+                                          name: table.ingredient.name
+                                      }
+                                  })
+                                  .from(table.dose)
+                                  .innerJoin(
+                                      table.ingredient,
+                                      eq(table.dose.ingredientId, table.ingredient.id)
+                                  )
+                                  .where(inArray(table.dose.id, currentDoseIds))
+                            : [];
+
+                    const currentDoseMap = new Map(currentDoses.map((d) => [d.id, d]));
 
                     // Determine which cocktails need full data
                     const newCocktailIds = rawActiveOrders
-                        .map(o => o.cocktailId)
-                        .filter(id => !knownCocktailIds.has(id));
+                        .map((o) => o.cocktailId)
+                        .filter((id) => !knownCocktailIds.has(id));
 
                     // Get full cocktail data for new cocktails
                     const newCocktails = new Map();
@@ -161,10 +174,12 @@ export async function GET({ locals }) {
                     }
 
                     // Build enriched active orders
-                    const activeOrders = rawActiveOrders.map(order => {
+                    const activeOrders = rawActiveOrders.map((order) => {
                         const device = order.deviceId ? deviceMap.get(order.deviceId) : null;
-                        const currentDose = order.currentDoseId ? currentDoseMap.get(order.currentDoseId) : null;
-                        
+                        const currentDose = order.currentDoseId
+                            ? currentDoseMap.get(order.currentDoseId)
+                            : null;
+
                         return {
                             id: order.id,
                             createdAt: order.createdAt,
@@ -174,20 +189,25 @@ export async function GET({ locals }) {
                             errorMessage: order.errorMessage,
                             cocktailId: order.cocktailId,
                             device: device ? { id: device.id, name: device.name } : null,
-                            currentDose: currentDose ? {
-                                id: currentDose.id,
-                                number: currentDose.number,
-                                quantity: currentDose.quantity,
-                                ingredient: currentDose.ingredient
-                            } : null
+                            currentDose: currentDose
+                                ? {
+                                      id: currentDose.id,
+                                      number: currentDose.number,
+                                      quantity: currentDose.quantity,
+                                      ingredient: currentDose.ingredient
+                                  }
+                                : null
                         };
                     });
 
                     // Determine polling frequency based on order status
-                    const hasInProgressOrders = activeOrders.some(o => o.status === 'in_progress');
-                    const hasActiveOrders = activeOrders.some(o => ['pending', 'in_progress'].includes(o.status));
-                    const nextInterval = hasInProgressOrders ? 1000 : 
-                                       hasActiveOrders ? 3000 : 5000;
+                    const hasInProgressOrders = activeOrders.some(
+                        (o) => o.status === 'in_progress'
+                    );
+                    const hasActiveOrders = activeOrders.some((o) =>
+                        ['pending', 'in_progress'].includes(o.status)
+                    );
+                    const nextInterval = hasInProgressOrders ? 1000 : hasActiveOrders ? 3000 : 5000;
 
                     // Update interval if needed
                     if (interval) {
@@ -199,7 +219,7 @@ export async function GET({ locals }) {
 
                     if (!isClosed) {
                         const response: any = { activeOrders };
-                        
+
                         // Include full cocktail data for new cocktails
                         if (newCocktails.size > 0) {
                             response.newCocktails = Object.fromEntries(newCocktails);
@@ -211,7 +231,9 @@ export async function GET({ locals }) {
                     console.error('SSE error:', error);
                     if (!isClosed) {
                         try {
-                            controller.enqueue(`data: ${JSON.stringify({ error: 'Failed to fetch orders' })}\n\n`);
+                            controller.enqueue(
+                                `data: ${JSON.stringify({ error: 'Failed to fetch orders' })}\n\n`
+                            );
                         } catch (enqueueError) {
                             cleanup();
                         }
@@ -221,7 +243,7 @@ export async function GET({ locals }) {
 
             // Send initial data
             sendUpdate();
-            
+
             return cleanup;
         },
         cancel: cleanup

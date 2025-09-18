@@ -9,9 +9,12 @@ export async function POST({ request }) {
     const { token } = data;
 
     if (!token) {
-        return json({
-            error: "Missing device token"
-        }, { status: 400 });
+        return json(
+            {
+                error: 'Missing device token'
+            },
+            { status: 400 }
+        );
     }
 
     // Find the device by token
@@ -22,9 +25,12 @@ export async function POST({ request }) {
         .get();
 
     if (!device) {
-        return json({
-            error: "Invalid device token"
-        }, { status: 401 });
+        return json(
+            {
+                error: 'Invalid device token'
+            },
+            { status: 401 }
+        );
     }
 
     // Update last ping time
@@ -42,10 +48,7 @@ export async function POST({ request }) {
             and(
                 eq(table.order.deviceId, device.id),
                 // Check for both pending and in-progress orders
-                or(
-                    eq(table.order.status, 'pending'),
-                    eq(table.order.status, 'in_progress')
-                )
+                or(eq(table.order.status, 'pending'), eq(table.order.status, 'in_progress'))
             )
         )
         .orderBy(table.order.createdAt)
@@ -54,7 +57,7 @@ export async function POST({ request }) {
 
     if (!order) {
         return json({
-            action: "standby",
+            action: 'standby',
             idle: 1000
         });
     }
@@ -131,16 +134,16 @@ export async function POST({ request }) {
                 .where(eq(table.order.id, order.id));
 
             return json({
-                action: "completed",
+                action: 'completed',
                 orderId: order.id,
-                message: "Order completed - drink ready for pickup"
+                message: 'Order completed - drink ready for pickup'
             });
         }
     }
 
     if (!currentDose) {
         return json({
-            action: "standby",
+            action: 'standby',
             idle: 1000
         });
     }
@@ -149,7 +152,7 @@ export async function POST({ request }) {
     const pump = await findPumpForOrderAndDose(order.id, currentDose.id);
     if (!pump || !pump.gpio) {
         return json({
-            action: "standby",
+            action: 'standby',
             idle: 1000
         });
     }
@@ -163,7 +166,7 @@ export async function POST({ request }) {
 
     if (!ingredient) {
         return json({
-            action: "standby",
+            action: 'standby',
             idle: 1000
         });
     }
@@ -174,7 +177,7 @@ export async function POST({ request }) {
     const doseWeightProgress = (order.doseProgress || 0) * (ingredient.density / 1000);
 
     return json({
-        action: "pump",
+        action: 'pump',
         orderId: order.id,
         doseId: currentDose.id,
         pumpGpio: pump.gpio,

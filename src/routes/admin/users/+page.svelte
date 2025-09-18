@@ -5,8 +5,8 @@
 
     export let data: PageData;
 
-    $: unverifiedProfiles = data.profiles.filter(p => !p.isVerified);
-    $: verifiedProfiles = data.profiles.filter(p => p.isVerified);
+    $: unverifiedProfiles = data.profiles.filter((p) => !p.isVerified);
+    $: verifiedProfiles = data.profiles.filter((p) => p.isVerified);
 </script>
 
 <Header user={data.user} />
@@ -31,18 +31,18 @@
                         <div class="flex items-center justify-between bg-gray-700 p-4 rounded-lg">
                             <div>
                                 <p class="font-bold">
-                                    <a href="/profile?id={profile.userId}" class="hover:underline">{profile.username}</a>
+                                    <a href="/profile?id={profile.userId}" class="hover:underline"
+                                        >{profile.username}</a
+                                    >
                                 </p>
-                                <p class="text-sm text-gray-400">Created: {new Date(profile.createdAt).toLocaleDateString()}</p>
+                                <p class="text-sm text-gray-400">
+                                    Created: {new Date(profile.createdAt).toLocaleDateString()}
+                                </p>
                             </div>
                             <div class="flex gap-2">
-                                <form 
-                                    method="POST" 
-                                    action="?/verifyProfile" 
-                                    use:enhance
-                                >
+                                <form method="POST" action="?/verifyProfile" use:enhance>
                                     <input type="hidden" name="profileId" value={profile.id} />
-                                    <button 
+                                    <button
                                         type="submit"
                                         class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded"
                                     >
@@ -50,13 +50,9 @@
                                     </button>
                                 </form>
                                 {#if !profile.isAdmin}
-                                    <form 
-                                        method="POST" 
-                                        action="?/promoteToAdmin" 
-                                        use:enhance
-                                    >
+                                    <form method="POST" action="?/promoteToAdmin" use:enhance>
                                         <input type="hidden" name="profileId" value={profile.id} />
-                                        <button 
+                                        <button
                                             type="submit"
                                             class="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded"
                                         >
@@ -79,27 +75,34 @@
                     <div class="flex items-center justify-between bg-gray-700 p-4 rounded-lg">
                         <div>
                             <p class="font-bold">
-                                <a href="/profile?id={profile.userId}" class="hover:underline">{profile.username}</a>
+                                <a href="/profile?id={profile.userId}" class="hover:underline"
+                                    >{profile.username}</a
+                                >
                             </p>
-                            <p class="text-sm text-gray-400">Artist Name: {profile.artistName || 'Not set'}</p>
                             <p class="text-sm text-gray-400">
-                                <span class="{profile.isVerified ? 'bg-green-600' : 'bg-yellow-600'} text-white text-xs px-2 py-1 rounded">
+                                Artist Name: {profile.artistName || 'Not set'}
+                            </p>
+                            <p class="text-sm text-gray-400">
+                                <span
+                                    class="{profile.isVerified
+                                        ? 'bg-green-600'
+                                        : 'bg-yellow-600'} text-white text-xs px-2 py-1 rounded"
+                                >
                                     {profile.isVerified ? 'Verified' : 'Unverified'}
                                 </span>
                                 {#if profile.isAdmin}
-                                    <span class="ml-2 bg-purple-700 text-white text-xs px-2 py-1 rounded">Admin</span>
+                                    <span
+                                        class="ml-2 bg-purple-700 text-white text-xs px-2 py-1 rounded"
+                                        >Admin</span
+                                    >
                                 {/if}
                             </p>
                         </div>
                         <div class="flex gap-2">
                             {#if !profile.isAdmin}
-                                <form 
-                                    method="POST" 
-                                    action="?/promoteToAdmin" 
-                                    use:enhance
-                                >
+                                <form method="POST" action="?/promoteToAdmin" use:enhance>
                                     <input type="hidden" name="profileId" value={profile.id} />
-                                    <button 
+                                    <button
                                         type="submit"
                                         class="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded"
                                     >
@@ -107,18 +110,22 @@
                                     </button>
                                 </form>
                             {:else if profile.userId !== data.user.id}
-                                <form 
-                                    method="POST" 
-                                    action="?/removeAdmin" 
+                                <form
+                                    method="POST"
+                                    action="?/removeAdmin"
                                     use:enhance
                                     on:submit|preventDefault={(e) => {
-                                        if (confirm('Are you sure you want to remove admin status from this user?')) {
+                                        if (
+                                            confirm(
+                                                'Are you sure you want to remove admin status from this user?'
+                                            )
+                                        ) {
                                             e.target.submit();
                                         }
                                     }}
                                 >
                                     <input type="hidden" name="profileId" value={profile.id} />
-                                    <button 
+                                    <button
                                         type="submit"
                                         class="bg-orange-600 hover:bg-orange-700 text-white px-4 py-2 rounded"
                                     >
@@ -126,18 +133,22 @@
                                     </button>
                                 </form>
                             {/if}
-                            <form 
-                                method="POST" 
-                                action="?/deleteUser" 
+                            <form
+                                method="POST"
+                                action="?/deleteUser"
                                 use:enhance
                                 on:submit|preventDefault={(e) => {
-                                    if (confirm('Are you sure you want to delete this user? This action cannot be undone.')) {
+                                    if (
+                                        confirm(
+                                            'Are you sure you want to delete this user? This action cannot be undone.'
+                                        )
+                                    ) {
                                         e.target.submit();
                                     }
                                 }}
                             >
                                 <input type="hidden" name="userId" value={profile.userId} />
-                                <button 
+                                <button
                                     type="submit"
                                     class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded"
                                 >

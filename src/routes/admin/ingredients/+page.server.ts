@@ -15,10 +15,7 @@ export const load: PageServerLoad = async ({ locals }) => {
         throw redirect(302, '/');
     }
 
-    const ingredients = await db
-        .select()
-        .from(table.ingredient)
-        .orderBy(table.ingredient.name);
+    const ingredients = await db.select().from(table.ingredient).orderBy(table.ingredient.name);
 
     return {
         ingredients,

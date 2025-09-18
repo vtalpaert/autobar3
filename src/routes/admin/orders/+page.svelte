@@ -7,13 +7,19 @@
 
     // Function to get status badge color
     function getStatusColor(status: string) {
-        switch(status) {
-            case 'pending': return 'bg-yellow-600';
-            case 'in_progress': return 'bg-blue-600';
-            case 'completed': return 'bg-green-600';
-            case 'failed': return 'bg-red-600';
-            case 'cancelled': return 'bg-gray-600';
-            default: return 'bg-gray-600';
+        switch (status) {
+            case 'pending':
+                return 'bg-yellow-600';
+            case 'in_progress':
+                return 'bg-blue-600';
+            case 'completed':
+                return 'bg-green-600';
+            case 'failed':
+                return 'bg-red-600';
+            case 'cancelled':
+                return 'bg-gray-600';
+            default:
+                return 'bg-gray-600';
         }
     }
 </script>
@@ -53,7 +59,9 @@
                             {#each data.orders as order}
                                 <tr class="border-b border-gray-700">
                                     <td class="py-3 px-4">{order.id.slice(0, 8)}</td>
-                                    <td class="py-3 px-4">{new Date(order.createdAt).toLocaleString()}</td>
+                                    <td class="py-3 px-4"
+                                        >{new Date(order.createdAt).toLocaleString()}</td
+                                    >
                                     <td class="py-3 px-4">
                                         {order.customer.artistName || order.customer.username}
                                     </td>
@@ -62,23 +70,31 @@
                                     </td>
                                     <td class="py-3 px-4">{order.cocktail.name}</td>
                                     <td class="py-3 px-4">
-                                        <span class={`${getStatusColor(order.status)} px-2 py-1 rounded-full text-xs`}>
+                                        <span
+                                            class={`${getStatusColor(order.status)} px-2 py-1 rounded-full text-xs`}
+                                        >
                                             {order.status}
                                         </span>
                                     </td>
                                     <td class="py-3 px-4">
-                                        {order.doseProgress ? `${order.doseProgress.toFixed(1)} ml` : '-'}
+                                        {order.doseProgress
+                                            ? `${order.doseProgress.toFixed(1)} ml`
+                                            : '-'}
                                     </td>
                                     <td class="py-3 px-4">
                                         <div class="flex gap-2">
                                             {#if order.status === 'pending' || order.status === 'in_progress'}
-                                                <form 
-                                                    method="POST" 
-                                                    action="?/cancelOrder" 
+                                                <form
+                                                    method="POST"
+                                                    action="?/cancelOrder"
                                                     use:enhance
                                                 >
-                                                    <input type="hidden" name="orderId" value={order.id} />
-                                                    <button 
+                                                    <input
+                                                        type="hidden"
+                                                        name="orderId"
+                                                        value={order.id}
+                                                    />
+                                                    <button
                                                         type="submit"
                                                         class="bg-orange-600 hover:bg-orange-700 text-white px-2 py-1 rounded text-sm"
                                                     >
@@ -86,13 +102,13 @@
                                                     </button>
                                                 </form>
                                             {/if}
-                                            <form 
-                                                method="POST" 
-                                                action="?/deleteOrder" 
-                                                use:enhance
-                                            >
-                                                <input type="hidden" name="orderId" value={order.id} />
-                                                <button 
+                                            <form method="POST" action="?/deleteOrder" use:enhance>
+                                                <input
+                                                    type="hidden"
+                                                    name="orderId"
+                                                    value={order.id}
+                                                />
+                                                <button
                                                     type="submit"
                                                     class="bg-red-600 hover:bg-red-700 text-white px-2 py-1 rounded text-sm"
                                                 >

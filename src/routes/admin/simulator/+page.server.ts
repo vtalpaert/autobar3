@@ -52,10 +52,7 @@ export const load: PageServerLoad = async ({ locals }) => {
         .innerJoin(table.user, eq(table.profile.userId, table.user.id))
         .leftJoin(table.dose, eq(table.order.currentDoseId, table.dose.id))
         .leftJoin(table.ingredient, eq(table.dose.ingredientId, table.ingredient.id))
-        .where(or(
-            eq(table.order.status, 'pending'),
-            eq(table.order.status, 'in_progress')
-        ));
+        .where(or(eq(table.order.status, 'pending'), eq(table.order.status, 'in_progress')));
 
     return {
         devices,
@@ -147,7 +144,7 @@ export const actions: Actions = {
             });
 
             const result = await response.json();
-            
+
             // Get ingredient name if we have an ingredientId
             let ingredientName = null;
             if (result.ingredientId) {
@@ -158,22 +155,23 @@ export const actions: Actions = {
                     .get();
                 ingredientName = ingredient?.name || 'Unknown';
             }
-            
-            return { 
-                success: true, 
+
+            return {
+                success: true,
                 action: result.action,
                 orderId: result.orderId,
                 doseId: result.doseId,
                 pumpGpio: result.pumpGpio,
                 doseWeight: result.doseWeight,
                 doseWeightProgress: result.doseWeightProgress,
-                message: result.action === 'pump' 
-                    ? `Ready to pump: ${result.doseWeight - result.doseWeightProgress}g remaining for order ${result.orderId} (${result.doseWeightProgress}g/${result.doseWeight}g done) on GPIO ${result.pumpGpio}`
-                    : result.action === 'standby'
-                    ? `Device on standby, idle for ${result.idle}ms`
-                    : result.action === 'completed'
-                    ? `Order ${result.orderId} completed: ${result.message}`
-                    : `Device status: ${result.action}`
+                message:
+                    result.action === 'pump'
+                        ? `Ready to pump: ${result.doseWeight - result.doseWeightProgress}g remaining for order ${result.orderId} (${result.doseWeightProgress}g/${result.doseWeight}g done) on GPIO ${result.pumpGpio}`
+                        : result.action === 'standby'
+                          ? `Device on standby, idle for ${result.idle}ms`
+                          : result.action === 'completed'
+                            ? `Order ${result.orderId} completed: ${result.message}`
+                            : `Device status: ${result.action}`
                 // Don't refresh for checkAction - it's just reading state
             };
         } catch (error) {
@@ -200,7 +198,7 @@ export const actions: Actions = {
         // Get device token (or use override device)
         const overrideDeviceId = formData.get('overrideDeviceId')?.toString();
         const targetDeviceId = overrideDeviceId || deviceId;
-        
+
         const device = await db
             .select({ apiToken: table.device.apiToken, name: table.device.name })
             .from(table.device)
@@ -224,20 +222,22 @@ export const actions: Actions = {
             });
 
             const result = await response.json();
-            const deviceName = overrideDeviceId ? `${device.name || `Device ${targetDeviceId.slice(0, 8)}`} (WRONG DEVICE)` : 'selected device';
+            const deviceName = overrideDeviceId
+                ? `${device.name || `Device ${targetDeviceId.slice(0, 8)}`} (WRONG DEVICE)`
+                : 'selected device';
             const isManual = formData.get('isManual') === 'true';
             const orderInfo = isManual ? `${orderId} (MANUAL)` : orderId;
-            
+
             if (result.continue) {
-                return { 
-                    success: true, 
+                return {
+                    success: true,
                     message: `Progress reported from ${deviceName}: Set weight to ${progressAmount}g for order ${orderInfo}`,
                     completed: false,
                     refreshOrders: true
                 };
             } else {
-                return { 
-                    success: true, 
+                return {
+                    success: true,
                     message: result.message || 'Order was cancelled or completed',
                     cancelled: true,
                     refreshOrders: true
@@ -266,7 +266,7 @@ export const actions: Actions = {
         // Get device token (or use override device)
         const overrideDeviceId = formData.get('overrideDeviceId')?.toString();
         const targetDeviceId = overrideDeviceId || deviceId;
-        
+
         const device = await db
             .select({ apiToken: table.device.apiToken, name: table.device.name })
             .from(table.device)
@@ -279,7 +279,7 @@ export const actions: Actions = {
 
         try {
             const errorCode = formData.get('errorCode')?.toString() || '1'; // Default to general error
-            
+
             const response = await fetch('/api/devices/error', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -292,10 +292,12 @@ export const actions: Actions = {
             });
 
             const result = await response.json();
-            const deviceName = overrideDeviceId ? `${device.name || `Device ${targetDeviceId.slice(0, 8)}`} (WRONG DEVICE)` : 'selected device';
-            
-            return { 
-                success: true, 
+            const deviceName = overrideDeviceId
+                ? `${device.name || `Device ${targetDeviceId.slice(0, 8)}`} (WRONG DEVICE)`
+                : 'selected device';
+
+            return {
+                success: true,
                 message: `Error reported from ${deviceName}: ${result.message}`,
                 errorReported: true,
                 refreshOrders: true

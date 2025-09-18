@@ -59,9 +59,7 @@ export const actions: Actions = {
             return { error: 'Cocktail ID is required' };
         }
 
-        await db
-            .delete(table.cocktail)
-            .where(eq(table.cocktail.id, cocktailId));
+        await db.delete(table.cocktail).where(eq(table.cocktail.id, cocktailId));
 
         return { success: true };
     }

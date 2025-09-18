@@ -9,7 +9,7 @@
 </script>
 
 <svelte:head>
-    <script 
+    <script
         type="module"
         src="https://unpkg.com/esp-web-tools@10/dist/web/install-button.js?module"
     ></script>
@@ -20,10 +20,7 @@
 <div class="min-h-screen bg-gradient-to-b from-gray-900 to-gray-800 text-white">
     <div class="container mx-auto px-4 py-16">
         <div class="mb-8">
-            <a 
-                href="/devices" 
-                class="text-blue-400 hover:text-blue-300 transition-colors"
-            >
+            <a href="/devices" class="text-blue-400 hover:text-blue-300 transition-colors">
                 ← {t.devices.back}
             </a>
             <h1 class="text-4xl font-bold mt-4">{t.devices.registerNew}</h1>
@@ -41,11 +38,10 @@
             </div>
 
             <div class="text-center">
-                <esp-web-install-button
-                    manifest="/firmware/manifest.json"
-                    class="inline-block"
-                >
-                    <button class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg transition-colors">
+                <esp-web-install-button manifest="/firmware/manifest.json" class="inline-block">
+                    <button
+                        class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg transition-colors"
+                    >
                         {t.devices.installButton}
                     </button>
                 </esp-web-install-button>

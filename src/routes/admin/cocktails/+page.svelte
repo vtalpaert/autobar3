@@ -28,23 +28,23 @@
                         <div class="flex items-center justify-between bg-gray-700 p-4 rounded-lg">
                             <div>
                                 <p class="font-bold">{cocktail.name}</p>
-                                <p class="text-sm text-gray-400">Created by: {cocktail.creatorName}</p>
-                                <p class="text-sm text-gray-400">Created: {new Date(cocktail.createdAt).toLocaleDateString()}</p>
+                                <p class="text-sm text-gray-400">
+                                    Created by: {cocktail.creatorName}
+                                </p>
+                                <p class="text-sm text-gray-400">
+                                    Created: {new Date(cocktail.createdAt).toLocaleDateString()}
+                                </p>
                             </div>
                             <div class="flex gap-2">
-                                <a 
+                                <a
                                     href={`/cocktails/${cocktail.id}`}
                                     class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded"
                                 >
                                     View
                                 </a>
-                                <form 
-                                    method="POST" 
-                                    action="?/deleteCocktail" 
-                                    use:enhance
-                                >
+                                <form method="POST" action="?/deleteCocktail" use:enhance>
                                     <input type="hidden" name="cocktailId" value={cocktail.id} />
-                                    <button 
+                                    <button
                                         type="submit"
                                         class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded"
                                     >

@@ -8,10 +8,13 @@ export async function POST({ request }) {
     const { token, firmwareVersion, needsCalibration } = data;
 
     if (!token || !firmwareVersion) {
-        return json({
-            tokenValid: false,
-            message: "Missing token or firmware version"
-        }, { status: 401 });
+        return json(
+            {
+                tokenValid: false,
+                message: 'Missing token or firmware version'
+            },
+            { status: 401 }
+        );
     }
 
     const device = await db
@@ -21,10 +24,13 @@ export async function POST({ request }) {
         .get();
 
     if (!device) {
-        return json({
-            tokenValid: false,
-            message: `Your token '${token}' is invalid, you should enroll again`
-        }, { status: 401 });
+        return json(
+            {
+                tokenValid: false,
+                message: `Your token '${token}' is invalid, you should enroll again`
+            },
+            { status: 401 }
+        );
     }
 
     // Update the firmware version, ping time, and calibration status if provided
@@ -38,14 +44,11 @@ export async function POST({ request }) {
         updateData.needCalibration = true;
     }
 
-    await db
-        .update(table.device)
-        .set(updateData)
-        .where(eq(table.device.id, device.id));
+    await db.update(table.device).set(updateData).where(eq(table.device.id, device.id));
 
     return json({
         tokenValid: true,
-        message: "Hello from the server",
+        message: 'Hello from the server',
         needCalibration: device.needCalibration
     });
 }
