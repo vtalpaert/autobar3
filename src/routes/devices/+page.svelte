@@ -115,16 +115,16 @@
     <div class="container mx-auto px-4 py-16">
         <div class="flex justify-between items-center mb-8">
             <h1 class="text-4xl font-bold">{t.devices.title}</h1>
-            <div class="space-x-4">
+            <div class="flex flex-col sm:flex-row gap-4">
                 <a
                     href="/devices/register"
-                    class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded transition-colors"
+                    class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded transition-colors text-center"
                 >
                     {t.devices.registerNew}
                 </a>
                 <a
                     href="/devices/enroll"
-                    class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded transition-colors"
+                    class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded transition-colors text-center"
                 >
                     {t.devices.enroll}
                 </a>
