@@ -28,18 +28,10 @@ set(out_path "${CMAKE_SOURCE_DIR}/static/firmware")
 # Create output directory if it doesn't exist
 file(MAKE_DIRECTORY ${out_path})
 
-# Create a custom target for generating the binary from the ELF file
-add_custom_target(generate_binary
-    DEPENDS ${PROJECT_NAME}.elf
-    COMMAND ${CMAKE_COMMAND} -E echo "Generating binary from ELF..."
-    COMMAND esptool.py --chip esp32 elf2image ${build_dir}/${PROJECT_NAME}.elf
-    COMMENT "Generating binary image from built executable"
-)
-
-# Copy application binary for OTA updates
+# Copy application binary for OTA updates - depends on the binary generation
 add_custom_command(
     OUTPUT ${out_path}/${PROJECT_NAME}.bin
-    DEPENDS ${build_dir}/${PROJECT_NAME}.bin
+    DEPENDS gen_project_binary
     COMMAND ${CMAKE_COMMAND} -E echo "Copying application binary for OTA..."
     COMMAND ${CMAKE_COMMAND} -E copy ${build_dir}/${PROJECT_NAME}.bin ${out_path}/${PROJECT_NAME}.bin
     COMMENT "Copying application binary for OTA updates"
@@ -48,9 +40,8 @@ add_custom_command(
 # Create merged binary using esptool.py
 add_custom_command(
     OUTPUT ${out_path}/merged-firmware-esp32.bin
-    DEPENDS bootloader partition-table generate_binary
+    DEPENDS bootloader partition-table gen_project_binary
     COMMAND ${CMAKE_COMMAND} -E echo "Creating merged firmware binary..."
-    COMMAND ${CMAKE_COMMAND} -E sleep 1
     COMMAND esptool.py --chip esp32 merge_bin 
             -o ${out_path}/merged-firmware-esp32.bin
             --flash_mode dio

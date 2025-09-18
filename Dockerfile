@@ -4,7 +4,7 @@ RUN . /scripts/generate_dev_certificates.sh
 
 FROM espressif/idf:v5.3 AS firmware-builder
 SHELL ["/bin/bash", "-c"]
-COPY CMakeLists.txt sdkconfig /workspace/
+COPY CMakeLists.txt sdkconfig dependencies.lock /workspace/
 COPY main /workspace/main
 COPY --from=certificates-generator /main/server_cert.pem /workspace/main/server_cert.pem
 WORKDIR /workspace

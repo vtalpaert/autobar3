@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 
 # Script to generate self-signed SSL certificates for development
 
@@ -16,7 +16,7 @@ ORGANIZATIONAL_UNIT="IT"
 COMMON_NAME="localhost"
 
 # Get all local IP addresses (excluding loopback)
-LOCAL_IPS=$(ip addr show | grep -oP '(?<=inet\s)\d+(\.\d+){3}' | grep -v '127.0.0.1')
+LOCAL_IPS=$(ip addr show | grep 'inet ' | grep -v '127.0.0.1' | sed 's/.*inet \([0-9.]*\).*/\1/')
 
 # Create certificates directory if it doesn't exist
 mkdir -p "$CERT_DIR"
@@ -31,7 +31,7 @@ IP_COUNT=2
 for ip in $LOCAL_IPS; do
     ALT_NAMES="$ALT_NAMES
 IP.$IP_COUNT = $ip"
-    ((IP_COUNT++))
+    IP_COUNT=$((IP_COUNT + 1))
 done
 
 # Create OpenSSL config file with SAN
