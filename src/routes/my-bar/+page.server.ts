@@ -71,7 +71,7 @@ export const load: PageServerLoad = async ({ locals }) => {
                 instructions: table.cocktail.instructions,
                 imageUri: table.cocktail.imageUri,
                 creator: {
-                    username: table.profile.userId,
+                    username: table.user.username,
                     artistName: table.profile.artistName
                 }
             },
@@ -92,6 +92,7 @@ export const load: PageServerLoad = async ({ locals }) => {
         .from(table.order)
         .innerJoin(table.cocktail, eq(table.order.cocktailId, table.cocktail.id))
         .innerJoin(table.profile, eq(table.cocktail.creatorId, table.profile.id))
+        .innerJoin(table.user, eq(table.profile.userId, table.user.id))
         .leftJoin(table.device, eq(table.order.deviceId, table.device.id))
         .leftJoin(table.dose, eq(table.order.currentDoseId, table.dose.id))
         .leftJoin(table.ingredient, eq(table.dose.ingredientId, table.ingredient.id))

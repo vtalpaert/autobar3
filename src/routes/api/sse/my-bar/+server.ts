@@ -19,12 +19,13 @@ async function getCocktailWithDetails(cocktailId: string) {
             instructions: table.cocktail.instructions,
             imageUri: table.cocktail.imageUri,
             creator: {
-                username: table.profile.userId,
+                username: table.user.username,
                 artistName: table.profile.artistName
             }
         })
         .from(table.cocktail)
         .innerJoin(table.profile, eq(table.cocktail.creatorId, table.profile.id))
+        .innerJoin(table.user, eq(table.profile.userId, table.user.id))
         .where(eq(table.cocktail.id, cocktailId))
         .get();
 

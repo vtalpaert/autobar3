@@ -42,19 +42,25 @@
             {/if}
             
             {#if data.cocktail.description}
-                <p class="text-gray-300 text-lg mb-6">{data.cocktail.description}</p>
+                <p class="text-gray-300 text-lg mb-6 whitespace-pre-wrap">{data.cocktail.description}</p>
             {/if}
             
             {#if data.cocktail.instructions}
                 <div class="mb-6">
                     <h2 class="text-2xl font-bold mb-3">{t.cocktails.instructions}</h2>
-                    <p class="text-gray-300">{data.cocktail.instructions}</p>
+                    <p class="text-gray-300 whitespace-pre-wrap">{data.cocktail.instructions}</p>
                 </div>
             {/if}
             
             <div class="flex justify-between items-center mt-8 mb-4">
                 <div class="text-sm text-gray-400">
-                    <p>{t.cocktails.createdBy} {data.cocktail.creatorName}</p>
+                    <p>{t.cocktails.createdBy} 
+                        {#if data.cocktail.creator.artistName}
+                            {data.cocktail.creator.artistName} ({data.cocktail.creator.username})
+                        {:else}
+                            {data.cocktail.creator.username}
+                        {/if}
+                    </p>
                     <p>{t.cocktails.addedOn} {formattedDate}</p>
                 </div>
                 

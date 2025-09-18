@@ -88,6 +88,20 @@
 		return order.currentDose ? order.currentDose.number : 0;
 	}
 
+	// Check if description needs truncation (more than 5 lines)
+	function needsTruncation(text: string): boolean {
+		if (!text) return false;
+		const lines = text.split('\n');
+		return lines.length > 5;
+	}
+
+	// Get truncated description (first 5 lines)
+	function getTruncatedDescription(text: string): string {
+		if (!text) return '';
+		const lines = text.split('\n');
+		return lines.slice(0, 5).join('\n');
+	}
+
 	function connectSSE() {
 		if (eventSource) return;
 
@@ -390,11 +404,20 @@
 								<div class="flex justify-between items-start mb-4">
 									<div class="flex-1">
 										<h3 class="text-2xl font-bold text-white mb-1">
-											{cocktail?.name || 'Loading...'}
+											<a 
+												href="/cocktails/{cocktail?.id}" 
+												class="hover:text-blue-400 transition-colors"
+											>
+												{cocktail?.name || 'Loading...'}
+											</a>
 										</h3>
 										{#if cocktail?.creator}
 											<p class="text-sm text-gray-400 mb-2">
-												by {cocktail.creator.artistName || cocktail.creator.username}
+												by {#if cocktail.creator?.artistName}
+													{cocktail.creator.artistName} ({cocktail.creator.username})
+												{:else}
+													{cocktail.creator?.username || 'Unknown'}
+												{/if}
 											</p>
 										{/if}
 										<span
@@ -424,9 +447,21 @@
 
 								<!-- Description -->
 								{#if cocktail?.description}
-									<p class="text-gray-300 mb-4 leading-relaxed">
-										{cocktail.description}
-									</p>
+									<div class="text-gray-300 mb-4 leading-relaxed">
+										<p class="whitespace-pre-wrap">
+											{needsTruncation(cocktail.description) 
+												? getTruncatedDescription(cocktail.description)
+												: cocktail.description}
+										</p>
+										{#if needsTruncation(cocktail.description)}
+											<a 
+												href="/cocktails/{cocktail.id}" 
+												class="text-blue-400 hover:text-blue-300 text-sm mt-2 inline-block transition-colors"
+											>
+												Read more...
+											</a>
+										{/if}
+									</div>
 								{/if}
 
 								<!-- Current Progress for In-Progress Orders -->
@@ -482,16 +517,14 @@
 									</div>
 								{/if}
 
-								<!-- Instructions (Expandable) -->
+								<!-- Instructions -->
 								{#if cocktail?.instructions}
-									<details class="mb-4">
-										<summary class="text-sm font-medium text-gray-300 cursor-pointer hover:text-white transition-colors">
-											Preparation Instructions
-										</summary>
-										<div class="mt-2 p-3 bg-gray-700 rounded text-sm text-gray-300 leading-relaxed">
+									<div class="mb-4">
+										<h4 class="text-sm font-medium text-gray-300 mb-2">Preparation Instructions</h4>
+										<div class="p-3 bg-gray-700 rounded text-sm text-gray-300 leading-relaxed whitespace-pre-wrap">
 											{cocktail.instructions}
 										</div>
-									</details>
+									</div>
 								{/if}
 
 								<!-- Order Details -->

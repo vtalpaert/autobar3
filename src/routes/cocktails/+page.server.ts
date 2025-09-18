@@ -48,7 +48,10 @@ export const load: PageServerLoad = async ({ locals }) => {
                 description: table.cocktail.description,
                 imageUri: table.cocktail.imageUri,
                 creatorId: table.cocktail.creatorId,
-                creatorName: table.user.username
+                creator: {
+                    username: table.user.username,
+                    artistName: table.profile.artistName
+                }
             })
             .from(table.cocktail)
             .innerJoin(table.profile, eq(table.profile.id, table.cocktail.creatorId))

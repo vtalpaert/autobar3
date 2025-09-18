@@ -171,7 +171,13 @@
 							<p class="text-gray-300 mb-4">{cocktail.description}</p>
 						{/if}
 						
-						<p class="text-sm text-gray-400 mb-4">{t.cocktails.createdBy} {cocktail.creatorName}</p>
+						<p class="text-sm text-gray-400 mb-4">{t.cocktails.createdBy} 
+							{#if cocktail.creator?.artistName}
+								{cocktail.creator.artistName} ({cocktail.creator.username})
+							{:else}
+								{cocktail.creator?.username || 'Unknown'}
+							{/if}
+						</p>
 
 						<!-- Ingredient Status -->
 						{#if cocktail.availability !== 'no-device'}

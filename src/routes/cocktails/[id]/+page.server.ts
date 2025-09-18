@@ -18,16 +18,19 @@ export const load: PageServerLoad = async ({ params, locals }) => {
         throw error(404, 'Cocktail not found');
     }
 
-    // Get creator name
+    // Get creator info
     const creator = await db
-        .select({ username: table.user.username })
+        .select({ 
+            username: table.user.username,
+            artistName: table.profile.artistName
+        })
         .from(table.user)
         .innerJoin(table.profile, eq(table.profile.userId, table.user.id))
         .where(eq(table.profile.id, cocktail.creatorId))
         .get();
 
-    // Add creator name to cocktail
-    cocktail.creatorName = creator?.username || 'Unknown';
+    // Add creator info to cocktail
+    cocktail.creator = creator || { username: 'Unknown', artistName: null };
 
     // Get doses with ingredients for this cocktail
     const doses = await db
