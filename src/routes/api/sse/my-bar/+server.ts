@@ -4,11 +4,27 @@ import * as table from '$lib/server/db/schema';
 import { selectVerifiedProfile } from '$lib/server/auth.js';
 
 // Simple cache for cocktail data to avoid re-sending same cocktail info
-const cocktailCache = new Map<string, any>();
+// Map<cocktailId, { data: any, timestamp: number }>
+const cocktailCache = new Map<string, { data: any; timestamp: number }>();
+
+// Cleanup stale cocktail cache entries (older than 3 minutes)
+function cleanupStaleCocktails() {
+    const now = Date.now();
+    const staleThreshold = 3 * 60 * 1000; // 3 minutes
+
+    for (const [cocktailId, cached] of cocktailCache.entries()) {
+        if (now - cached.timestamp > staleThreshold) {
+            cocktailCache.delete(cocktailId);
+        }
+    }
+}
 
 async function getCocktailWithDetails(cocktailId: string) {
-    if (cocktailCache.has(cocktailId)) {
-        return cocktailCache.get(cocktailId);
+    cleanupStaleCocktails();
+    
+    const cached = cocktailCache.get(cocktailId);
+    if (cached) {
+        return cached.data;
     }
 
     const cocktailWithDetails = await db
@@ -51,7 +67,10 @@ async function getCocktailWithDetails(cocktailId: string) {
             doses
         };
 
-        cocktailCache.set(cocktailId, result);
+        cocktailCache.set(cocktailId, {
+            data: result,
+            timestamp: Date.now()
+        });
         return result;
     }
 
