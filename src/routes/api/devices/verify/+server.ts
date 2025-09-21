@@ -2,41 +2,39 @@ import { json } from '@sveltejs/kit';
 import { db } from '$lib/server/db';
 import * as table from '$lib/server/db/schema';
 import { eq } from 'drizzle-orm';
+import { authenticateDevice } from '$lib/server/device-auth';
 
 export async function POST({ request }) {
     const data = await request.json();
     const { token, firmwareVersion, needsCalibration } = data;
 
-    if (!token || !firmwareVersion) {
+    if (!firmwareVersion) {
         return json(
             {
                 tokenValid: false,
-                message: 'Missing token or firmware version'
+                message: 'Missing firmware version'
             },
-            { status: 401 }
+            { status: 400 }
         );
     }
 
-    const device = await db
-        .select()
-        .from(table.device)
-        .where(eq(table.device.apiToken, token))
-        .get();
-
-    if (!device) {
+    // Authenticate device
+    const authResult = await authenticateDevice(request, token);
+    if (!authResult.success) {
         return json(
             {
                 tokenValid: false,
-                message: `Your token '${token}' is invalid, you should enroll again`
+                message: authResult.error
             },
-            { status: 401 }
+            { status: authResult.status }
         );
     }
 
-    // Update the firmware version, ping time, and calibration status if provided
+    const device = authResult.device;
+
+    // Update the firmware version and calibration status if provided
     const updateData: any = {
-        firmwareVersion,
-        lastPingAt: new Date()
+        firmwareVersion
     };
 
     // If device reports it needs calibration, update the database

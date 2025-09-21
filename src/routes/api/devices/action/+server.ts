@@ -3,41 +3,19 @@ import { db } from '$lib/server/db';
 import * as table from '$lib/server/db/schema';
 import { eq, and, or, gt, isNull } from 'drizzle-orm';
 import { findPumpForOrderAndDose } from '$lib/server/device-capabilities';
+import { authenticateDevice } from '$lib/server/device-auth';
 
 export async function POST({ request }) {
     const data = await request.json();
     const { token } = data;
 
-    if (!token) {
-        return json(
-            {
-                error: 'Missing device token'
-            },
-            { status: 400 }
-        );
+    // Authenticate device (don't update ping time here, we handle it below)
+    const authResult = await authenticateDevice(request, token, false);
+    if (!authResult.success) {
+        return json({ error: authResult.error }, { status: authResult.status });
     }
 
-    // Find the device by token
-    const device = await db
-        .select()
-        .from(table.device)
-        .where(eq(table.device.apiToken, token))
-        .get();
-
-    if (!device) {
-        return json(
-            {
-                error: 'Invalid device token'
-            },
-            { status: 401 }
-        );
-    }
-
-    // Update last ping time
-    await db
-        .update(table.device)
-        .set({ lastPingAt: new Date() })
-        .where(eq(table.device.id, device.id));
+    const device = authResult.device;
 
     // Find pending or in-progress orders for this device
     // Process in creation order (oldest first)

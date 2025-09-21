@@ -2,43 +2,35 @@ import { json } from '@sveltejs/kit';
 import { db } from '$lib/server/db';
 import * as table from '$lib/server/db/schema';
 import { eq } from 'drizzle-orm';
+import { authenticateDevice } from '$lib/server/device-auth';
 
 export async function POST({ request }) {
     const data = await request.json();
     const { token, orderId, errorCode, message } = data;
 
-    if (!token || !orderId || !message) {
+    if (!orderId || !message) {
         return json(
             {
                 success: false,
-                message: 'Missing required fields'
+                message: 'Missing orderId or message'
             },
             { status: 400 }
         );
     }
 
-    // Find the device by token
-    const device = await db
-        .select()
-        .from(table.device)
-        .where(eq(table.device.apiToken, token))
-        .get();
-
-    if (!device) {
+    // Authenticate device
+    const authResult = await authenticateDevice(request, token);
+    if (!authResult.success) {
         return json(
             {
                 success: false,
-                message: 'Invalid device token'
+                message: authResult.error
             },
-            { status: 401 }
+            { status: authResult.status }
         );
     }
 
-    // Update last ping time
-    await db
-        .update(table.device)
-        .set({ lastPingAt: new Date() })
-        .where(eq(table.device.id, device.id));
+    const device = authResult.device;
 
     // Find the order
     const order = await db.select().from(table.order).where(eq(table.order.id, orderId)).get();
