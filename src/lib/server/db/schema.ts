@@ -42,7 +42,12 @@ export const device = sqliteTable('device', {
     hx711Dt: integer('hx711_dt'), // GPIO pin for HX711 DT (data)
     hx711Sck: integer('hx711_sck'), // GPIO pin for HX711 SCK (clock)
     hx711Offset: integer('hx711_offset'), // HX711 calibration offset (signed int)
-    hx711Scale: real('hx711_scale') // HX711 calibration scale (float)
+    hx711Scale: real('hx711_scale'), // HX711 calibration scale (float)
+    rgbRedPin: integer('rgb_red_pin'), // GPIO pin for RGB LED red channel
+    rgbGreenPin: integer('rgb_green_pin'), // GPIO pin for RGB LED green channel
+    rgbBluePin: integer('rgb_blue_pin'), // GPIO pin for RGB LED blue channel
+    switchPin: integer('switch_pin'), // GPIO pin for switch/button input
+    switchIsInvertedLogic: integer('switch_is_inverted_logic', { mode: 'boolean' }).notNull().default(false) // true if low is active (pull-up), false if high is active (pull-down)
 });
 
 export const pump = sqliteTable('pump', {
