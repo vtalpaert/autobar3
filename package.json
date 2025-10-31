@@ -74,6 +74,7 @@
     },
     "dependencies": {
         "@libsql/client": "^0.15.1",
+        "@netlify/vite-plugin": "^2.7.8",
         "@node-rs/argon2": "^1.1.0",
         "@oslojs/crypto": "^1.0.1",
         "@oslojs/encoding": "^1.1.0",
