@@ -22,8 +22,12 @@ COPY .env.example *.config.* LICENSE tsconfig.json ./
 COPY src src/
 
 RUN cp .env.example .env && npm run build && npm prune --production
+RUN npm i && npm run db:push -- --force && npm run db:load-ingredients:install && npm run db:create-admin && npm run setup-uploads
 
 FROM node-builder AS node-preview
 WORKDIR /app
-RUN npm i && npm run db:push -- --force && npm run db:load-ingredients:install && npm run db:create-admin && npm run setup-uploads
 ENTRYPOINT [ "npm", "run", "preview" ]
+
+#FROM node-builder AS node-pre-production
+#WORKDIR /app
+#RUN npm run build

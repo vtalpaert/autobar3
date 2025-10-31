@@ -59,7 +59,7 @@ Using the Devices page, use "Flash New Device" and then "Enroll via WiFi" for in
 If you have docker installed, you might prefer to run the project for a quick demo by using:
 
 ```bash
-docker build -t autobar3 .
+docker build --target node-preview -t autobar3 .
 docker run --rm -it autobar3
 ```
 
