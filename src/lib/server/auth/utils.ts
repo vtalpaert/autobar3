@@ -1,6 +1,6 @@
 import { hash } from '@node-rs/argon2';
 import { encodeBase32LowerCase } from '@oslojs/encoding';
-import * as table from '$lib/server/db/schema';
+import * as table from '../db/schema';
 import type { LibSQLDatabase } from 'drizzle-orm/libsql';
 
 export function generateUserId() {

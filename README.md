@@ -54,16 +54,55 @@ Using the Devices page, use "Flash New Device" and then "Enroll via WiFi" for in
 
 ![access point](docs/screenshot_access_point.png)
 
-## Getting Started with Docker
+## Getting started with Docker
 
-If you have docker installed, you might prefer to run the project for a quick demo by using:
+If you have docker installed, you might prefer to run the project for a quick demo
+
+### Preview
 
 ```bash
-docker build --target node-preview -t autobar3 .
-docker run --rm -it autobar3
+docker build -t autobar3:preview -f dockerfiles/Dockerfile.preview .
+docker run --rm -it autobar3:preview
 ```
 
-The admin authentification is in `.env.example`. You may change the values before building the image.
+The admin authentication is in `.env.example`. You may change the values before building the image.
+
+Building the image will take care of creating the SSL certificates and build the firmware for you.
+
+### Production
+
+Create initial database or migrate
+
+```bash
+docker build --target production-database -t autobar3:prod-db -f dockerfiles/Dockerfile.prod .
+
+# First time
+mkdir -p ./data/db
+## copy initial db to host data/db folder
+docker run --rm --mount type=bind,src=./data/db,dst=/data/db-init -it autobar3:prod-db /bin/sh -c "cp /data/db/local.db /data/db-init/local.db"
+
+# When DB already exists
+docker run --rm --mount type=bind,src=./data/db,dst=/data/db -it autobar3:prod-db /bin/sh -c "npm run db:push"
+```
+
+Or alternatively use the convenience image to trigger migrations on a server
+
+```bash
+mkdir -p ./data/db
+docker build --target production-database -t autobar3:prod-db -f dockerfiles/Dockerfile.prod .
+docker build -t autobar3:utils -f dockerfiles/Dockerfile.utils .
+docker run --rm -p 8081:8081 --mount type=bind,src=./data/db,dst=/data/db -v /var/run/docker.sock:/var/run/docker.sock -it autobar3:utils $(pwd)/data
+
+# In another terminal
+curl -d "cmd=db_push" http://localhost:8081
+```
+
+Start production server
+
+```bash
+docker build -t autobar3:prod -f dockerfiles/Dockerfile.prod .
+docker run --rm --env-file .env.prod.example -p 3000:3000 --mount type=bind,src=./data,dst=/data -it autobar3:prod
+```
 
 ## Local development
 

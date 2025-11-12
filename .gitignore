@@ -11,6 +11,7 @@ uploads
 /.svelte-kit
 /build
 /dist
+/data
 *.bin
 old/
 static/firmware
