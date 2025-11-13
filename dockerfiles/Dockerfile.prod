@@ -17,7 +17,20 @@ RUN npm i -D @sveltejs/adapter-node && npm ci
 COPY .env.prod.example *.config.* LICENSE tsconfig.json ./
 COPY src src/
 
-RUN cp .env.prod.example .env && mkdir -p /data/db && npm run db:push -- --force && npm run db:load-ingredients:install && npm run db:create-admin && npm run setup-uploads
+# .env.prod.example uses /data for database and uploads
+# initialize the database and create a copy in /app, allowing
+# users to mount a local data folder on the container's /data
+# The scripts/migrate_db.sh restores the content of /data
+RUN cp .env.prod.example .env \
+    && mkdir -p /data/db \
+    && npm run db:push -- --force \
+    && npm run db:load-ingredients:install \
+    && npm run db:create-admin \
+    && npm run setup-uploads \
+    && cp /data/db/local.db /app/initial.db
+
+COPY scripts/migrate_db.sh /app/scripts/migrate_db.sh
+ENTRYPOINT [ "/bin/sh", "/app/scripts/migrate_db.sh" ]
 
 FROM production-database AS production-builder
 COPY --from=production-firmware-builder /workspace/static/firmware/merged-firmware-esp32.bin static/firmware/merged-firmware-esp32.bin
@@ -35,4 +48,4 @@ COPY --from=production-builder /app/node_modules node_modules/
 
 EXPOSE 3000
 ENV NODE_ENV=production
-CMD [ "node", "--env-file=.env", "build" ]
+ENTRYPOINT [ "node", "--env-file=.env", "build" ]

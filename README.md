@@ -44,15 +44,17 @@ The project consists of two main parts:
 2. **Hardware Implementation**
     - ESP32-based cocktail mixing machine (primary target)
     - Support for legacy Raspberry Pi implementation (todo)
-    - Automated OTA updates (todo)
+    - Automated OTA updates
     - Weight-based pour measurement
     - Multiple pump control
 
 ### ESP32 configuration using the access point
 
-Using the Devices page, use "Flash New Device" and then "Enroll via WiFi" for instructions. You should obtain a page as below.
+Using the Devices page, use "Flash New Device" and then "Enroll via WiFi" for instructions. The ESP32 will start an access point wifi network to configure the device.
 
 ![access point](docs/screenshot_access_point.png)
+
+The server URL field allows you to self host the main server !
 
 ## Getting started with Docker
 
@@ -69,35 +71,22 @@ The admin authentication is in `.env.example`. You may change the values before 
 
 Building the image will take care of creating the SSL certificates and build the firmware for you.
 
+> The database is overwritten with each build !
+
 ### Production
 
-Create initial database or migrate
+Create initial database or [migrate](https://orm.drizzle.team/docs/migrations) :
 
 ```bash
+# Generate an image with the initial database and the development tools (drizzle-kit) to migrate the SQLite database
 docker build --target production-database -t autobar3:prod-db -f dockerfiles/Dockerfile.prod .
 
-# First time
-mkdir -p ./data/db
-## copy initial db to host data/db folder
-docker run --rm --mount type=bind,src=./data/db,dst=/data/db-init -it autobar3:prod-db /bin/sh -c "cp /data/db/local.db /data/db-init/local.db"
-
-# When DB already exists
-docker run --rm --mount type=bind,src=./data/db,dst=/data/db -it autobar3:prod-db /bin/sh -c "npm run db:push"
+# Mount local data folder
+mkdir -p ./data
+docker run --rm --mount type=bind,src=./data,dst=/data -it autobar3:prod-db
 ```
 
-Or alternatively use the convenience image to trigger migrations on a server
-
-```bash
-mkdir -p ./data/db
-docker build --target production-database -t autobar3:prod-db -f dockerfiles/Dockerfile.prod .
-docker build -t autobar3:utils -f dockerfiles/Dockerfile.utils .
-docker run --rm -p 8081:8081 --mount type=bind,src=./data/db,dst=/data/db -v /var/run/docker.sock:/var/run/docker.sock -it autobar3:utils $(pwd)/data
-
-# In another terminal
-curl -d "cmd=db_push" http://localhost:8081
-```
-
-Start production server
+Start production server :
 
 ```bash
 docker build -t autobar3:prod -f dockerfiles/Dockerfile.prod .
@@ -117,7 +106,7 @@ First, generate SSL certificates for local development:
 This script generates:
 
 - Self-signed certificates for HTTPS development server
-- A corresponding PEM file shipped inside the ESP32 firmware in order to verify HTTPS connections
+- The corresponding PEM file is built into the ESP32 firmware so that the device may trust the server using HTTPS
 
 > These certificates are for development only and should not be used in production
 
@@ -140,6 +129,8 @@ The `CMakeLists.txt` includes commands to copy the firmware binaries to the stat
 
 (TODO) VS Code devcontainer or pure docker command
 
+> Hint: use [this Dockerfile](dockerfiles/Dockerfile.preview) as a base
+
 ### Web
 
 Install dependencies and start the development server:
@@ -151,7 +142,7 @@ npm run dev
 
 The development server will run with HTTPS using the generated self-signed certificates.
 
-> Note: For production deployment, replace the development certificates with proper SSL certificates from a trusted Certificate Authority.
+> Note: For production deployment, replace the development certificates with proper SSL certificates from a trusted Certificate Authority
 
 ## Contributing
 

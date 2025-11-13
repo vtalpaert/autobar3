@@ -7,8 +7,6 @@ PORT=8081
 LOCAL_DATA_FOLDER=$1
 
 db_push () {
-    echo $(ls /data/db/)
-
     if [ ! -f /data/db/local.db ]; then
         docker run --rm \
             --mount type=bind,src=$LOCAL_DATA_FOLDER/db,dst=/data/db-init \
