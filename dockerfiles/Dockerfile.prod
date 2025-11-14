@@ -12,7 +12,7 @@ RUN source /opt/esp/idf/export.sh > /dev/null 2>&1 && idf.py set-target esp32 &&
 
 FROM node:lts-alpine AS production-database
 WORKDIR /app
-COPY package*.json .
+COPY package*.json ./
 RUN npm ci
 COPY .env.prod.example *.config.* LICENSE tsconfig.json ./
 COPY src src/
