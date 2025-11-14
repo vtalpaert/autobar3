@@ -13,7 +13,7 @@ RUN source /opt/esp/idf/export.sh > /dev/null 2>&1 && idf.py set-target esp32 &&
 FROM node:lts-alpine AS production-database
 WORKDIR /app
 COPY package*.json .
-RUN npm i -D @sveltejs/adapter-node && npm ci
+RUN npm ci
 COPY .env.prod.example *.config.* LICENSE tsconfig.json ./
 COPY src src/
 
@@ -34,7 +34,7 @@ ENTRYPOINT [ "/bin/sh", "/app/scripts/migrate_db.sh" ]
 
 FROM production-database AS production-builder
 COPY --from=production-firmware-builder /workspace/static/firmware/merged-firmware-esp32.bin static/firmware/merged-firmware-esp32.bin
-RUN npm run build && npm prune --production
+RUN npm --env-file=.env run build && npm prune --production
 
 FROM node:lts-alpine AS production
 WORKDIR /app

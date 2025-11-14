@@ -14,7 +14,7 @@ FROM node:lts-alpine AS preview-builder
 ENV GCP_BUILDPACKS=1
 WORKDIR /app
 COPY package*.json .
-RUN npm i -D @sveltejs/adapter-node && npm ci
+RUN npm ci
 COPY --from=preview-certificates-generator /certificates/ certificates/
 COPY static static/
 COPY --from=preview-firmware-builder /workspace/static/firmware/merged-firmware-esp32.bin static/firmware/merged-firmware-esp32.bin
