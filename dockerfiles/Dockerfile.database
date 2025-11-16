@@ -1,0 +1,33 @@
+FROM alpine/openssl AS production-certificates-generator
+ARG DOMAIN=autobar3.robotcocktail.ovh
+RUN openssl s_client -connect ${DOMAIN}.ovh:443 2>/dev/null </dev/null |  sed -ne '/-BEGIN CERTIFICATE-/,/-END CERTIFICATE-/p' > cert.pem
+
+FROM espressif/idf:v5.3 AS production-firmware-builder
+SHELL ["/bin/bash", "-c"]
+COPY CMakeLists.txt sdkconfig dependencies.lock /workspace/
+COPY main /workspace/main
+COPY --from=production-certificates-generator cert.pem /workspace/main/server_cert.pem
+WORKDIR /workspace
+RUN source /opt/esp/idf/export.sh > /dev/null 2>&1 && idf.py set-target esp32 && idf.py build
+
+FROM node:lts-alpine AS production-database
+WORKDIR /app
+COPY package*.json ./
+RUN npm ci
+COPY .env.prod.example *.config.* LICENSE tsconfig.json ./
+COPY src src/
+
+# .env.prod.example uses /data for database and uploads
+# initialize the database and create a copy in /app, allowing
+# users to mount a local data folder on the container's /data
+# The scripts/migrate_db.sh restores the content of /data
+RUN cp .env.prod.example .env \
+    && mkdir -p /data/db \
+    && npm run db:push -- --force \
+    && npm run db:load-ingredients:install \
+    && npm run db:create-admin \
+    && npm run setup-uploads \
+    && cp /data/db/local.db /app/initial.db
+
+COPY scripts/migrate_db.sh /app/scripts/migrate_db.sh
+ENTRYPOINT [ "/bin/sh", "/app/scripts/migrate_db.sh", "&&", "sleep 60" ]
