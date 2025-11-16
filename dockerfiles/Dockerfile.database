@@ -30,4 +30,5 @@ RUN cp .env.prod.example .env \
     && cp /data/db/local.db /app/initial.db
 
 COPY scripts/migrate_db.sh /app/scripts/migrate_db.sh
-ENTRYPOINT [ "/bin/sh", "/app/scripts/migrate_db.sh", "&&", "sleep 60" ]
+COPY scripts/database_rollover.sh /app/scripts/database_rollover.sh
+ENTRYPOINT [ "/bin/sh", "/app/scripts/database_rollover.sh" ]
