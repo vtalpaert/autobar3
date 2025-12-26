@@ -17,6 +17,8 @@ COPY package*.json .
 RUN npm ci
 COPY --from=preview-certificates-generator /certificates/ certificates/
 COPY static static/
+COPY --from=preview-firmware-builder /workspace/static/firmware/autobar3.bin static/firmware/autobar3.bin
+COPY --from=preview-firmware-builder /workspace/static/firmware/manifest.json static/firmware/manifest.json
 COPY --from=preview-firmware-builder /workspace/static/firmware/merged-firmware-esp32.bin static/firmware/merged-firmware-esp32.bin
 COPY .env.example *.config.* LICENSE tsconfig.json ./
 COPY src src/

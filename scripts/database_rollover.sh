@@ -4,6 +4,6 @@ source scripts/migrate_db.sh
 
 SLEEP=60
 while true; do
-    echo Sleep $SLEEP
+    # echo Sleep $SLEEP
     sleep $SLEEP
 done

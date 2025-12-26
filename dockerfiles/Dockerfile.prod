@@ -33,15 +33,20 @@ COPY scripts/migrate_db.sh /app/scripts/migrate_db.sh
 ENTRYPOINT [ "/bin/sh", "/app/scripts/migrate_db.sh" ]
 
 FROM production-database AS production-builder
+WORKDIR /app
+COPY static static/
+COPY --from=production-firmware-builder /workspace/static/firmware/autobar3.bin static/firmware/autobar3.bin
+COPY --from=production-firmware-builder /workspace/static/firmware/manifest.json static/firmware/manifest.json
 COPY --from=production-firmware-builder /workspace/static/firmware/merged-firmware-esp32.bin static/firmware/merged-firmware-esp32.bin
 RUN npm --env-file=.env run build && npm prune --production
 
 FROM node:lts-alpine AS production
 WORKDIR /app
 
-COPY --from=production-builder /app/package.json /app/.env ./
-COPY --from=production-builder /app/build build/
 COPY --from=production-builder /app/node_modules node_modules/
+COPY --from=production-builder /app/package.json /app/.env ./
+COPY --from=production-builder /app/static static/
+COPY --from=production-builder /app/build build/
 
 # Uncomment to use default DB, otherwise run with --mount type=bind,src=./data/db,dst=/data/db
 #COPY --from=production-builder /data /data/
