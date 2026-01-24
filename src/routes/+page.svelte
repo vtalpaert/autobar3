@@ -47,7 +47,7 @@
 
     <!-- Features Section -->
     <div class="container mx-auto px-4 py-16">
-        <div class="grid md:grid-cols-3 gap-8">
+        <div class="grid md:grid-cols-4 gap-8">
             <div class="bg-gray-800 p-6 rounded-lg">
                 <div class="text-blue-500 text-4xl mb-4">🍹</div>
                 <h3 class="text-xl font-bold mb-2">{t.features.perfectDrinks.title}</h3>
@@ -57,18 +57,26 @@
             </div>
 
             <div class="bg-gray-800 p-6 rounded-lg">
-                <div class="text-blue-500 text-4xl mb-4">🔧</div>
-                <h3 class="text-xl font-bold mb-2">{t.features.smartHardware.title}</h3>
+                <div class="text-blue-500 text-4xl mb-4">🤝</div>
+                <h3 class="text-xl font-bold mb-2">{t.features.connectWithFriends.title}</h3>
                 <p class="text-gray-400">
-                    {t.features.smartHardware.description}
+                    {t.features.connectWithFriends.description}
                 </p>
             </div>
 
             <div class="bg-gray-800 p-6 rounded-lg">
                 <div class="text-blue-500 text-4xl mb-4">🚀</div>
-                <h3 class="text-xl font-bold mb-2">{t.features.modernStack.title}</h3>
+                <h3 class="text-xl font-bold mb-2">{t.features.openSource.title}</h3>
                 <p class="text-gray-400">
-                    {t.features.modernStack.description}
+                    {t.features.openSource.description}
+                </p>
+            </div>
+
+            <div class="bg-gray-800 p-6 rounded-lg">
+                <div class="text-blue-500 text-4xl mb-4">🔧</div>
+                <h3 class="text-xl font-bold mb-2">{t.features.diyFriendly.title}</h3>
+                <p class="text-gray-400">
+                    {t.features.diyFriendly.description}
                 </p>
             </div>
         </div>

@@ -3,7 +3,7 @@ export const ui = {
         hero: {
             title: 'RobotCocktail',
             description:
-                'The modern solution for automated cocktail mixing. Create perfect drinks every time with precision and style.',
+                'The Open Source solution for automated cocktail mixing. Create perfect drinks every time with precision and style.',
             register: 'Register',
             seeCocktails: 'See My Cocktails',
             viewGithub: 'View on GitHub'
@@ -12,17 +12,22 @@ export const ui = {
             perfectDrinks: {
                 title: 'Perfect Drinks',
                 description:
-                    'Precise measurements and consistent pours ensure the perfect drink every time.'
+                    'Precise pours ensure the perfect drink every time.'
             },
-            smartHardware: {
-                title: 'Smart Hardware',
+            connectWithFriends: {
+                title: 'Connect With Friends',
                 description:
-                    'Built with modern hardware like ESP32 and Raspberry Pi for reliable operation.'
+                    'Share your cocktail recipes and collaborate with friends to create new drinks together.'
             },
-            modernStack: {
-                title: 'Modern Stack',
+            openSource: {
+                title: 'Open Source',
                 description:
-                    'Built with SvelteKit and Tailwind CSS for a responsive and fast user experience.'
+                    'Use the main server, host your own or contribute to the project on GitHub.'
+            },
+            diyFriendly: {
+                title: 'DIY Friendly',
+                description:
+                    '3D files, PCB design and off-the-shelf components make building your own RobotCocktail a breeze.'
             }
         },
         footer: {
@@ -47,26 +52,31 @@ export const ui = {
         hero: {
             title: 'RobotCocktail',
             description:
-                'La solution moderne pour le mélange automatisé de cocktails. Créez des boissons parfaites à chaque fois avec précision et style.',
+                'La solution open source pour le mélange automatisé de cocktails. Créez des boissons parfaites à chaque fois avec précision et style.',
             register: "S'inscrire",
             seeCocktails: 'Voir Mes Cocktails',
             viewGithub: 'Voir sur GitHub'
         },
         features: {
             perfectDrinks: {
-                title: 'Boissons Parfaites',
+                title: 'Dosage Parfait',
                 description:
-                    'Des mesures précises et des versements constants assurent une boisson parfaite à chaque fois.'
+                    'Des doses précises assurent une boisson parfaite à chaque fois.'
             },
-            smartHardware: {
-                title: 'Matériel Intelligent',
+            connectWithFriends: {
+                title: 'Connectez-vous avec des Amis',
                 description:
-                    'Construit avec du matériel moderne comme ESP32 et Raspberry Pi pour un fonctionnement fiable.'
+                    'Partagez vos recettes de cocktails et collaborez avec des amis pour créer de nouvelles boissons ensemble.'
             },
-            modernStack: {
-                title: 'Stack Moderne',
+            openSource: {
+                title: 'Open Source',
                 description:
-                    'Construit avec SvelteKit et Tailwind CSS pour une expérience utilisateur réactive et rapide.'
+                    'Utilisez le serveur principal, hébergez le vôtre ou contribuez au projet sur GitHub.'
+            },
+            diyFriendly: {
+                title: 'La philosophie DIY',
+                description:
+                    'Les fichiers 3D, le design PCB et un choix de composants simples facilitent la construction de votre propre RobotCocktail.'
             }
         },
         footer: {
